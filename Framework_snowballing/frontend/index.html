@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snowballing Forward</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles_index.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand fs-4" href="/">Snowballing Forward</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="triagem.html">Initial Analysis</a></li>
+          <li class="nav-item"><a class="nav-link" href="criterios.html">Criteria Applications</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Conteúdo -->
+  <div class="container mt-5 pt-5">
+    <h1 class="text-center mb-4">Search by DOI</h1>
+
+    <div class="d-flex justify-content-center mb-3">
+      <input type="text" id="searchInput" placeholder="Enter DOI" class="form-control w-50 rounded" />
+      <button onclick="buscarArtigo()" class="btn btn-success ms-2">Buscar</button>
+    </div>
+
+    <div id="resultado" class="mt-4"></div>
+
+    <div id="citationsSection" style="display:none;">
+      <div id="citationsHeader" class="d-flex justify-content-between align-items-center">
+        <h3>Cited By</h3>
+        <button id="downloadBtn" title="Baixar citações (CSV)" class="btn btn-link p-0">
+          Download CSV
+        </button>
+      </div>
+
+      <!-- Card flutuante do abstract -->
+      <div id="abstractCard" style="display:none;">
+        <h5>Full Abstract</h5>
+        <p id="abstractFullText"></p>
+        <button id="closeAbstractBtn" class="btn btn-sm btn-secondary mt-3">Fechar</button>
+      </div>
+
+      <div id="citationsList" class="mt-3 table-responsive shadow-sm rounded">
+        <table class="table table-hover table-striped align-middle mb-0" id="tabela-triagem">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Abstract</th>
+              <th>Year</th>
+              <th>Venue</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    // Busca artigo pela API
+    function buscarArtigo() {
+      const doi = document.getElementById('searchInput').value.trim();
+      if (!doi) {
+        alert('Please enter a DOI to search.');
+        return;
+      }
+
+      document.body.classList.add('busca-realizada');
+
+      fetch(`http://localhost:3000/api/articles/search?doi=${encodeURIComponent(doi)}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Article not found or API error');
+          return res.json();
+        })
+        .then(data => {
+          mostrarResultado(data);
+          mostrarCitacoes(data.citations);
+          // Guarda no global window.citationsData e adiciona campo 'selecionado' inicial nulo
+          window.citationsData = data.citations.map(c => ({ ...c, selecionado: null }));
+        })
+        .catch(err => {
+          document.getElementById('resultado').innerHTML = '<p class="text-danger">Erro: ' + err.message + '</p>';
+          document.getElementById('citationsSection').style.display = 'none';
+          document.getElementById('citationsList').innerHTML = '';
+          window.citationsData = [];
+        });
+    }
+
+    // Mostra o artigo seed
+    function mostrarResultado(artigo) {
+      if (!artigo || !artigo.title) {
+        document.getElementById('resultado').innerHTML = '<p>Article not found.</p>';
+        return;
+      }
+
+      const tabelaHTML = `
+        <h3>Seed</h3>
+        <table class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th style="width: 40%;">Title</th>
+              <th>Year</th>
+              <th>Venue</th>
+              <th>DOI</th>
+              <th>Cited by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${artigo.title}</td>
+              <td>${artigo.year || '-'}</td>
+              <td>${artigo.venue || '-'}</td>
+              <td>${artigo.input_doi ? `<a href="https://doi.org/${artigo.input_doi}" target="_blank">${artigo.input_doi}</a>` : '-'}</td>
+              <td>${artigo.citations_count || '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('resultado').innerHTML = tabelaHTML;
+    }
+
+    // Mostra as citações na tabela, com botões para marcar
+    function mostrarCitacoes(citations) {
+      const citSection = document.getElementById('citationsSection');
+      const tabelaBody = document.querySelector('#tabela-triagem tbody');
+
+      if (!citations || citations.length === 0) {
+        document.getElementById('citationsList').innerHTML = '<p>No citations found.</p>';
+        citSection.style.display = 'none';
+        return;
+      }
+
+      function createActionButton(type, title, icon, artigoData, selecionado) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn btn-sm btn-triagem btn-${type}`;
+        btn.title = title;
+        btn.innerHTML = `<i class="bi bi-${icon}"></i> ${title}`;
+        if (selecionado === type) {
+          btn.classList.add('active');
+        }
+        btn.addEventListener('click', () => {
+          const row = btn.closest('tr');
+          row.querySelectorAll('.btn-triagem').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          if (!artigoData.paperId) {
+            alert('Article has no identifier (missing paperId');
+            return;
+          }
+
+          marcarArtigoLocal(artigoData.paperId, type);
+        });
+        return btn;
+      }
+
+      function createTableRow(cit) {
+        const tr = document.createElement('tr');
+
+        const abstractCell = document.createElement('td');
+        abstractCell.className = 'abstract-cell';
+        const resumo = cit.abstract ? cit.abstract.substring(0, 100) + (cit.abstract.length > 100 ? '...' : '') : '-';
+        abstractCell.textContent = resumo;
+        abstractCell.title = 'Click to see full abstract';
+        abstractCell.style.cursor = 'pointer';
+        abstractCell.addEventListener('click', () => mostrarAbstractCompleto(cit.abstract));
+
+        tr.innerHTML = `
+          <td>${cit.title || '-'}</td>
+          <td></td> 
+          <td>${cit.year || '-'}</td>
+          <td>${cit.venue || '-'}</td>
+        `;
+        tr.replaceChild(abstractCell, tr.children[1]);
+
+        const tdActions = document.createElement('td');
+        tdActions.classList.add('text-nowrap');
+
+        tdActions.append(
+          createActionButton('incluir', 'Include', 'check-circle-fill', cit, cit.selecionado),
+          createActionButton('excluir', 'Exclude', 'x-circle-fill', cit, cit.selecionado),
+          //createActionButton('talvez', 'Talvez', 'question-circle-fill', cit, cit.selecionado)
+        );
+
+        tr.appendChild(tdActions);
+        return tr;
+      }
+
+      tabelaBody.innerHTML = '';
+      citations.forEach(cit => {
+        tabelaBody.appendChild(createTableRow(cit));
+      });
+
+      citSection.style.display = 'block';
+    }
+
+    // Função para marcar artigo localmente, atualiza window.citationsData e UI
+    function marcarArtigoLocal(paperId, acao) {
+      const cit = window.citationsData.find(c => c.paperId === paperId);
+      if (!cit) {
+        alert('Citation not found for local marking.');
+        return;
+      }
+      cit.selecionado = acao;
+
+      // Atualiza UI chamando mostrarCitacoes com os dados atualizados
+      mostrarCitacoes(window.citationsData);
+    }
+
+    function mostrarAbstractCompleto(texto) {
+      const card = document.getElementById('abstractCard');
+      const textoEl = document.getElementById('abstractFullText');
+      textoEl.textContent = texto || 'Resumo indisponível.';
+      card.style.display = 'block';
+    }
+
+    document.getElementById('closeAbstractBtn').addEventListener('click', () => {
+      document.getElementById('abstractCard').style.display = 'none';
+    });
+
+    function baixarCitationsCSV() {
+      const citations = window.citationsData;
+      if (!citations || citations.length === 0) {
+        alert('No citations loaded to export.');
+        return;
+      }
+
+      let csvContent = "Title,Authors,Year,Venue,DOI\n";
+
+      citations.forEach(cit => {
+        const title = cit.title ? `"${cit.title.replace(/"/g, '""')}"` : '-';
+        const autores = cit.authors && cit.authors.length > 0
+          ? `"${cit.authors.map(a => a.name).join('; ').replace(/"/g, '""')}"`
+          : '-';
+        const year = cit.year || '-';
+        const venue = cit.venue ? `"${cit.venue.replace(/"/g, '""')}"` : '-';
+        const doi = cit.doi || '-';
+
+        csvContent += `${title},${autores},${year},${venue},${doi}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'citations.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('downloadBtn').onclick = baixarCitationsCSV;
+
+    // FUNÇÃO NOVA: salva dados no window.name e vai para triagem
+    function irParaTriagem() {
+      if (!window.citationsData || window.citationsData.length === 0) {
+        alert('No citations to send to screening.');
+        return;
+      }
+      window.name = JSON.stringify(window.citationsData);
+      window.location.href = 'triagem.html';
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+  const linkAnalise = document.querySelector('a.nav-link[href="triagem.html"]');
+  if (linkAnalise) {
+    linkAnalise.addEventListener('click', e => {
+      e.preventDefault(); // impede navegação imediata
+      if (!window.citationsData || window.citationsData.length === 0) {
+        alert('No citations to send to screening.');
+        return;
+      }
+      // salva dados em window.name
+      window.name = JSON.stringify(window.citationsData);
+      // navega para triagem
+      window.location.href = 'triagem.html';
+    });
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const linkCriterios = document.querySelector('a.nav-link[href="criterios.html"]');
+  if (linkCriterios) {
+    linkCriterios.addEventListener('click', e => {
+      e.preventDefault(); // Impede navegação imediata
+
+      if (!window.citationsData || window.citationsData.length === 0) {
+        alert('No citations to send.');
+        return;
+      }
+
+      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
+
+      if (incluidos.length === 0) {
+        alert('No article marked as "Include"');
+        return;
+      }
+
+      window.name = JSON.stringify(incluidos);
+      window.location.href = 'criterios.html';
+    });
+  }
+});
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

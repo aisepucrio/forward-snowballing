@@ -1,0 +1,1880 @@
+{
+  "input_doi": "https://doi.org/10.1016/j.jss.2021.111044",
+  "title": "Learning software configuration spaces: A systematic literature review",
+  "year": 2021,
+  "venue": "-",
+  "abstract": "-",
+  "citations_count": 90,
+  "citations": [
+    {
+      "paperId": "linux-kernel-configurations-at-scale-a-dataset-for",
+      "title": "Linux Kernel Configurations at Scale: A Dataset for Performance and Evolution Analysis",
+      "authors": [
+        {
+          "name": "Heraldo Borges"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "D. Khelladi"
+        },
+        {
+          "name": "Mathieu Acher"
+        }
+      ],
+      "year": 2025,
+      "venue": "arXiv.org",
+      "doi": "10.48550/arXiv.2505.07487",
+      "abstract": "Configuring the Linux kernel to meet specific requirements, such as binary size, is highly challenging due to its immense complexity-with over 15,000 interdependent options evolving rapidly across different versions. Although several studies have explored sampling strategies and machine learning methods to understand and predict the impact of configuration options, the literature still lacks a comprehensive and large-scale dataset encompassing multiple kernel versions along with detailed quantitative measurements. To bridge this gap, we introduce LinuxData, an accessible collection of kernel configurations spanning several kernel releases, specifically from versions 4.13 to 5.8. This dataset, gathered through automated tools and build processes, comprises over 240,000 kernel configurations systematically labeled with compilation outcomes and binary sizes. By providing detailed records of configuration evolution and capturing the intricate interplay among kernel options, our dataset enables innovative research in feature subset selection, prediction models based on machine learning, and transfer learning across kernel versions. Throughout this paper, we describe how the dataset has been made easily accessible via OpenML and illustrate how it can be leveraged using only a few lines of Python code to evaluate AI-based techniques, such as supervised machine learning. We anticipate that this dataset will significantly enhance reproducibility and foster new insights into configuration-space analysis at a scale that presents unique opportunities and inherent challenges, thereby advancing our understanding of the Linux kernel's configurability and evolution."
+    },
+    {
+      "paperId": "a-conceptual-framework-for-smart-governance-system",
+      "title": "A Conceptual Framework for Smart Governance Systems Implementation",
+      "authors": [
+        {
+          "name": "Salvador Muñoz-Hermoso"
+        },
+        {
+          "name": "Francisco J. Domínguez-Mayo"
+        },
+        {
+          "name": "Agustí Cerrillo-i-Martínez"
+        },
+        {
+          "name": "David Benavides"
+        }
+      ],
+      "year": 2025,
+      "venue": "International journal of electronic governance and research",
+      "doi": "10.4018/ijegr.376170",
+      "abstract": "Knowledge-based decision-making open to citizens holds little significance in governments. One reason is that so far, no reference frameworks are available to implement smart governance systems in the full public policy cycle, resulting in most of the existing tools not being knowledge-based. Thus, there is a risk that decisions are ineffective or misaligned with the different interests of civil society. Moreover, existing proposals do not cover most of the key features needed in smart governance and do not provide sufficient elements to facilitate its implementation. Based on the existing literature and tools, as well as on a survey of local government practitioners, the authors propose a conceptual framework for implementing smart governance systems, which manages both knowledge internal and external to the organization, and the one provided by stakeholders; thus, improving consensus and group decision-making. To this end, the framework considers available data and information technologies, and its components make it easier for institutions and information technology providers to develop solutions with a knowledge-based collaborative governance model."
+    },
+    {
+      "paperId": "unveiling-the-impact-of-sampling-on-feature-select",
+      "title": "Unveiling the Impact of Sampling on Feature Selection for Performance Prediction in Configurable Systems",
+      "authors": [
+        {
+          "name": "João Marcello Bessal"
+        },
+        {
+          "name": "Millena Cavalcanti"
+        },
+        {
+          "name": "Mathieu Acher"
+        },
+        {
+          "name": "Markus Endler"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        }
+      ],
+      "year": 2025,
+      "venue": "International Conference on Software Reuse",
+      "doi": "10.1109/ICSR66718.2025.00012",
+      "abstract": "Modern software systems are highly configurable, offering a vast number of configuration options that can be customized to meet specific functional and non-functional requirements. To support the configuration process, several automated software approaches based on machine learning have been proposed in the literature. These approaches aim to assist developers by predicting non-functional properties based on configuration settings. A recent study demonstrated the potential of leveraging a subset of configuration options (a.k.a. features) to achieve accurate performance predictions in the Linux kernel. The promise of learning over a reduced set of features – instead of all features – is to obtain performance models that are faster to compute, simpler to interpret, and still accurate. Despite the encouraging results of the original study, several questions remain unresolved: Can the findings be generalized to other configurable systems other than Linux? Which learning algorithms deliver the most efficient results when working with a reduced number of features? What are the most effective sampling strategies for building accurate and efficient models? In this work, we extend the original study by conducting an in-depth analysis across eight configurable systems. We evaluate the impact of sampling strategies and learning algorithms on model accuracy and training efficiency. Our goal is to understand whether there is a dominant sampling strategy and learning algorithm for varying systems and performance targets. Our results reveal variability in optimal strategies across systems and advocate for tailored approaches rather than universal solutions."
+    },
+    {
+      "paperId": "towards-realistic-applicable-and-feasible-configur",
+      "title": "Towards Realistic, Applicable and Feasible Configuration-Aware Performance Modeling",
+      "authors": [
+        {
+          "name": "Yuanjie Xia"
+        }
+      ],
+      "year": 2025,
+      "venue": "2025 IEEE/ACM 47th International Conference on Software Engineering: Companion Proceedings (ICSE-Companion)",
+      "doi": "10.1109/ICSE-Companion66252.2025.00027",
+      "abstract": "In modern software systems, configurability has become essential for optimizing performance across varying scenarios and user demands. However, predicting performance in configurable software remains challenging due to the complex interplay between configuration settings and workload characteristics. Existing performance models lack applicability and ignore the combined influence of configurations and workloads, limiting their applicability in dynamic environments. Additionally, current methods focus on either configurations or workloads in isolation, leaving the interactions between the two insufficiently explored. We conclude these challenges into three parts, which are realistic, applicable and feasible for the performance modeling, This thesis addresses the challenges through four projects. We conduct an empirical study to understand the complex relationships between configurations, workloads, and performance outcomes. Additionally, we develop a systematic sampling method to enhance the applicability and accuracy of configuration performance models, allowing models to learn from historical data actively. To further improve performance prediction, we propose a hybrid modeling approach that integrates configuration and workload variations, thereby increasing model simplicity and precision. Finally, we explore applying large language models (LLMs) to streamline the modeling process, embedding LLM insights into traditional methods to reduce the cost and complexity of performance modeling. These contributions aim to create robust performance models that better support software configuration and workload management, enhancing system reliability and efficiency."
+    },
+    {
+      "paperId": "fp-rainbow-fingerprint-based-browser-configuration",
+      "title": "FP-Rainbow: Fingerprint-Based Browser Configuration Identification",
+      "authors": [
+        {
+          "name": "Maxime Huyghe"
+        },
+        {
+          "name": "Walter Rudametkin"
+        },
+        {
+          "name": "Clément Quinton"
+        }
+      ],
+      "year": 2025,
+      "venue": "The Web Conference",
+      "doi": "10.1145/3696410.3714699",
+      "abstract": "Browser fingerprinting is a tracking technique that collects attributes and calls functions from the browser's APIs. Unlike cookies, browser fingerprints are difficult to evade or delete, raising significant privacy concerns for users as they can be used to re-identify individuals over browsing sessions without their consent. Yet, there has been limited research on the impact of browser configuration settings on these fingerprints. This paper introduces FP-Rainbow, a novel approach to systematically explore and map the configuration space of Chromium-based web browsers aiming to identify the impact of configuration parameters on browser fingerprints and their changes over time. We explore 1,748 configuration parameters (switches) and identify their impact on the browser's BOM (Browser Object Model). By collecting and analyzing over 61,000 fingerprints from 18 versions of Chromium, our study reveals that 32 to 56 of these configuration parameters (depending on versions), such as disable-3d-apis or disable-notifications, influence the fingerprint of a web browser. FP-Rainbow also proves efficient in identifying browser configuration parameters from unknown fingerprints, achieving an average successful identification rate of 84% when considering a single configuration parameter and 78% when multiple parameters are involved, across all evaluated browser versions. These findings emphasize the importance of measuring the impact of configuration parameters on browsers to develop safer and more privacy-friendly web browsers."
+    },
+    {
+      "paperId": "applying-graph-neural-networks-to-learn-graph-conf",
+      "title": "Applying Graph Neural Networks to Learn Graph Configuration Spaces",
+      "authors": [
+        {
+          "name": "Michael Mittermaier"
+        },
+        {
+          "name": "Takfarinas Saber"
+        },
+        {
+          "name": "Goetz Botterweck"
+        }
+      ],
+      "year": 2025,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3715340.3715444",
+      "abstract": "The configuration process for feature-oriented product lines is well-researched for Boolean and numerical feature configurations. However, in several engineering fields, we encounter the challenge of finding the optimal graph structure to describe a product configuration. Optimising complex graph structures towards multiple objectives within numerous constraints requires a deep understanding of the graph configuration space and the product properties it represents. This study aims to leverage graph neural networks (GNNs) to predict product properties, thereby supporting the configuration process in product lines. In a controlled experiment, we compare a GNN-based approach to a recent state-of-the-art approach utilising graph embeddings. We evaluate these methods on both accuracy and learning efficiency. Our findings indicate that the GNN-based approach outperforms the embedding-based method in terms of accuracy. However, it requires a substantially larger volume of training data to achieve these results. Overall, this research demonstrates the applicability of an ML-supported framework for engineering product lines using graph configurations."
+    },
+    {
+      "paperId": "performance-aware-behaviour-models-for-feature-dep",
+      "title": "Performance-Aware Behaviour Models for Feature-Dependent Runtime Attributes in Product Lines",
+      "authors": [
+        {
+          "name": "B. Friesel"
+        },
+        {
+          "name": "Olaf Spinczyk"
+        }
+      ],
+      "year": 2025,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3715340.3715435",
+      "abstract": "A product line’s features describe its configurable functional properties by means of boolean feature toggles or numeric values. Meanwhile, performance models describe the link between features and non-functional product line properties such as binary size, memory usage, or workload latency. So far, these have focused on static features: model formalisms and learning algorithms assume that the product cannot be reconfigured at runtime and that there is no interaction between features, runtime behaviour, and runtime performance attributes. This is inadequate for real-world configurable software systems: compile-time features may be reconfigured at runtime (e.g. by overriding defaults), and non-featured workload attributes may affect performance attributes and thus must be considered within performance models. We propose performance-aware behaviour models to address this challenge. These build upon existing work on behaviour models and dynamic product lines, and link feature models (static configuration), behaviour models (variable workloads), non-featured runtime variability, and performance models in order to allow engineers to determine arbitrary configuration- and workload-dependent performance attributes of product lines. They are compatible with existing modeling methods and support workload-dependent performance attributes that cannot be expressed as a function of product features alone. We demonstrate the benefits of performance-aware behaviour models in three case studies, and show that they reduce performance prediction error by up to 90 %."
+    },
+    {
+      "paperId": "csat-configuration-structure-aware-tuning-for-high",
+      "title": "CSAT: Configuration structure-aware tuning for highly configurable software systems",
+      "authors": [
+        {
+          "name": "Yufei Li"
+        },
+        {
+          "name": "Liang Bao"
+        },
+        {
+          "name": "Kaipeng Huang"
+        },
+        {
+          "name": "C. Wu"
+        }
+      ],
+      "year": 2024,
+      "venue": "Journal of Systems and Software",
+      "doi": "10.1016/j.jss.2024.112316",
+      "abstract": null
+    },
+    {
+      "paperId": "llm-based-misconfiguration-detection-for-aws-serve",
+      "title": "LLM-Based Misconfiguration Detection for AWS Serverless Computing",
+      "authors": [
+        {
+          "name": "Jinfeng Wen"
+        },
+        {
+          "name": "Zhenpeng Chen"
+        },
+        {
+          "name": "Zixi Zhu"
+        },
+        {
+          "name": "Federica Sarro"
+        },
+        {
+          "name": "Yi Liu"
+        },
+        {
+          "name": "Haodi Ping"
+        },
+        {
+          "name": "Shangguang Wang"
+        }
+      ],
+      "year": 2024,
+      "venue": "ACM Transactions on Software Engineering and Methodology",
+      "doi": "10.1145/3745766",
+      "abstract": "Serverless computing is a popular cloud computing paradigm that enables developers to build applications at the function level, known as serverless applications. The Serverless Application Model (AWS SAM) is the most widely adopted configuration schema. However, misconfigurations pose a significant challenge due to the complexity of serverless configurations and the limitations of traditional data-driven techniques. Recent advancements in Large Language Models (LLMs), pre-trained on large-scale public data, offer promising potential for identifying and explaining misconfigurations. In this paper, we present SlsDetector, the first framework that harnesses the capabilities of LLMs to perform static misconfiguration detection in serverless applications. SlsDetector utilizes effective prompt engineering with zero-shot prompting to identify configuration issues. It designs multi-dimensional constraints aligned with serverless configuration characteristics and leverages the Chain of Thought technique to enhance LLM inferences, alongside generating structured responses. We evaluate SlsDetector on a curated dataset of 110 configuration files, which includes correct configurations, real-world misconfigurations, and intentionally injected errors. Our results show that SlsDetector, based on ChatGPT-4o (one of the most representative LLMs), achieves a precision of 72.88%, recall of 88.18%, and F1-score of 79.75%, outperforming state-of-the-art data-driven methods by 53.82, 17.40, and 49.72 percentage points, respectively. We further investigate the generalization capability of SlsDetector across recent LLMs, including Llama 3.1 (405B) Instruct Turbo, Gemini 1.5 Pro, and DeepSeek V3, with consistently high effectiveness."
+    },
+    {
+      "paperId": "exploring-performance-trade-offs-in-jhipster",
+      "title": "Exploring Performance Trade-offs in JHipster",
+      "authors": [
+        {
+          "name": "Edouard Gu'egain"
+        },
+        {
+          "name": "Alexandre Bonvoisin"
+        },
+        {
+          "name": "Clément Quinton"
+        },
+        {
+          "name": "Mathieu Acher"
+        },
+        {
+          "name": "Romain Rouvoy"
+        }
+      ],
+      "year": 2024,
+      "venue": "arXiv.org",
+      "doi": "10.48550/arXiv.2409.16480",
+      "abstract": "The performance of software systems remains a persistent concern in the field of software engineering. While traditional metrics like binary size and execution time have long been focal points for developers, the power consumption concern has gained significant attention, adding a layer of complexity to performance evaluation. Configurable software systems, with their potential for numerous configurations, further complicate this evaluation process. In this experience paper, we examine the impact of configurations on performance, specifically focusing on the web stack generator JHipster. Our goal is to understand how configuration choices within JHipster influence the performance of the generated system. We undertake an exhaustive analysis of JHipster by examining its configurations and their effects on system performance. Additionally, we explore individual configuration options to gauge their specific influence on performance. Through this process, we develop a comprehensive performance model for JHipster, enabling us to automate the identification of configurations that optimize specific performance metrics. In particular, we identify configurations that demonstrate near-optimal performance across multiple indicators and report on significant correlations between configuration choices within JHipster and the performance of generated systems."
+    },
+    {
+      "paperId": "towards-rapid-design-of-compartmental-models",
+      "title": "Towards Rapid Design of Compartmental Models",
+      "authors": [
+        {
+          "name": "Zahra Fiyouzisabah"
+        },
+        {
+          "name": "Jessie Galasso"
+        },
+        {
+          "name": "Marios Fokaefs"
+        },
+        {
+          "name": "Michalis Famelis"
+        }
+      ],
+      "year": 2024,
+      "venue": "ACM/IEEE International Conference on Model Driven Engineering Languages and Systems",
+      "doi": "10.1145/3652620.3688340",
+      "abstract": "In times of crisis, epidemiologists can come under great pressure to model rapidly evolving diseases and to produce analyses about the effects of potential public health interventions. Taking previously developed, tested, and validated model components as the base on which to prototype new infectious disease models can save precious time and effort. However, there is currently no systematic process for quickly navigating a corpus of existing epidemiological models or identifying and reusing their most useful components. In this paper, we propose a vision to accelerate the creation of prototype compartmental models for infectious diseases. We outline a semi-automated process that epidemiologists can use to create prototypes that have been partially completed with reused fragments from existing models. Epidemiologists can thus focus on modelling the novel aspects of an ongoing public health crisis, as opposed to aspects of it that are already more or less well understood in previous work. Our approach comprises five steps in total, including identifying useful components in a corpus of infectious disease models, generating potential candidate prototypes, and organizing them in a formal data structure that allows navigation and exploration by the modellers. We outline 13 challenges ahead and discuss potential solutions based on formal modelling techniques."
+    },
+    {
+      "paperId": "optimization-space-learning-a-lightweight-nonitera",
+      "title": "Optimization Space Learning: A Lightweight, Noniterative Technique for Compiler Autotuning",
+      "authors": [
+        {
+          "name": "Tamim Burgstaller"
+        },
+        {
+          "name": "Damian Garber"
+        },
+        {
+          "name": "Viet-Man Le"
+        },
+        {
+          "name": "Alexander Felfernig"
+        }
+      ],
+      "year": 2024,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3646548.3672588",
+      "abstract": "Compilers are highly configurable systems. One can influence the performance of a compiled program by activating and deactivating selected compiler optimizations. However, automatically finding well-performing configurations is a challenging task. We consider expensive iteration, paired with recompilation of the program to optimize, as one of the main shortcomings of state-of-the-art approaches. Therefore, we propose Optimization Space Learning, a lightweight and noniterative technique. It exploits concepts known from configuration space learning and recommender systems to discover well-performing compiler configurations. This reduces the overhead induced by the approach significantly, compared to existing approaches. The process of finding a well-performing configuration is 800k times faster than with the state-of-the-art techniques."
+    },
+    {
+      "paperId": "pragmatic-random-sampling-of-the-linux-kernel-enha",
+      "title": "Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool",
+      "authors": [
+        {
+          "name": "David Fernández-Amorós"
+        },
+        {
+          "name": "R. Heradio"
+        },
+        {
+          "name": "José Miguel Horcas Aguilera"
+        },
+        {
+          "name": "J. Galindo"
+        },
+        {
+          "name": "David Benavides"
+        },
+        {
+          "name": "Lidia Fuentes"
+        }
+      ],
+      "year": 2024,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3646548.3672586",
+      "abstract": "The configuration space of some systems is so large that it cannot be computed. This is the case with the Linux Kernel, which provides almost 19,000 configurable options described across more than 1,600 files in the Kconfig language. As a result, many analyses of the Kernel rely on sampling its configuration space (e.g., debugging compilation errors, predicting configuration performance, finding the configuration that optimizes specific performance metrics, etc.). The Kernel can be sampled pragmatically, with its built-in tool conf, or idealistically, translating the Kconfig files into logic formulas. The pros of the idealistic approach are that it provides statistical guarantees for the sampled configurations, but the cons are that it sets out many challenging problems that have not been solved yet, such as scalability issues. This paper introduces a new version of conf called randconfig+, which incorporates a series of improvements that increase the randomness and correctness of pragmatic sampling and also help validate the Boolean translation required for the idealistic approach. randconfig+ has been tested on 20,000 configurations generated for 10 different Kernel versions from 2003 to the present day. The experimental results show that randconfig+ is compatible with all tested Kernel versions, guarantees the correctness of the generated configurations, and increases conf’s randomness for numeric and string options."
+    },
+    {
+      "paperId": "out-of-the-box-prediction-of-non-functional-varian",
+      "title": "Out-of-the-Box Prediction of Non-Functional Variant Properties Using Automated Machine Learning",
+      "authors": [
+        {
+          "name": "Lukas Güthing"
+        },
+        {
+          "name": "T. Pett"
+        },
+        {
+          "name": "Ina Schaefer"
+        }
+      ],
+      "year": 2024,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3646548.3676546",
+      "abstract": "A configurable system is characterized by the configuration options present or absent in its variants. Selecting and deselecting those configuration options directly influences the functional properties of the system. Apart from functional properties, there are system characteristics that influence the performance (e.g., power demand), safety (e.g., fault probabilities), and security (e.g., susceptibility to attacks) of the system, called Non-Functional Properties (NFPs). Knowledge of NFPs is crucial for evaluating a system’s feasibility, usability, and resource demands. Although variability influences these characteristics, NFPs do not compose linearly for every selected feature. Feature interactions can increase the overall NFP values through (potentially exponential) amplification or decrease them through mitigation effects. In this paper, we propose an automated machine learning (AutoML) approach to predict NFP values for new configurations based on previously measured configuration values. Using AutoML, we leverage the advantages of machine learning for predicting NFPs without having to parameterize and fine-tune machine learning models. This approach and the resulting pipeline aim to reduce the complexity of performance prediction for configurable systems. We test the feasibility of our pipeline in a first evaluation on 4 real-world subject systems and discuss cases where AutoML may improve the prediction of NFPs."
+    },
+    {
+      "paperId": "automated-program-repair-for-variability-bugs-in-s",
+      "title": "Automated program repair for variability bugs in software product line systems",
+      "authors": [
+        {
+          "name": "Thu-Trang Nguyen"
+        },
+        {
+          "name": "Xiaoyi Zhang"
+        },
+        {
+          "name": "Paolo Arcaini"
+        },
+        {
+          "name": "Fuyuki Ishikawa"
+        },
+        {
+          "name": "H. Vo"
+        }
+      ],
+      "year": 2024,
+      "venue": "Journal of Systems and Software",
+      "doi": "10.1016/j.jss.2024.112152",
+      "abstract": null
+    },
+    {
+      "paperId": "embracing-deep-variability-for-reproducibility-and",
+      "title": "Embracing Deep Variability For Reproducibility and Replicability",
+      "authors": [
+        {
+          "name": "Mathieu Acher"
+        },
+        {
+          "name": "Benoît Combemale"
+        },
+        {
+          "name": "Georges Aaron Randrianaina"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2024,
+      "venue": "ACM-REP",
+      "doi": "10.1145/3641525.3663621",
+      "abstract": "Reproducibility (a.k.a., determinism in some cases) constitutes a fundamental aspect in various fields of computer science, such as floating-point computations in numerical analysis and simulation, concurrency models in parallelism, reproducible builds for third parties integration and packaging, and containerization for execution environments. These concepts, while pervasive across diverse concerns, often exhibit intricate inter-dependencies, making it challenging to achieve a comprehensive understanding. In this short and vision paper we delve into the application of software engineering techniques, specifically variability management, to systematically identify and explicit points of variability that may give rise to reproducibility issues (e.g., language, libraries, compiler, virtual machine, OS, environment variables, etc.). The primary objectives are: i) gaining insights into the variability layers and their possible interactions, ii) capturing and documenting configurations for the sake of reproducibility, and iii) exploring diverse configurations to replicate, and hence validate and ensure the robustness of results. By adopting these methodologies, we aim to address the complexities associated with reproducibility and replicability in modern software systems and environments, facilitating a more comprehensive and nuanced perspective on these critical aspects."
+    },
+    {
+      "paperId": "paving-a-path-for-a-combined-family-of-feature-tog",
+      "title": "Paving a Path for a Combined Family of Feature Toggle and Configuration Option Research",
+      "authors": [
+        {
+          "name": "Rezvan Mahdavi-Hezaveh"
+        },
+        {
+          "name": "Sameeha Fatima"
+        },
+        {
+          "name": "Laurie Williams"
+        }
+      ],
+      "year": 2024,
+      "venue": "ACM Transactions on Software Engineering and Methodology",
+      "doi": "10.1145/3672555",
+      "abstract": "Feature toggles and configuration options are techniques to include or exclude functionality in software. The research contributions to these two techniques have most often been focused on either one of them. However, focusing on the similarities of these two techniques and the use of a common terminology may enable a combined family of research on software configuration (a term we use to encompass both techniques) and prevent duplication of effort. The goal of this study is to aid researchers in conducting a family of research on software configuration by extending an existing model of software configuration that provides a common terminology for feature toggles and configuration options in research studies. We started with Siegmund et al.’s Model of Software Configuration (MSC), which was developed based on configuration option-related resources. We extend the MSC by qualitative analysis of feature toggle-related resources. From our analysis, we proposed MSCv2 and evaluated it through its application on publications and an industrial system. Our results indicate researchers studying the same system may provide different definitions of software configuration in publications, similar research questions may be answered repeatedly because of a lack of a clear definition of software configuration, and having an MSC may enable generalized research on this family of research."
+    },
+    {
+      "paperId": "cost-efficient-construction-of-performance-models",
+      "title": "Cost-Efficient Construction of Performance Models",
+      "authors": [
+        {
+          "name": "Larissa Schmid"
+        },
+        {
+          "name": "Timur Sağlam"
+        },
+        {
+          "name": "Michael Selzer"
+        },
+        {
+          "name": "A. Koziolek"
+        }
+      ],
+      "year": 2024,
+      "venue": "Proceedings of the 4th Workshop on Performance EngineeRing, Modelling, Analysis, and VisualizatiOn STrategy",
+      "doi": "10.1145/3660317.3660322",
+      "abstract": "Modern high-performance applications are highly-configurable systems that provide hundreds of configuration options. Performance models offer insights into the performance of these applications and help users understand the impact of these options. Yet, crafting models for such applications proves costly due to the many configuration options and their unknown performance impacts that need to be modeled. However, some options are performance-irrelevant, and removing them can reduce construction costs without compromising accuracy. This paper explores an approach to automatically identify performance-irrelevant configuration options empirically. By leveraging established performance modeling methods, we devise cost-efficient preliminary prediction models that rely on fewer samples and analyze them to identify such options. We evaluate our approach using a real-world HPC application to demonstrate our method's effectiveness in recognizing performance-irrelevant options and the potential to save costs for performance modeling."
+    },
+    {
+      "paperId": "effect-of-feature-subset-selection-on-samplings-fo",
+      "title": "Effect of Feature Subset Selection on Samplings for Performance Prediction of Configurable Systems",
+      "authors": [
+        {
+          "name": "João Marcello Bessa Rodrigues"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        }
+      ],
+      "year": 2024,
+      "venue": "Brazilian Symposium on Information Systems",
+      "doi": "10.5753/sbsi_estendido.2024.238518",
+      "abstract": "Organizations require personalized solutions to effectively address users’ needs, and stay competitive in the market. In this context, configurable systems offer numerous configuration options to meet user-specific functional and non-functional requirements. However, although configurability makes these systems flexible and versatile, a simple change can result in serious problems in different software variants, such as performance bottlenecks and security issues. Thus, automated approaches based on machine learning have been developed to facilitate configuration management. Our work aims to expand upon previous findings in this field by assessing their applicability to other scenarios. By introducing more efficient practices, we can contribute to cost reduction, higher software quality, and quicker time-to-market. This is particularly relevant in a global context where software plays a crucial role."
+    },
+    {
+      "paperId": "deep-configuration-performance-learning-a-systemat",
+      "title": "Deep Configuration Performance Learning: A Systematic Survey and Taxonomy",
+      "authors": [
+        {
+          "name": "Jingzhi Gong"
+        },
+        {
+          "name": "Tao Chen"
+        }
+      ],
+      "year": 2024,
+      "venue": "ACM Transactions on Software Engineering and Methodology",
+      "doi": "10.48550/arXiv.2403.03322",
+      "abstract": "Performance is arguably the most crucial attribute that reflects the quality of a configurable software system. However, given the increasing scale and complexity of modern software, modeling and predicting how various configurations can impact performance becomes one of the major challenges in software maintenance. As such, performance is often modeled without having a thorough knowledge of the software system, but relying mainly on data, which fits precisely with the purpose of deep learning. In this article, we conduct a comprehensive review exclusively on the topic of deep learning for performance learning of configurable software, covering 1,206 searched papers spanning six indexing services, based on which 99 primary papers were extracted and analyzed. Our results outline key statistics, taxonomy, strengths, weaknesses, and optimal usage scenarios for techniques related to the preparation of configuration data, the construction of deep learning performance models, the evaluation of these models, and their utilization in various software configuration-related tasks. We also identify the good practices and potentially problematic phenomena from the studies surveyed, together with a comprehensive summary of actionable suggestions and insights into future opportunities within the field. To promote open science, all the raw results of this survey can be accessed at our repository: https://github.com/ideas-labo/DCPL-SLR."
+    },
+    {
+      "paperId": "a-demonstration-of-end-user-code-customization-usi",
+      "title": "A Demonstration of End-User Code Customization Using Generative AI",
+      "authors": [
+        {
+          "name": "Mathieu Acher"
+        }
+      ],
+      "year": 2024,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3634713.3634732",
+      "abstract": "Producing a variant of code is highly challenging, particularly for individuals unfamiliar with programming. This demonstration introduces a novel use of generative AI to aid end-users in customizing code. We first describe how generative AI can be used to customize code through prompts and instructions, and further demonstrate its potential in building end-user tools for configuring code. We showcase how to transform an undocumented, technical, low-level TikZ into a user-friendly, configurable, Web-based customization tool written in Python, HTML, CSS, and JavaScript and itself configurable. We discuss how generative AI can support this transformation process and traditional variability engineering tasks, such as identification and implementation of features, synthesis of a template code generator, and development of end-user configurators. We believe it is a first step towards democratizing variability programming, opening a path for end-users to adapt code to their needs."
+    },
+    {
+      "paperId": "global-software-development-agile-planning-model-c",
+      "title": "Global software development agile planning model: challenges and current trends",
+      "authors": [
+        {
+          "name": "Hajar Lamsellak"
+        },
+        {
+          "name": "Mohammed Ghaouth Belkasmi"
+        }
+      ],
+      "year": 2023,
+      "venue": "Indonesian Journal of Electrical Engineering and Computer Science",
+      "doi": "10.11591/ijeecs.v32.i3.pp1774-1784",
+      "abstract": "Agile planning offers a number of benefits that make the customers active members of the team throughout the project. In global software development (GSD), geographic separations demand special attention to harness these benefits. Our paper conducted a systematic mapping study (SMS) to analyze GSD-specific agile planning challenges followed by a systematic literature review (SLR) for efficient solutions. These studies led to a model for agile planning in global software development supporting GSD practitioners during this process."
+    },
+    {
+      "paperId": "learning-input-aware-performance-models-of-configu",
+      "title": "Learning input-aware performance models of configurable systems: An empirical evaluation",
+      "authors": [
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "Helge Spieker"
+        },
+        {
+          "name": "Arnaud Gotlieb"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Paul Temple"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2023,
+      "venue": "Journal of Systems and Software",
+      "doi": "10.1016/j.jss.2023.111883",
+      "abstract": null
+    },
+    {
+      "paperId": "unleashing-the-power-of-implicit-feedback-in-softw",
+      "title": "Unleashing the Power of Implicit Feedback in Software Product Lines: Benefits Ahead",
+      "authors": [
+        {
+          "name": "Raul Medeiros"
+        },
+        {
+          "name": "Oscar Díaz"
+        },
+        {
+          "name": "David Benavides"
+        }
+      ],
+      "year": 2023,
+      "venue": "International Conference on Generative Programming: Concepts and Experiences",
+      "doi": "10.1145/3624007.3624058",
+      "abstract": "Software Product Lines (SPLs) facilitate the development of a complete range of software products through systematic reuse. Reuse involves not only code but also the transfer of knowledge gained from one product to others within the SPL. This transfer includes bug fixing, which, when encountered in one product, affects the entire SPL portfolio. Similarly, feedback obtained from the usage of a single product can inform beyond that product to impact the entire SPL portfolio. Specifically, implicit feedback refers to the automated collection of data on software usage or execution, which allows for the inference of customer preferences and trends. While implicit feedback is commonly used in single-product development, its application in SPLs has not received the same level of attention. This paper promotes the investigation of implicit feedback in SPLs by identifying a set of SPL activities that can benefit the most from it. We validate this usefulness with practitioners using a questionnaire-based approach (n=8). The results provide positive insights into the advantages and practical implications of adopting implicit feedback at the SPL level."
+    },
+    {
+      "paperId": "solving-multi-configuration-problems-a-performance",
+      "title": "Solving Multi-Configuration Problems: A Performance Analysis with Choco Solver",
+      "authors": [
+        {
+          "name": "Benjamin Ritz"
+        },
+        {
+          "name": "A. Felfernig"
+        },
+        {
+          "name": "Viet-Man Le"
+        },
+        {
+          "name": "Sebastian Lubos"
+        }
+      ],
+      "year": 2023,
+      "venue": "ConfWS",
+      "doi": "10.48550/arXiv.2310.02658",
+      "abstract": "In many scenarios, configurators support the configuration of a solution that satisfies the preferences of a single user. The concept of \\emph{multi-configuration} is based on the idea of configuring a set of configurations. Such a functionality is relevant in scenarios such as the configuration of personalized exams, the configuration of project teams, and the configuration of different trips for individual members of a tourist group (e.g., when visiting a specific city). In this paper, we exemplify the application of multi-configuration for generating individualized exams. We also provide a constraint solver performance analysis which helps to gain some insights into corresponding performance issues."
+    },
+    {
+      "paperId": "software-reconfiguration-in-robotics",
+      "title": "Software Reconfiguration in Robotics",
+      "authors": [
+        {
+          "name": "Sven Peldszus"
+        },
+        {
+          "name": "Davide Brugali"
+        },
+        {
+          "name": "Daniel Struber"
+        },
+        {
+          "name": "Patrizio Pelliccione"
+        },
+        {
+          "name": "T. Berger"
+        }
+      ],
+      "year": 2023,
+      "venue": "Software Engineering",
+      "doi": "10.1007/s10664-024-10596-9",
+      "abstract": "\n Robots often need to be reconfigurable—to customize, calibrate, or optimize robots operating in varying environments with different hardware. A particular challenge in robotics is the automated and dynamic reconfiguration to load and unload software components, as well as parameterizing them. Over the last decades, a large variety of software reconfiguration techniques has been presented in the literature, many specifically for robotics systems. Also many robotics frameworks support reconfiguration. Unfortunately, there is a lack of empirical data on the actual use of reconfiguration techniques in real robotics projects and on their realization in robotics frameworks. To advance reconfiguration techniques and support their adoption, we need to improve our empirical understanding of them in practice. We present a study of automated reconfiguration at runtime in the robotics domain. We determine the state-of-the art by reviewing 78 relevant publications on reconfiguration. We determine the state-of-practice by analyzing how four major robotics frameworks support reconfiguration, and how reconfiguration is realized in 48 robotics (sub-)systems. We contribute a detailed analysis of the design space of reconfiguration techniques. We identify trends and research gaps. Our results show a significant discrepancy between the state-of-the-art and the state-of-practice. While the scientific community focuses on complex structural reconfiguration, only parameter reconfiguration is widely used in practice. Our results support practitioners to realize reconfiguration in robotics systems, as well as they support researchers and tool builders to create more effective reconfiguration techniques that are adopted in practice."
+    },
+    {
+      "paperId": "comsa-a-modeling-driven-sampling-approach-for-conf",
+      "title": "CoMSA: A Modeling-Driven Sampling Approach for Configuration Performance Testing",
+      "authors": [
+        {
+          "name": "Yuanjie Xia"
+        },
+        {
+          "name": "Zishuo Ding"
+        },
+        {
+          "name": "Weiyi Shang"
+        }
+      ],
+      "year": 2023,
+      "venue": "International Conference on Automated Software Engineering",
+      "doi": "10.1109/ASE56229.2023.00091",
+      "abstract": "Highly configurable systems enable customers to flexibly configure the systems in diverse deployment environments. The flexibility of configurations also poses challenges for performance testing. On one hand, there exist a massive number of possible configurations; while on the other hand, the time and resources are limited for performance testing, which is already a costly process during software development. Modeling the performance of configurations is one of the solutions to reduce the cost of configuration performance testing. Although prior research proposes various modeling and sampling techniques to build configuration performance models, the sampling approaches used in the model typically do not consider the accuracy of the performance models, leading to potential sub-optimal performance modeling results in practice. In this paper, we present a modeling-driven sampling approach (CoMSA) to improve the performance modeling of highly configurable systems. The intuition of CoMSA is to select samples based on their uncertainties to the performance models. In other words, the configurations that have the more uncertain performance prediction results by the performance models are more likely to be selected as further training samples to improve the model. CoMSA is designed by considering both scenarios where 1) the software projects do not have historical performance testing results (cold start) and 2) there exist historical performance testing results (warm start). We evaluate the performance of our approach in four subjects, namely LRZIP, LLVM, x264, and SQLite. Through the evaluation result, we can conclude that our sampling approaches could highly enhance the accuracy of the prediction models and the efficiency of configuration performance testing compared to other baseline sampling approaches."
+    },
+    {
+      "paperId": "on-programming-variability-with-large-language-mod",
+      "title": "On Programming Variability with Large Language Model-based Assistant",
+      "authors": [
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "J. Duarte"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2023,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3579027.3608972",
+      "abstract": "Programming variability is central to the design and implementation of software systems that can adapt to a variety of contexts and requirements, providing increased flexibility and customization. Managing the complexity that arises from having multiple features, variations, and possible configurations is known to be highly challenging for software developers. In this paper, we explore how large language model (LLM)-based assistants can support the programming of variability.We report on new approaches made possible with LLM-based assistants, like: features and variations can be implemented as prompts; augmentation of variability out of LLM-based domain knowledge; seamless implementation of variability in different kinds of artefacts, programming languages, and frameworks, at different binding times (compile-time or run-time). We are sharing our data (prompts, sessions, generated code, etc.) to support the assessment of the effectiveness and robustness of LLMs for variability-related tasks."
+    },
+    {
+      "paperId": "generative-ai-for-reengineering-variants-into-soft",
+      "title": "Generative AI for Reengineering Variants into Software Product Lines: An Experience Report",
+      "authors": [
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Jabier Martinez"
+        }
+      ],
+      "year": 2023,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3579028.3609016",
+      "abstract": "The migration and reengineering of existing variants into a software product line (SPL) is an error-prone and time-consuming activity. Many extractive approaches have been proposed, spanning different activities from feature identification and naming to the synthesis of reusable artefacts. In this paper, we explore how large language model (LLM)-based assistants can support domain analysts and developers. We revisit four illustrative cases of the literature where the challenge is to migrate variants written in different formalism (UML class diagrams, Java, GraphML, statecharts). We systematically report on our experience with ChatGPT-4, describing our strategy to prompt LLMs and documenting positive aspects but also failures. We compare the use of LLMs with state-of-the-art approach, BUT4Reuse. While LLMs offer potential in assisting domain analysts and developers in transitioning software variants into SPLs, their intrinsic stochastic nature and restricted ability to manage large variants or complex structures necessitate a semiautomatic approach, complete with careful review, to counteract inaccuracies."
+    },
+    {
+      "paperId": "true-variability-shining-through-taxonomy-mining",
+      "title": "True Variability Shining Through Taxonomy Mining",
+      "authors": [
+        {
+          "name": "C. König"
+        },
+        {
+          "name": "Kamil Rosiak"
+        },
+        {
+          "name": "L. Cleophas"
+        },
+        {
+          "name": "Ina Schaefer"
+        }
+      ],
+      "year": 2023,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3579027.3608989",
+      "abstract": "Software variants of a Software Product Line (SPL) consist of a set of artifacts specified by features. Variability models document the valid relationships between features and their mapping to artifacts. However, research has shown inconsistencies between the variability of variants in features and artifacts, with negative effects on system safety and development effort. To analyze this mismatch in variability, the causal relationships between features, artifacts, and variants must be uncovered, which has only been addressed to a limited extent. In this paper, we propose taxonomy graphs as novel variability models that reflect the composition of variants from artifacts and features, making mismatches in variability explicit. Our evaluation with two SPL case studies demonstrates the usefulness of our variability model and shows that mismatches in variability can vary significantly in detail and severity."
+    },
+    {
+      "paperId": "finding-near-optimal-configurations-in-colossal-sp",
+      "title": "Finding Near-optimal Configurations in Colossal Spaces with Statistical Guarantees",
+      "authors": [
+        {
+          "name": "Jeho Oh"
+        },
+        {
+          "name": "D. Batory"
+        },
+        {
+          "name": "R. Heradio"
+        }
+      ],
+      "year": 2023,
+      "venue": "ACM Transactions on Software Engineering and Methodology",
+      "doi": "10.1145/3611663",
+      "abstract": "A Software Product Line (SPL) is a family of similar programs. Each program is defined by a unique set of features, called a configuration, that satisfies all feature constraints. “What configuration achieves the best performance for a given workload?” is the SPLOptimization (SPLO) challenge. SPLO is daunting: just 80 unconstrained features yield 1024 unique configurations, which equals the estimated number of stars in the universe. We explain (a) how uniform random sampling and random search algorithms solve SPLO more efficiently and accurately than current machine-learned performance models and (b) how to compute statistical guarantees on the quality of a returned configuration; i.e., it is within x% of optimal with y% confidence."
+    },
+    {
+      "paperId": "care-finding-root-causes-of-configuration-issues-i",
+      "title": "CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots",
+      "authors": [
+        {
+          "name": "Md. Abir Hossen"
+        },
+        {
+          "name": "Sonam Kharade"
+        },
+        {
+          "name": "B. Schmerl"
+        },
+        {
+          "name": "Javier C'amara"
+        },
+        {
+          "name": "Jason M. O'Kane"
+        },
+        {
+          "name": "E. Czaplinski"
+        },
+        {
+          "name": "K. Dzurilla"
+        },
+        {
+          "name": "D. Garlan"
+        },
+        {
+          "name": "Pooyan Jamshidi"
+        }
+      ],
+      "year": 2023,
+      "venue": "IEEE Robotics and Automation Letters",
+      "doi": "10.1109/LRA.2023.3280810",
+      "abstract": "Robotic systems have subsystems with a combinatorially large configuration space and hundreds or thousands of possible software and hardware configuration options interacting non-trivially. The configurable parameters are set to target specific objectives, but they can cause functional faults when incorrectly configured. Finding the root cause of such faults is challenging due to the exponentially large configuration space and the dependencies between the robot's configuration settings and performance. This paper proposes C<sc>a</sc>RE—a method for diagnosing the root cause of functional faults through the lens of causality. C<sc>a</sc>RE abstracts the causal relationships between various configuration options and the robot's performance objectives by learning a causal structure and estimating the causal effects of options on robot performance indicators. We demonstrate C<sc>a</sc>RE’s efficacy by finding the root cause of the observed functional faults and validating the diagnosed root cause by conducting experiments in both physical robots (<italic>Husky</italic> and <italic>Turtlebot 3</italic>) and in simulation (<italic>Gazebo</italic>). Furthermore, we demonstrate that the causal models learned from robots in simulation (e.g., <italic>Husky</italic> in <italic>Gazebo</italic>) are transferable to physical robots across different platforms (e.g., <italic>Husky</italic> and <italic>Turtlebot 3</italic>)."
+    },
+    {
+      "paperId": "focloud-feature-model-guided-performance-predictio",
+      "title": "FOCloud: Feature Model Guided Performance Prediction and Explanation for Deployment Configurable Cloud Applications",
+      "authors": [
+        {
+          "name": "Indika Kumara"
+        },
+        {
+          "name": "Mohamed Hameez Ariz"
+        },
+        {
+          "name": "Mohan Baruwal Chhetri"
+        },
+        {
+          "name": "Majid Mohammadi"
+        },
+        {
+          "name": "Willem-jan Van Den Heuvel"
+        },
+        {
+          "name": "D. Tamburri"
+        }
+      ],
+      "year": 2023,
+      "venue": "IEEE Transactions on Services Computing",
+      "doi": "10.1109/TSC.2022.3142853",
+      "abstract": "The increasing heterogeneity of the VM offerings on public IaaS clouds gives rise to a very large number of deployment options for constructing distributed, multi-component cloud applications. However, selecting an appropriate deployment variant, i.e., a valid combination of deployment options, to meet required performance levels is non-trivial. The combinatorial explosion of the deployment space makes it infeasible to measure the performance of all deployment variants to build a comprehensive empirical performance model. To address this problem, we propose Feature-Oriented Cloud (FOCloud), a performance engineering approach for deployment configurable cloud applications. FOCloud (i) uses feature modeling to structure and constrain the valid deployment space by modeling the commonalities and variations in the different deployment options and their inter-dependencies, (ii) uses sampling and machine learning to incrementally and cost-effectively build a performance prediction model whose input variables are the deployment options, and the output variable is the performance of the resulting deployment variant, and (iii) uses Explainable AI techniques to provide explanations for the prediction outcomes of valid deployment variants in terms of the deployment options. We demonstrate the practicality and feasibility of FOCloud by applying it to an extension of the RuBiS benchmark application deployed on Google Cloud."
+    },
+    {
+      "paperId": "machine-learning-for-software-engineering-a-tertia",
+      "title": "Machine Learning for Software Engineering: A Tertiary Study",
+      "authors": [
+        {
+          "name": "Zoe Kotti"
+        },
+        {
+          "name": "R. Galanopoulou"
+        },
+        {
+          "name": "D. Spinellis"
+        }
+      ],
+      "year": 2022,
+      "venue": "ACM Computing Surveys",
+      "doi": "10.1145/3572905",
+      "abstract": "Machine learning (ML) techniques increase the effectiveness of software engineering (SE) lifecycle activities. We systematically collected, quality-assessed, summarized, and categorized 83 reviews in ML for SE published between 2009 and 2022, covering 6,117 primary studies. The SE areas most tackled with ML are software quality and testing, while human-centered areas appear more challenging for ML. We propose a number of ML for SE research challenges and actions, including conducting further empirical validation and industrial studies on ML, reconsidering deficient SE methods, documenting and automating data collection and pipeline processes, reexamining how industrial practitioners distribute their proprietary data, and implementing incremental ML approaches."
+    },
+    {
+      "paperId": "specialization-of-run-time-configuration-space-at-",
+      "title": "Specialization of Run-time Configuration Space at Compile-time: An Exploratory Study",
+      "authors": [
+        {
+          "name": "Xhevahire Tërnava"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "B. Combemale"
+        }
+      ],
+      "year": 2022,
+      "venue": "ACM Symposium on Applied Computing",
+      "doi": "10.1145/3555776.3578613",
+      "abstract": "Numerous software systems are highly configurable through runtime options (e.g., command-line parameters). Users can tune some of the options to meet various functional and non-functional requirements such as footprint, security, or execution time. However, some options are never set for a given system instance, and their values remain the same whatever the use cases of the system. Herein, we design a controlled experiment in which the system's run-time configuration space can be specialized at compile-time and combinations of options can be removed on demand. We perform an in-depth study of the well-known x264 video encoder and quantify the effects of its specialization to its non-functional properties, namely on binary size, attack surface, and performance while ensuring its validity. Our exploratory study suggests that the configurable specialization of a system has statistically significant benefits on most of its analysed non-functional properties, which benefits depend on the number of the debloated options. While our empirical results and insights show the importance of removing code related to unused run-time options to improve software systems, an open challenge is to further automate the specialization process."
+    },
+    {
+      "paperId": "automating-feature-model-maintainability-evaluatio",
+      "title": "Automating Feature Model maintainability evaluation using machine learning techniques",
+      "authors": [
+        {
+          "name": "Publio Silva"
+        },
+        {
+          "name": "Carla Bezerra"
+        },
+        {
+          "name": "I. Machado"
+        }
+      ],
+      "year": 2022,
+      "venue": "Journal of Systems and Software",
+      "doi": "10.1016/j.jss.2022.111539",
+      "abstract": null
+    },
+    {
+      "paperId": "family-based-fingerprint-analysis-a-position-paper",
+      "title": "Family-Based Fingerprint Analysis: A Position Paper",
+      "authors": [
+        {
+          "name": "C. Damasceno"
+        },
+        {
+          "name": "D. Strüber"
+        }
+      ],
+      "year": 2022,
+      "venue": "A Journey from Process Algebra via Timed Automata to Model Learning",
+      "doi": "10.1007/978-3-031-15629-8_8",
+      "abstract": "Thousands of vulnerabilities are reported on a monthly basis to security repositories, such as the National Vulnerability Database. Among these vulnerabilities, software misconfiguration is one of the top 10 security risks for web applications. With this large influx of vulnerability reports, software fingerprinting has become a highly desired capability to discover distinctive and efficient signatures and recognize reportedly vulnerable software implementations. Due to the exponential worst-case complexity of fingerprint matching, designing more efficient methods for fingerprinting becomes highly desirable, especially for variability-intensive systems where optional features add another exponential factor to its analysis. This position paper presents our vision of a framework that lifts model learning and family-based analysis principles to software fingerprinting. In this framework, we propose unifying databases of signatures into a featured finite state machine and using presence conditions to specify whether and in which circumstances a given input-output trace is observed. We believe feature-based signatures can aid performance improvements by reducing the size of fingerprints under analysis."
+    },
+    {
+      "paperId": "automated-identification-of-security-relevant-conf",
+      "title": "Automated Identification of Security-Relevant Configuration Settings Using NLP",
+      "authors": [
+        {
+          "name": "Patrick Stöckle"
+        },
+        {
+          "name": "Theresa Wasserer"
+        },
+        {
+          "name": "Bernd Grobauer"
+        },
+        {
+          "name": "A. Pretschner"
+        }
+      ],
+      "year": 2022,
+      "venue": "International Conference on Automated Software Engineering",
+      "doi": "10.1145/3551349.3559499",
+      "abstract": "To secure computer infrastructure, we need to configure all security-relevant settings. We need security experts to identify security-relevant settings, but this process is time-consuming and expensive. Our proposed solution uses state-of-the-art natural language processing to classify settings as security-relevant based on their description. Our evaluation shows that our trained classifiers do not perform well enough to replace the human security experts but can help them classify the settings. By publishing our labeled data sets and the code of our trained model, we want to help security experts analyze configuration settings and enable further research in this area."
+    },
+    {
+      "paperId": "defining-categorical-reasoning-of-numerical-featur",
+      "title": "Defining categorical reasoning of numerical feature models with feature-wise and variant-wise quality attributes",
+      "authors": [
+        {
+          "name": "Daniel-Jesus Munoz"
+        },
+        {
+          "name": "M. Pinto"
+        },
+        {
+          "name": "D. Gurov"
+        },
+        {
+          "name": "L. Fuentes"
+        }
+      ],
+      "year": 2022,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3503229.3547057",
+      "abstract": "Automatic analysis of variability is an important stage of Software Product Line (SPL) engineering. Incorporating quality information into this stage poses a significant challenge. However, quality-aware automated analysis tools are rare, mainly because in existing solutions variability and quality information are not unified under the same model. In this paper, we make use of the Quality Variability Model (QVM), based on Category Theory (CT), to redefine reasoning operations. We start defining and composing the six most common operations in SPL, but now as quality-based queries, which tend to be unavailable in other approaches. Consequently, QVM supports interactions between variant-wise and feature-wise quality attributes. As a proof of concept, we present, implement and execute the operations as lambda reasoning for CQL IDE - the state-of-the-art CT tool."
+    },
+    {
+      "paperId": "feature-subset-selection-for-learning-huge-configu",
+      "title": "Feature subset selection for learning huge configuration spaces: the case of linux kernel size",
+      "authors": [
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Hugo Martin"
+        },
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        },
+        {
+          "name": "D. Khelladi"
+        },
+        {
+          "name": "Olivier Barais"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        }
+      ],
+      "year": 2022,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3546932.3546997",
+      "abstract": "Linux kernels are used in a wide variety of appliances, many of them having strong requirements on the kernel size due to constraints such as limited memory or instant boot. With more than nine thousands of configuration options to choose from, developers and users of Linux actually spend significant effort to document, understand, and eventually tune (combinations of) options for meeting a kernel size. In this paper, we describe a large-scale endeavour automating this task and predicting a given Linux kernel binary size out of unmeasured configurations. We first experiment that state-of-the-art solutions specifically made for configurable systems such as performance-influence models cannot cope with that number of options, suggesting that software product line techniques may need to be adapted to such huge configuration spaces. We then show that tree-based feature selection can learn a model achieving low prediction errors over a reduced set of options. The resulting model, trained on 95 854 kernel configurations, is fast to compute, simple to interpret and even outperforms the accuracy of learning without feature selection."
+    },
+    {
+      "paperId": "acapulco-an-extensible-tool-for-identifying-optima",
+      "title": "Acapulco: an extensible tool for identifying optimal and consistent feature model configurations",
+      "authors": [
+        {
+          "name": "Jabier Martinez"
+        },
+        {
+          "name": "D. Strüber"
+        },
+        {
+          "name": "J. Horcas"
+        },
+        {
+          "name": "Alexandru Burdusel"
+        },
+        {
+          "name": "S. Zschaler"
+        }
+      ],
+      "year": 2022,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3503229.3547067",
+      "abstract": "Configuring feature-oriented variability-rich systems is complex because of the large number of features and, potentially, the lack of visibility of the implications on quality attributes when selecting certain features. We present Acapulco as an alternative to the existing tools for automating the configuration process with a focus on mono- and multi-criteria optimization. The soundness of the tool has been proven in a previous publication comparing it to SATIBEA and MODAGAME. The main advantage was obtained through consistency-preserving configuration operators (CPCOs) that guarantee the validity of the configurations during the IBEA genetic algorithm evolution process. We present a new version of Acapulco built on top of FeatureIDE, extensible through the easy integration of objective functions, providing pre-defined reusable objectives, and being able to handle complex feature model constraints."
+    },
+    {
+      "paperId": "kconfig-webconf-retrofitting-performance-models-on",
+      "title": "kconfig-webconf: retrofitting performance models onto kconfig-based software product lines",
+      "authors": [
+        {
+          "name": "B. Friesel"
+        },
+        {
+          "name": "Kathrin Elmenhorst"
+        },
+        {
+          "name": "L. Kaiser"
+        },
+        {
+          "name": "Michael Müller"
+        },
+        {
+          "name": "O. Spinczyk"
+        }
+      ],
+      "year": 2022,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3503229.3547026",
+      "abstract": "Despite decades of research and clear advantages, performance-aware configuration of real-world software product lines is still an exception rather than the norm. One reason for this may be tooling: configuration software with support for non-functional property models is generally not compatible with the configuration and build process of existing product lines. Specifically, the Kconfig language is popular in open source software projects, but neither language nor configuration frontends support performance models. To address this, we present kconfig-webconf: a performance-aware, Kconfig-compatible software product line configuration frontend. It is part of a toolchain that can automatically generate performance models with a minimal amount of changes to a software product line's build process. With such a performance model, kconfig-webconf can serve as a performance-aware drop-in replacement for existing Kconfig frontends. We evaluate its usage in five examples, including the busybox multi-call binary and the resKIL agricultural AI product line."
+    },
+    {
+      "paperId": "adaptive-behavioral-model-learning-for-software-pr",
+      "title": "Adaptive behavioral model learning for software product lines",
+      "authors": [
+        {
+          "name": "Shaghayegh Tavassoli"
+        },
+        {
+          "name": "C. Damasceno"
+        },
+        {
+          "name": "R. Khosravi"
+        },
+        {
+          "name": "M. Mousavi"
+        }
+      ],
+      "year": 2022,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3546932.3546991",
+      "abstract": "Behavioral models enable the analysis of the functionality of software product lines (SPL), e.g., model checking and model-based testing. Model learning aims to construct behavioral models. Due to the commonalities among the products of an SPL, it is possible to reuse the previously-learned models during the model learning process. In this paper, an adaptive approach, called PL*, for learning the product models of an SPL is presented based on the well-known L* algorithm. In this method, after learning each product, the sequences in the final observation table are stored in a repository which is used to initialize the observation table of the remaining products. The proposed algorithm is evaluated on two open-source SPLs and the learning cost is measured in terms of the number of rounds, resets, and input symbols. The results show that for complex SPLs, the total learning cost of PL* is significantly lower than that of the non-adaptive method in terms of all three metrics. Furthermore, it is observed that the order of learning products affects the efficiency of PL*. We introduce a heuristic to determine an ordering which reduces the total cost of adaptive learning."
+    },
+    {
+      "paperId": "black-box-models-for-non-functional-properties-of-",
+      "title": "Black-Box Models for Non-Functional Properties of AI Software Systems",
+      "authors": [
+        {
+          "name": "B. Friesel"
+        },
+        {
+          "name": "O. Spinczyk"
+        }
+      ],
+      "year": 2022,
+      "venue": "2022 IEEE/ACM 1st International Conference on AI Engineering – Software Engineering for AI (CAIN)",
+      "doi": "10.1145/3522664.3528602",
+      "abstract": "Non-functional properties (NFPs) such as latency, memory requirements, or hardware cost are an important characteristic of AI software systems, especially in the domain of resource-constrained embedded devices. Embedded AI products require sufficient resources for satisfactory latency and accuracy, but should also be cost-efficient and therefore not use more powerful hardware than strictly necessary. Traditionally, modeling and optimization efforts focus on the AI architecture, utilizing methods such as neural architecture search (NAS). However, before developers can start optimizing, they need to know which architectures are suitable candidates for their use case. To this end, architectures must be viewed in context: model post-processing (e.g. quantization), hardware platform, and run-time configuration such as batching all have significant effects on NFPs and therefore on AI architecture performance. Moreover, scalar parameters such as batch size cannot be benchmarked exhaustively. We argue that it is worthwhile to address this issue by means of black-box models before deciding on AI architectures for optimization and hardware/software platforms for inference. To support our claim, we present an AI product line with variable hardware and software components, perform benchmarks, and present notable results. Additionally, we evaluate both compactness and generalization capabilities of regression tree-based modeling approaches from the machine learning and product line engineering communities. We find that linear model trees perform best: they can capture NFPs of known AI configurations with a mean error of up to 13 %, and can predict unseen configurations with a mean error of 10 to 26 %. We find linear model trees to be more compact and interpretable than other tree-based approaches. CCS CONCEPTS • Computing methodologies → Modeling methodologies; Machine learning; • Software and its engineering → Extra-functional properties."
+    },
+    {
+      "paperId": "towards-incremental-build-of-software-configuratio",
+      "title": "Towards Incremental Build of Software Configurations",
+      "authors": [
+        {
+          "name": "Georges Aaron Randrianaina"
+        },
+        {
+          "name": "D. Khelladi"
+        },
+        {
+          "name": "Olivier Zendra"
+        },
+        {
+          "name": "M. Acher"
+        }
+      ],
+      "year": 2022,
+      "venue": "2022 IEEE/ACM 44th International Conference on Software Engineering: New Ideas and Emerging Results (ICSE-NIER)",
+      "doi": "10.1145/3510455.3512792",
+      "abstract": "Building software is a crucial task to compile, test, and deploy software systems while continuously ensuring quality. As software is more and more configurable, building multiple configurations is a pressing need, yet, costly and challenging to instrument. The common practice is to independently build (a.k.a., clean build) a software for a subset of configurations. While incremental build has been considered for software evolution and relatively small modifications of the source code, it has surprisingly not been considered for software configurations. In this vision paper, we formulate the hypothesis that incremental build can reduce the cost of exploring the configuration space of software systems. We detail how we apply incremental build for two real-world application scenarios and conduct a preliminary evaluation on two case studies, namely x264 and Linux Kernel. For x264, we found that one can incrementally build configurations in an order such that overall build time is reduced. Nevertheless, we could not find any optimal order with the Linux Kernel, due to a high distance between random configurations. Therefore, we show it is possible to control the process of generating configurations: we could reuse commonality and gain up to 66% of build time compared to only clean builds.CCS CONCEPTS • Software and its engineering $\\rightarrow$ Software configuration management and version control systems."
+    },
+    {
+      "paperId": "regression-model-trees-compact-energy-models-for-c",
+      "title": "Regression Model Trees: Compact Energy Models for Complex IoT Devices",
+      "authors": [
+        {
+          "name": "Daniel Friesel"
+        },
+        {
+          "name": "O. Spinczyk"
+        }
+      ],
+      "year": 2022,
+      "venue": "2022 Workshop on Benchmarking Cyber-Physical Systems and Internet of Things (CPS-IoTBench)",
+      "doi": "10.1109/CPS-IoTBench56135.2022.00007",
+      "abstract": null
+    },
+    {
+      "paperId": "code-reviewer-recommendation-in-tencent-practice-c",
+      "title": "Code Reviewer Recommendation in Tencent: Practice, Challenge, and Direction*",
+      "authors": [
+        {
+          "name": "Georges Aaron Randrianaina"
+        },
+        {
+          "name": "Xhevahire Tërnava"
+        },
+        {
+          "name": "D. Khelladi"
+        },
+        {
+          "name": "Mathieu Acher"
+        }
+      ],
+      "year": 2022,
+      "venue": "2022 IEEE/ACM 44th International Conference on Software Engineering: Software Engineering in Practice (ICSE-SEIP)",
+      "doi": "10.1145/3510457.3513035",
+      "abstract": "Code review is essential for assuring system quality in software engineering. Over decades in practice, code review has evolved to be a lightweight tool-based process focusing on code change: the smallest unit of the development cycle, and we refer to it as Modern Code Review (MCR). MCR involves code contributors committing code changes and code reviewers reviewing the assigned code changes. Such a reviewer assigning process is challenged by efficiently finding appropriate reviewers. Recent studies propose automated code reviewer recommendation (CRR) approaches to resolve such challenges. These approaches are often evaluated on open-source projects and obtain promising performance. However, the code reviewer recommendation systems are not widely used on proprietary projects, and most current reviewer selecting practice is still manual or, at best, semi-manual. No previous work systematically evaluated these approaches’ effectiveness and compared each other on proprietary projects in practice. In this paper, we performed a quantitative analysis of typical recommendation approaches on proprietary projects in Tencent. The results show an imperfect performance of these approaches on proprietary projects and reveal practical challenges like the “cold start problem”. To better understand practical challenges, we interviewed practitioners about the expectations of applying reviewer recommendations to a production environment. The interview involves the current systems’ limitations, expected application scenario, and information requirements. Finally, we discuss the implications and the direction of practical code reviewer recommendation tools."
+    },
+    {
+      "paperId": "were-not-gonna-break-it-consistency-preserving-ope",
+      "title": "We’re Not Gonna Break It! Consistency-Preserving Operators for Efficient Product Line Configuration",
+      "authors": [
+        {
+          "name": "J. Horcas"
+        },
+        {
+          "name": "D. Strüber"
+        },
+        {
+          "name": "Alexandru Burdusel"
+        },
+        {
+          "name": "Jabier Martinez"
+        },
+        {
+          "name": "S. Zschaler"
+        }
+      ],
+      "year": 2022,
+      "venue": "IEEE Transactions on Software Engineering",
+      "doi": "10.1109/TSE.2022.3171404",
+      "abstract": "When configuring a software product line, finding a good trade-off between multiple orthogonal quality concerns is a challenging multi-objective optimisation problem. State-of-the-art solutions based on search-based techniques create invalid configurations in intermediate steps, requiring additional repair actions that reduce the efficiency of the search. In this work, we introduce consistency-preserving configuration operators (CPCOs)—genetic operators that maintain valid configurations throughout the entire search. CPCOs bundle coherent sets of changes: the activation or deactivation of a particular feature together with other (de)activations that are needed to preserve validity. In our evaluation, our instantiation of the IBEA algorithm with CPCOs outperforms two state-of-the-art tools for optimal product line configuration in terms of both speed and solution quality. The improvements are especially pronounced in large product lines with thousands of features."
+    },
+    {
+      "paperId": "unicorn-reasoning-about-configurable-system-perfor",
+      "title": "Unicorn: reasoning about configurable system performance through the lens of causality",
+      "authors": [
+        {
+          "name": "Md Shahriar Iqbal"
+        },
+        {
+          "name": "R. Krishna"
+        },
+        {
+          "name": "Mohammad Ali Javidian"
+        },
+        {
+          "name": "Baishakhi Ray"
+        },
+        {
+          "name": "Pooyan Jamshidi"
+        }
+      ],
+      "year": 2022,
+      "venue": "European Conference on Computer Systems",
+      "doi": "10.1145/3492321.3519575",
+      "abstract": "Modern computer systems are highly configurable, with the total variability space sometimes larger than the number of atoms in the universe. Understanding and reasoning about the performance behavior of highly configurable systems, over a vast and variable space, is challenging. State-of-the-art methods for performance modeling and analyses rely on predictive machine learning models, therefore, they become (i) unreliable in unseen environments (e.g., different hardware, workloads), and (ii) may produce incorrect explanations. To tackle this, we propose a new method, called Unicorn, which (i) captures intricate interactions between configuration options across the software-hardware stack and (ii) describes how such interactions can impact performance variations via causal inference. We evaluated Unicorn on six highly configurable systems, including three on-device machine learning systems, a video encoder, a database management system, and a data analytics pipeline. The experimental results indicate that Unicorn outperforms state-of-the-art performance debugging and optimization methods in finding effective repairs for performance faults and finding configurations with near-optimal performance. Further, unlike the existing methods, the learned causal performance models reliably predict performance for new environments."
+    },
+    {
+      "paperId": "input-sensitivity-on-the-performance-of-configurab",
+      "title": "Input sensitivity on the performance of configurable systems an empirical study",
+      "authors": [
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "Jean-Marc J'ez'equel"
+        }
+      ],
+      "year": 2021,
+      "venue": "Journal of Systems and Software",
+      "doi": "10.1016/j.jss.2023.111671",
+      "abstract": null
+    },
+    {
+      "paperId": "transfer-learning-across-variants-and-versions-the",
+      "title": "Transfer Learning Across Variants and Versions: The Case of Linux Kernel Size",
+      "authors": [
+        {
+          "name": "Hugo Martin"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "J. Jézéquel"
+        },
+        {
+          "name": "D. Khelladi"
+        }
+      ],
+      "year": 2021,
+      "venue": "IEEE Transactions on Software Engineering",
+      "doi": "10.1109/TSE.2021.3116768",
+      "abstract": "With large scale and complex configurable systems, it is hard for users to choose the right combination of options (i.e., configurations) in order to obtain the wanted trade-off between functionality and performance goals such as speed or size. Machine learning can help in relating these goals to the configurable system options, and thus, predict the effect of options on the outcome, typically after a costly training step. However, many configurable systems evolve at such a rapid pace that it is impractical to retrain a new model from scratch for each new version. In this paper, we propose a new method to enable transfer learning of binary size predictions among versions of the same configurable system. Taking the extreme case of the Linux kernel with its <inline-formula><tex-math notation=\"LaTeX\">$\\approx 14,500$</tex-math><alternatives><mml:math><mml:mrow><mml:mo>≈</mml:mo><mml:mn>14</mml:mn><mml:mo>,</mml:mo><mml:mn>500</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href=\"martin-ieq1-3116768.gif\"/></alternatives></inline-formula> configuration options, we first investigate how binary size predictions of kernel size degrade over successive versions. We show that the direct reuse of an accurate prediction model from 2017 quickly becomes inaccurate when Linux evolves, up to a 32% mean error by August 2020. We thus propose a new approach for transfer evolution-aware model shifting (<sc>tEAMS</sc>). It leverages the structure of a configurable system to transfer an initial predictive model towards its future versions with a minimal amount of extra processing for each version. We show that <sc>tEAMS</sc> vastly outperforms state of the art approaches over the 3 years history of Linux kernels, from 4.13 to 5.8."
+    },
+    {
+      "paperId": "a-comparison-of-performance-specialization-learnin",
+      "title": "A comparison of performance specialization learning for configurable systems",
+      "authors": [
+        {
+          "name": "Hugo Martin"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2021,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3461001.3471155",
+      "abstract": "The specialization of the configuration space of a software system has been considered for targeting specific configuration profiles, usages, deployment scenarios, or hardware settings. The challenge is to find constraints among options' values that only retain configurations meeting a performance objective. Since the exponential nature of configurable systems makes a manual specialization unpractical, several approaches have considered its automation using machine learning, i.e., measuring a sample of configurations and then learning what options' values should be constrained. Even focusing on learning techniques based on decision trees for their built-in explainability, there is still a wide range of possible approaches that need to be evaluated, i.e., how accurate is the specialization with regards to sampling size, performance thresholds, and kinds of configurable systems. In this paper, we compare six learning techniques: three variants of decision trees (including a novel algorithm) with and without the use of model-based feature selection. We first perform a study on 8 configurable systems considered in previous related works and show that the accuracy reaches more than 90% and that feature selection can improve the results in the majority of cases. We then perform a study on the Linux kernel and show that these techniques performs as well as on the other systems. Overall, our results show that there is no one-size-fits-all learning variant (though high accuracy can be achieved): we present guidelines and discuss tradeoffs."
+    },
+    {
+      "paperId": "the-interplay-of-compile-time-and-run-time-options",
+      "title": "The interplay of compile-time and run-time options for performance prediction",
+      "authors": [
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Xhevahire Tërnava"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2021,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3461001.3471149",
+      "abstract": "Many software projects are configurable through compile-time options (e.g., using ./configure) and also through run-time options (e.g., command-line parameters, fed to the software at execution time). Several works have shown how to predict the effect of run-time options on performance. However it is yet to be studied how these prediction models behave when the software is built with different compile-time options. For instance, is the best run-time configuration always the best w.r.t. the chosen compilation options? In this paper, we investigate the effect of compile-time options on the performance distributions of 4 software systems. There are cases where the compiler layer effect is linear which is an opportunity to generalize performance models or to tune and measure runtime performance at lower cost. We also prove there can exist an interplay by exhibiting a case where compile-time options significantly alter the performance distributions of a configurable system."
+    },
+    {
+      "paperId": "performance-health-index-for-complex-cyber-infrast",
+      "title": "Performance Health Index for Complex Cyber Infrastructures",
+      "authors": [
+        {
+          "name": "Sanjeev Sondur"
+        },
+        {
+          "name": "K. Kant"
+        }
+      ],
+      "year": 2021,
+      "venue": "ACM Transactions on Modeling and Performance Evaluation of Computing Systems",
+      "doi": "10.1145/3538646",
+      "abstract": "Most IT systems depend on a set of configuration variables (CVs), expressed as a name/value pair that collectively defines the resource allocation for the system. While the ill effects of misconfiguration or improper resource allocation are well-known, there are no effective a priori metrics to quantify the impact of the configuration on the desired system attributes such as performance, availability, etc. In this paper, we propose a Configuration Health Index (CHI) framework specifically attuned to the performance attribute to capture the influence of CVs on the performance aspects of the system. We show how CHI, which is defined as a configuration scoring system, can take advantage of the domain knowledge and the available (but rather limited) performance data to produce important insights into the configuration settings. We compare the CHI with both well-advertised segmented non-linear models and state-of-the-art data-driven models, and show that the CHI not only consistently provides better results but also avoids the dangers of a pure data drive approach which may predict incorrect behavior or eliminate some essential configuration variables from consideration."
+    },
+    {
+      "paperId": "an-overview-of-machine-learning-techniques-in-cons",
+      "title": "An overview of machine learning techniques in constraint solving",
+      "authors": [
+        {
+          "name": "Andrei Popescu"
+        },
+        {
+          "name": "Seda Polat-Erdeniz"
+        },
+        {
+          "name": "A. Felfernig"
+        },
+        {
+          "name": "Mathias Uta"
+        },
+        {
+          "name": "Müslüm Atas"
+        },
+        {
+          "name": "Viet-Man Le"
+        },
+        {
+          "name": "Klaus Pilsl"
+        },
+        {
+          "name": "Martin Enzelsberger"
+        },
+        {
+          "name": "Thi Ngoc Trang Tran"
+        }
+      ],
+      "year": 2021,
+      "venue": "Journal of Intelligence and Information Systems",
+      "doi": "10.1007/s10844-021-00666-5",
+      "abstract": "Constraint solving is applied in different application contexts. Examples thereof are the configuration of complex products and services, the determination of production schedules, and the determination of recommendations in online sales scenarios. Constraint solvers apply, for example, search heuristics to assure adequate runtime performance and prediction quality. Several approaches have already been developed showing that machine learning (ML) can be used to optimize search processes in constraint solving. In this article, we provide an overview of the state of the art in applying ML approaches to constraint solving problems including constraint satisfaction, SAT solving, answer set programming (ASP) and applications thereof such as configuration, constraint-based recommendation, and model-based diagnosis. We compare and discuss the advantages and disadvantages of these approaches and point out relevant directions for future work."
+    },
+    {
+      "paperId": "predicting-design-impactful-changes-in-modern-code",
+      "title": "Predicting Design Impactful Changes in Modern Code Review: A Large-Scale Empirical Study",
+      "authors": [
+        {
+          "name": "A. Uchôa"
+        },
+        {
+          "name": "Caio Barbosa"
+        },
+        {
+          "name": "Daniel Coutinho"
+        },
+        {
+          "name": "W. Oizumi"
+        },
+        {
+          "name": "W. K. Assunção"
+        },
+        {
+          "name": "S. Vergilio"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "Anderson Oliveira"
+        },
+        {
+          "name": "Alessandro F. Garcia"
+        }
+      ],
+      "year": 2021,
+      "venue": "IEEE Working Conference on Mining Software Repositories",
+      "doi": "10.1109/MSR52588.2021.00059",
+      "abstract": "Companies have adopted modern code review as a key technique for continuously monitoring and improving the quality of software changes. One of the main motivations for this is the early detection of design impactful changes, to prevent that design-degrading ones prevail after each code review. Even though design degradation symptoms often lead to changes’ rejections, practices of modern code review alone are actually not sufficient to avoid or mitigate design decay. Software design degrades whenever one or more symptoms of poor structural decisions, usually represented by smells, end up being introduced by a change. Design degradation may be related to both technical and social aspects in collaborative code reviews. Unfortunately, there is no study that investigates if code review stakeholders, e.g, reviewers, could benefit from approaches to distinguish and predict design impactful changes with technical and/or social aspects. By analyzing 57,498 reviewed code changes from seven open-source systems, we report an investigation on prediction of design impactful changes in modern code review. We evaluated the use of six ML algorithms to predict design impactful changes. We also extracted and assessed 41 different features based on both social and technical aspects. Our results show that Random Forest and Gradient Boosting are the best algorithms. We also observed that the use of technical features results in more precise predictions. However, the use of social features alone, which are available even before the code review starts (e.g., for team managers or change assigners), also leads to highly-accurate prediction. Therefore social and/or technical prediction models can be used to support further design inspection of suspicious changes early in a code review process. Finally, we provide an enriched dataset that allows researchers to investigate the context behind design impactful changes during the code review process."
+    },
+    {
+      "paperId": "an-overview-of-recommender-systems-and-machine-lea",
+      "title": "An Overview of Recommender Systems and Machine Learning in Feature Modeling and Configuration",
+      "authors": [
+        {
+          "name": "A. Felfernig"
+        },
+        {
+          "name": "Viet-Man Le"
+        },
+        {
+          "name": "Andrei Popescu"
+        },
+        {
+          "name": "Mathias Uta"
+        },
+        {
+          "name": "Thi Ngoc Trang Tran"
+        },
+        {
+          "name": "Müslüm Atas"
+        }
+      ],
+      "year": 2021,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3442391.3442408",
+      "abstract": "Recommender systems support decisions in various domains ranging from simple items such as books and movies to more complex items such as financial services, telecommunication equipment, and software systems. In this context, recommendations are determined, for example, on the basis of analyzing the preferences of similar users. In contrast to simple items which can be enumerated in an item catalog, complex items have to be represented on the basis of variability models (e.g., feature models) since a complete enumeration of all possible configurations is infeasible and would trigger significant performance issues. In this paper, we give an overview of a potential new line of research which is related to the application of recommender systems and machine learning techniques in feature modeling and configuration. In this context, we give examples of the application of recommender systems and machine learning and discuss future research issues."
+    },
+    {
+      "paperId": "deep-software-variability-towards-handling-cross-l",
+      "title": "Deep Software Variability: Towards Handling Cross-Layer Configuration",
+      "authors": [
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2021,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3442391.3442402",
+      "abstract": "Configuring software is a powerful means to reach functional and performance goals of a system. However, many layers (hardware, operating system, input data, etc.), themselves subject to variability, can alter performances of software configurations. For instance, configurations’ options of the x264 video encoder may have very different effects on x264’s encoding time when used with different input videos, depending on the hardware on which it is executed. In this vision paper, we coin the term deep software variability to refer to the interaction of all external layers modifying the behavior or non-functional properties of a software. Deep software variability challenges practitioners and researchers: the combinatorial explosion of possible executing environments complicates the understanding, the configuration, the maintenance, the debug, and the test of configurable systems. There are also opportunities: harnessing all variability layers (and not only the software layer) can lead to more efficient systems and configuration knowledge that truly generalizes to any usage and context."
+    },
+    {
+      "paperId": "empirical-assessment-of-generating-adversarial-con",
+      "title": "Empirical assessment of generating adversarial configurations for software product lines",
+      "authors": [
+        {
+          "name": "Paul Temple"
+        },
+        {
+          "name": "Gilles Perrouin"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "B. Biggio"
+        },
+        {
+          "name": "J. Jézéquel"
+        },
+        {
+          "name": "F. Roli"
+        }
+      ],
+      "year": 2021,
+      "venue": "Empirical Software Engineering",
+      "doi": "10.1007/s10664-020-09915-7",
+      "abstract": null
+    },
+    {
+      "paperId": "baloo-measuring-and-modeling-the-performance-confi",
+      "title": "Baloo: Measuring and Modeling the Performance Configurations of Distributed DBMS",
+      "authors": [
+        {
+          "name": "Johannes Grohmann"
+        },
+        {
+          "name": "Daniel Seybold"
+        },
+        {
+          "name": "Simon Eismann"
+        },
+        {
+          "name": "Mark Leznik"
+        },
+        {
+          "name": "Samuel Kounev"
+        },
+        {
+          "name": "Jörg Domaschka"
+        }
+      ],
+      "year": 2020,
+      "venue": "IEEE/ACM International Symposium on Modeling, Analysis, and Simulation On Computer and Telecommunication Systems",
+      "doi": "10.1109/MASCOTS50786.2020.9285960",
+      "abstract": "Correctly configuring a distributed database management system (DBMS) deployed in a cloud environment for maximizing performance poses many challenges to operators. Even if the entire configuration spectrum could be measured directly, which is often infeasible due to the multitude of parameters, single measurements are subject to random variations and need to be repeated multiple times. In this work, we propose Baloo, a framework for systematically measuring and modeling different performance-relevant configurations of distributed DBMS in cloud environments. Baloo dynamically estimates the required number of measurement configurations, as well as the number of required measurement repetitions per configuration based on a desired target accuracy. We evaluate Baloo based on a data set consisting of 900 DBMS configuration measurements conducted in our private cloud setup. Our evaluation shows that the highly configurable framework is able to achieve a prediction error of up to 12 %, while saving over 80 % of the measurement effort. We also publish all code and the acquired data set to foster future research."
+    },
+    {
+      "paperId": "feature-oriented-defect-prediction",
+      "title": "Feature-oriented defect prediction",
+      "authors": [
+        {
+          "name": "Stefan Strüder"
+        },
+        {
+          "name": "M. Mukelabai"
+        },
+        {
+          "name": "D. Strüber"
+        },
+        {
+          "name": "T. Berger"
+        }
+      ],
+      "year": 2020,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3382025.3414960",
+      "abstract": "Software errors are a major nuisance in software development and can lead not only to reputation damages, but also to considerable financial losses for companies. Therefore, numerous techniques for predicting software defects, largely based on machine learning methods, have been developed over the past decades. These techniques usually rely on code and process metrics in order to predict defects at the granularity of typical software assets, such as subsystems, components, and files. In this paper, we present the first systematic investigation of feature-oriented defect prediction: the prediction of defects at the granularity of features---domain-oriented entities abstractly representing (and often cross-cutting) typical software assets. Feature-oriented prediction can be beneficial, since: (i) particular features might be more error-prone than others, (ii) characteristics of features known as defective might be useful to predict other error-prone features, (iii) feature-specific code might be especially prone to faults arising from feature interactions. We present a dataset derived from 12 software projects and introduce two metric sets for feature-oriented defect prediction. We evaluated seven machine learning classifiers with three different attribute sets each, using our two new metric sets as well as an existing metric set from the literature. We observe precision and recall values of around 85% and better robustness when more diverse metrics sets with richer feature information are used."
+    },
+    {
+      "paperId": "sampling-effect-on-performance-prediction-of-confi",
+      "title": "Sampling Effect on Performance Prediction of Configurable Systems: A Case Study",
+      "authors": [
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Hugo Martin"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2020,
+      "venue": "International Conference on Performance Engineering",
+      "doi": "10.1145/3358960.3379137",
+      "abstract": "Numerous software systems are highly configurable and provide a myriad of configuration options that users can tune to fit their functional and performance requirements (e.g., execution time). Measuring all configurations of a system is the most obvious way to understand the effect of options and their interactions, but is too costly or infeasible in practice. Numerous works thus propose to measure only a few configurations (a sample) to learn and predict the performance of any combination of options' values. A challenging issue is to sample a small and representative set of configurations that leads to a good accuracy of performance prediction models. A recent study devised a new algorithm, called distance-based sampling, that obtains state-of-the-art accurate performance predictions on different subject systems. In this paper, we replicate this study through an in-depth analysis of x264, a popular and configurable video encoder. We systematically measure all 1,152 configurations of x264 with 17 input videos and two quantitative properties (encoding time and encoding size). Our goal is to understand whether there is a dominant sampling strategy over the very same subject system (x264), i.e., whatever the workload and targeted performance properties. The findings from this study show that random sampling leads to more accurate performance models. However, without considering random, there is no single \"dominant\" sampling, instead different strategies perform best on different inputs and non-functional properties, further challenging practitioners and researchers."
+    },
+    {
+      "paperId": "generating-attributed-variability-models-for-trans",
+      "title": "Generating attributed variability models for transfer learning",
+      "authors": [
+        {
+          "name": "Johannes Dorn"
+        },
+        {
+          "name": "S. Apel"
+        },
+        {
+          "name": "Norbert Siegmund"
+        }
+      ],
+      "year": 2020,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3377024.3377040",
+      "abstract": "Modern software systems often provide configuration options for customizing of the system's functional and non-functional properties, such as response time and energy consumption. The valid configurations of a software system are commonly documented in a variability model. Supporting the optimization of a system's non-functional properties, variability models have been extended with attributes that represent the influence of one or multiple options on a property. The concrete values of attributes are typically determined only in a single environment (e.g., for a specific software version, a certain workload, and a specific hardware setup) and are applicable only for this context. Changing the environment, attribute values need to be updated. Instead of determining all attributes from scratch with new measurements, recent approaches rely on transfer learning to reduce the effort of obtaining new attribute values. However, the development and evaluation of new transfer-learning techniques requires extensive measurements by themselves, which often is prohibitively costly. To support research in this area, we propose an approach to synthesize realistic attributed variability models from a base model. This way, we can support research and validation of novel transfer-learning techniques for configurable software systems. We use a genetic algorithm to vary attribute values. Combined with a declarative objective function, we search a changed attributed variability model that keeps some key characteristics while mimicking realistic changes of individual attribute values. We demonstrate the applicability of our approach by replicating the evaluation of an existing transfer-learning technique."
+    },
+    {
+      "paperId": "next-steps-in-variability-management-due-to-autono",
+      "title": "Next steps in variability management due to autonomous behaviour and runtime learning",
+      "authors": [
+        {
+          "name": "N. Bencomo"
+        }
+      ],
+      "year": 2020,
+      "venue": "International Workshop on Variability Modelling of Software-Intensive Systems",
+      "doi": "10.1145/3377024.3380451",
+      "abstract": "One of the basic principles in product lines is to delay design decisions related to offered functionality and quality to later phases of the life cycle [25]. Instead of deciding on what system to develop in advance, a set of assets and a common reference architecture are specified and implemented during the Domain Engineering process. Later on, during Application Engineering, specific systems are developed to satisfy the requirements reusing the assets and architecture [16]. Traditionally, this is during the Application Engineering when delayed design decisions are solved. The realization of this delay relies heavily on the use of variability in the development of product lines and systems. However, as systems become more interconnected and diverse, software architects cannot easily foresee the software variants and the interconnections between components. Consequently, a generic a priori model is conceived to specify the system's dynamic behaviour and architecture. The corresponding design decisions are left to be solved at runtime [13]. Surprisingly, few research initiatives have investigated variability models at runtime [9]. Further, they have been applied only at the level of goals and architecture, which contrasts to the needs claimed by the variability community, i.e., Software Product Lines (SPLC) and Dynamic Software Product Lines (DSPL) [2, 10, 14, 22]. Especially, the vision of DSPL with their ability to support runtime updates with virtually zero downtime for products of a software product line, denotes the obvious need of variability models being used at runtime to adapt the corresponding programs. A main challenge for dealing with runtime variability is that it should support a wide range of product customizations under various scenarios that might be unknown until the execution time, as new product variants can be identified only at runtime [10, 11]. Contemporary variability models face the challenge of representing runtime variability to therefore allow the modification of variation points during the system's execution, and underpin the automation of the system's reconfiguration [15]. The runtime representation of feature models (i.e. the runtime model of features) is required to automate the decision making [9]. Software automation and adaptation techniques have traditionally required a priori models for the dynamic behaviour of systems [17]. With the uncertainty present in the scenarios involved, the a priori model is difficult to define [20, 23, 26]. Even if foreseen, its maintenance is labour-intensive and, due to architecture decay, it is also prone to get out-of-date. However, the use of models@runtime does not necessarily require defining the system's behaviour model beforehand. Instead, different techniques such as machine learning, or mining software component interactions from system execution traces can be used to build a model which is in turn used to analyze, plan, and execute adaptations [18], and synthesize emergent software on the fly [7]. Another well-known problem posed by the uncertainty that characterize autonomous systems is that different stakeholders (e.g. end users, operators and even developers) may not understand them due to the emergent behaviour. In other words, the running system may surprise its customers and/or developers [4]. The lack of support for explanation in these cases may compromise the trust to stakeholders, who may eventually stop using a system [12, 24]. I speculate that variability models can offer great support for (i) explanation to understand the diversity of the causes and triggers of decisions during execution and their corresponding effects using traceability [5], and (ii) better understand the behaviour of the system and its environment. Further, an extension and potentially reframing of the techniques associated with variability management may be needed to help taming uncertainty and support explanation and understanding of the systems. The use of new techniques such as machine learning exacerbates the current situation. However, at the same time machine learning techniques can also help and be used, for example, to explore the variability space [1]. What can the community do to face the challenges associated? We need to meaningfully incorporate techniques from areas such as artificial intelligence, machine learning, optimization, planning, decision theory, and bio-inspired computing into our variability management techniques to provide explanation and management of the diversity of decisions, their causes and the effects associated. My own previous work has progressed [3, 5, 6, 8, 11, 12, 19, 21] to reflect what was discussed above."
+    },
+    {
+      "paperId": "flexibo-a-decoupled-cost-aware-multi-objective-opt",
+      "title": "FlexiBO: A Decoupled Cost-Aware Multi-Objective Optimization Approach for Deep Neural Networks",
+      "authors": [
+        {
+          "name": "Md Shahriar Iqbal"
+        },
+        {
+          "name": "Jianhai Su"
+        },
+        {
+          "name": "Lars Kotthoff"
+        },
+        {
+          "name": "Pooyan Jamshidi"
+        }
+      ],
+      "year": 2020,
+      "venue": "Journal of Artificial Intelligence Research",
+      "doi": "10.1613/jair.1.14139",
+      "abstract": "The design of machine learning systems often requires trading off different objectives, for example, prediction error and energy consumption for deep neural networks (DNNs). Typically, no single design performs well in all objectives; therefore, finding Pareto-optimal designs is of interest. The search for Pareto-optimal designs involves evaluating designs in an iterative process, and the measurements are used to evaluate an acquisition function that guides the search process. However, measuring different objectives incurs different costs. For example, the cost of measuring the prediction error of DNNs is orders of magnitude higher than that of measuring the energy consumption of a pre-trained DNN as it requires re-training the DNN. Current state-of-the-art methods do not consider this difference in objective evaluation cost, potentially incurring expensive evaluations of objective functions in the optimization process. In this paper, we develop a novel decoupled and cost-aware multi-objective optimization algorithm, which we call Flexible Multi-Objective Bayesian Optimization (FlexiBO) to address this issue. For evaluating each design, FlexiBO selects the objective with higher relative gain by weighting the improvement of the hypervolume of the Pareto region with the measurement cost of each objective. This strategy, therefore, balances the expense of collecting new information with the knowledge gained through objective evaluations, preventing FlexiBO from performing expensive measurements for little to no gain. We evaluate FlexiBO on seven state-of-the-art DNNs for image recognition, natural language processing (NLP), and speech-to-text translation. Our results indicate that, given the same total experimental budget, FlexiBO discovers designs with 4.8% to 12.4% lower hypervolume error than the best method in state-of-the-art multi-objective optimization."
+    },
+    {
+      "paperId": "flexibo-cost-aware-multi-objective-optimization-of",
+      "title": "FlexiBO: Cost-Aware Multi-Objective Optimization of Deep Neural Networks",
+      "authors": [
+        {
+          "name": "Md Shahriar Iqbal"
+        },
+        {
+          "name": "Jianhai Su"
+        },
+        {
+          "name": "Lars Kotthoff"
+        },
+        {
+          "name": "Pooyan Jamshidi"
+        }
+      ],
+      "year": 2020,
+      "venue": "arXiv.org",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-the-linux-kernel-configuration-space-resu",
+      "title": "Learning the Linux Kernel Configuration Space: Results and Challenges",
+      "authors": [
+        {
+          "name": "M. Acher"
+        }
+      ],
+      "year": 2019,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Hugo Martin"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        },
+        {
+          "name": "D. Khelladi"
+        },
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "Olivier Barais"
+        }
+      ],
+      "year": 2019,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "machine-learning-and-configurable-systems-a-gentle",
+      "title": "Machine learning and configurable systems: a gentle introduction",
+      "authors": [
+        {
+          "name": "Hugo Martin"
+        },
+        {
+          "name": "Juliana Alves Pereira"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Paul Temple"
+        }
+      ],
+      "year": 2019,
+      "venue": "Software Product Lines Conference",
+      "doi": "10.1145/3382025.3414976",
+      "abstract": "The goal of this tutorial is to give a gentle introduction to how machine learning can be used to support software product line configuration. This is our second practical tutorial in this trending field. The tutorial is based on a systematic literature review and includes practical tasks (specialization, performance and bug prediction) on real-world systems (Linux, VaryLaTeX, x264). The material is designed for academics and practitioners with basic knowledge in software product lines and machine learning."
+    },
+    {
+      "paperId": "pyrobuilds-enabling-efficient-exploration-of-linux",
+      "title": "PyroBuildS: Enabling Efficient Exploration of Linux Configuration Space with Incremental Build",
+      "authors": [
+        {
+          "name": "Georges Aaron Randrianaina"
+        },
+        {
+          "name": "M. Acher"
+        }
+      ],
+      "year": 2023,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "activity-report-project-team-diverse",
+      "title": "ACTIVITY REPORT Project-Team DIVERSE",
+      "authors": [
+        {
+          "name": "Benoît Combemale"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "David Mendez Acuna"
+        },
+        {
+          "name": "D. Vojtisek"
+        },
+        {
+          "name": "Dorian Leroy"
+        },
+        {
+          "name": "Erwan Bousse"
+        },
+        {
+          "name": "F. Coulon"
+        },
+        {
+          "name": "J. Jézéquel"
+        },
+        {
+          "name": "Olivier Barais"
+        },
+        {
+          "name": "Thomas Degueule"
+        },
+        {
+          "name": "DSpot"
+        },
+        {
+          "name": "Benjamin Danglot"
+        },
+        {
+          "name": "Benoit Baudry"
+        },
+        {
+          "name": "Monperrus Martin"
+        },
+        {
+          "name": "Descartes"
+        },
+        {
+          "name": "Oscar Luis"
+        },
+        {
+          "name": "Vera Perez"
+        }
+      ],
+      "year": 2022,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "performance-is-not-boolean-supporting-scalar-confi",
+      "title": "Performance is not Boolean: Supporting Scalar Configuration Variables in NFP Models",
+      "authors": [
+        {
+          "name": "B. Friesel"
+        }
+      ],
+      "year": 2022,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "scratching-the-surface-of-configure-learning-the-e",
+      "title": "Scratching the Surface of ./configure: Learning the Effects of Compile-Time Options on Binary Size and Gadgets",
+      "authors": [
+        {
+          "name": "Xhevahire Tërnava"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2022,
+      "venue": "International Conference on Software Reuse",
+      "doi": "10.1007/978-3-031-08129-3_3",
+      "abstract": null
+    },
+    {
+      "paperId": "the-interaction-between-inputs-and-configurations-",
+      "title": "The Interaction between Inputs and Configurations fed to Software Systems: an Empirical Study",
+      "authors": [
+        {
+          "name": "Luc Lesoil"
+        },
+        {
+          "name": "M. Acher"
+        },
+        {
+          "name": "Arnaud Blouin"
+        },
+        {
+          "name": "J. Jézéquel"
+        }
+      ],
+      "year": 2021,
+      "venue": "arXiv.org",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "context-aware-recommender-systems-for-social-netwo",
+      "title": "Context-Aware Recommender Systems for Social Networks: Review, Challenges and Opportunities",
+      "authors": [
+        {
+          "name": "Areej Bin Suhaim"
+        },
+        {
+          "name": "J. Berri"
+        }
+      ],
+      "year": 2021,
+      "venue": "IEEE Access",
+      "doi": "10.1109/ACCESS.2021.3072165",
+      "abstract": "Context-aware recommender systems dedicated to online social networks experienced noticeable growth in the last few years. This has led to more research being done in this area stimulated by the omnipresence of smartphones and the latest web technologies. These systems are able to detect specific user needs and adapt recommendations to actual user context. In this research, we present a comprehensive review of context-aware recommender systems developed for social networks. For this purpose, we used a systematic literature review methodology which clearly defined the scope, the objective, the timeframe, the methods, and the tools to undertake this research. Our focus is to investigate approaches and techniques used in the development of context-aware recommender systems for social networks and identify the research gaps, challenges, and opportunities in this field. In order to have a clear vision of the research potential in the field, we considered research articles published between 2015 and 2020 and used a research portal giving access to major scientific research databases. Primary research articles selected are reviewed and the recommendation process is analyzed to identify the approach, the techniques, and the context elements employed in the development of the recommendation systems. The paper presents the detail of the review study, provides a synthesis of the results, proposes an evaluation based on measurable evaluation tools developed in this study, and advocates future research and development pathways in this interesting field."
+    },
+    {
+      "paperId": "monte-carlo-simulations-for-variability-analyses-i",
+      "title": "Monte Carlo Simulations for Variability Analyses in Highly Configurable Systems",
+      "authors": [
+        {
+          "name": "José Miguel Horcas Aguilera"
+        },
+        {
+          "name": "A. G. Márquez"
+        },
+        {
+          "name": "J. Galindo"
+        },
+        {
+          "name": "David Benavides"
+        }
+      ],
+      "year": 2021,
+      "venue": "ConfWS",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "cadet-debugging-and-fixing-misconfigurations-using",
+      "title": "CADET: Debugging and Fixing Misconfigurations using Counterfactual Reasoning",
+      "authors": [
+        {
+          "name": "Md Shahriar Iqbal"
+        },
+        {
+          "name": "R. Krishna"
+        },
+        {
+          "name": "Mohammad Ali Javidian"
+        },
+        {
+          "name": "Baishakhi Ray"
+        },
+        {
+          "name": "Pooyan Jamshidi"
+        }
+      ],
+      "year": 2021,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "activity-report-2019-team-diverse-diversity-centri",
+      "title": "Activity Report 2019 Team DIVERSE Diversity-centric Software Engineering Joint team with Inria Rennes – Bretagne Atlantique D 4 – Language and Software Engineering",
+      "authors": [],
+      "year": 2020,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "bayesian-learning-for-hardware-and-software-conﬁgu",
+      "title": "Bayesian Learning for Hardware and Software Conﬁguration Co-Optimization",
+      "authors": [
+        {
+          "name": "Yi Ding"
+        }
+      ],
+      "year": 2020,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "scalable-performance-models-for-highly-configurabl",
+      "title": "Scalable Performance Models for Highly Configurable Systems",
+      "authors": [
+        {
+          "name": "Jeho Oh"
+        },
+        {
+          "name": "Oleg Zilmano"
+        }
+      ],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "feature-subset-selection-for-learning-huge-configu",
+      "title": "Feature Subset Selection for Learning Huge Configuration Spaces: The case of Linux Kernel Size",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    },
+    {
+      "paperId": "learning-very-large-configuration-spaces-what-matt",
+      "title": "Learning Very Large Configuration Spaces: What Matters for Linux Kernel Sizes",
+      "authors": [],
+      "year": null,
+      "venue": "",
+      "doi": "-",
+      "abstract": null
+    }
+  ]
+}

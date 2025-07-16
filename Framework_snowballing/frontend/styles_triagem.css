@@ -1,0 +1,9 @@
+
+body { background-color: #f8f9fa; font-size: 0.9rem; }
+.card-resumo { box-shadow: 0 0.25rem 0.5rem rgb(0 0 0 / 0.1); border-radius: 0.5rem; padding: 1rem; color: #212529; }
+.card-resumo h5 { font-weight: 600; margin-bottom: 0.5rem; }
+.card-resumo p { font-size: 2rem; font-weight: 700; margin-bottom: 0; }
+ul.resumo-list { max-height: 160px; overflow-y: auto; padding-left: 1rem; }
+ul.resumo-list li { font-size: 0.9rem; padding: 0.15rem 0; border-bottom: 1px solid #ddd; }
+ul.resumo-list::-webkit-scrollbar { width: 6px; }
+ul.resumo-list::-webkit-scrollbar-thumb { background-color: #adb5bd; border-radius: 3px; }
