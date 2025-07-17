@@ -64,12 +64,8 @@ If you use this work, please cite the following paper:
 1. Download the repository and unzip the files.
 2. Install the required libraries (Node.js and Python).
 3. Insert your Gemini API key into the file `analises.js`.
-4. In the terminal, run:
-   ```bash
-   node app.js
-
-5. In your browser, go to: : `http://localhost:3000`
-6. Enter the DOI of the seed article and click **Search**.
+4. In your browser, go to: : `http://localhost:3000`
+5. Enter the DOI of the seed article and click **Search**.
 
 > ⚠️ Note: The user must have a Gemini API key to use the LLM functionality.
 
@@ -77,23 +73,28 @@ If you use this work, please cite the following paper:
 
 ## 📦 C. Requirements
 
+The project was developed and validated on **Linux** environments.  
+Users operating on different systems may need to adjust certain commands or dependencies accordingly.
+
+
 This project uses Node.js and Python. The requirements are organized as follows:
 
-### Node.js (for backend and frontend)
+### Node.js & Python
 - Dependencies are listed in the `package.json` file.
+- Required libraries are listed in the `requirements.txt` .
+```bash
+  cd ./Framework_snowballing
+  ```
 - To install, run:
   ```bash
   cd ./Framework_snowballing
   npm install
-  ```
-
-### Python (for analysis scripts)
-- Required libraries are listed in the `requirements.txt` file.
-- To install, run:
-  ```bash
-  cd ./Framework_snowballing
   pip install -r requirements.txt
   ```
+- In the terminal, run:
+   ```bash
+   node app.js
+```
 
 ---
 
