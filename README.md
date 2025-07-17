@@ -63,7 +63,7 @@ If you use this work, please cite the following paper:
 
 1. Download the repository and unzip the files.
 2. Install the required libraries (Node.js and Python).
-3. Insert your Gemini API key into the file `analises.js`.
+3. Insert your Gemini API key into the file `scripts/analisa.py`.
 4. In the terminal, run:
    ```bash
    node app.js
