@@ -74,7 +74,6 @@ If you use this work, please cite the following paper:
 The project was developed and validated on **Linux** environments.  
 Users operating on different systems may need to adjust certain commands or dependencies accordingly.
 
-
 This project uses Node.js and Python. The requirements are organized as follows:
 
 ### Node.js & Python
@@ -92,11 +91,12 @@ This project uses Node.js and Python. The requirements are organized as follows:
 - In the terminal, run:
    ```bash
    node app.js
-```
-
----
-4. In your browser, go to: : `http://localhost:3000`
-5. Enter the DOI of the seed article and click **Search**.
+  ```
+- In your browser, go to: 
+  ```bash
+  `http://localhost:3000`
+  ```
+- Enter the DOI of the seed article and click **Search**.
 
 ## 📄 License
 
