@@ -15,10 +15,10 @@ The paper's PDF is available in this repository.
 If you use this work, please cite the following paper:
 
 ```bibtex
-@inproceedings{Januário2025Toward,
+@inproceedings{JanuarioSBES2025,
   title={Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal},
   author={Januário. Jailma, Nicolau. Maria Isabel S. B., Felizardo. Katia, Pereira. Juliana Alves},
-  booktitle={SBES-Simpósio Brasileiro de Engenharia de Software, Recife, PE },
+  booktitle={Brazilian Symposium on Software Engineering Insightful Ideas and Emerging Results Track (SBES IIER).ACM, Recife, PE },
   year={2025},
 }
 ```
