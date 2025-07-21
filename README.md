@@ -1,5 +1,6 @@
 # 🧠 Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal
 
+
 This repository contains:
 
 - The data used for a comparative study between tools implementing *forward snowballing*;
@@ -8,7 +9,9 @@ This repository contains:
   - Screening articles based on inclusion and exclusion criteria;
   - Using LLMs to support decision making.
 
-The paper's PDF is available in this repository.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16102191.svg)](https://doi.org/10.5281/zenodo.16102191)
+
+Access the full paper [here](SBES_IIER_2025___Snowballing.pdf)
 
 ## 📚 Citation
 
