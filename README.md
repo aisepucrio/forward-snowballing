@@ -68,7 +68,7 @@ If you use this work, please cite the following paper:
 2. Install the required libraries (Node.js and Python).
 3. Insert your Gemini API key into the file `analisa.js`.
 
-> ⚠️ Note: The user must have a Gemini API key to use the LLM functionality.
+> ⚠️ Note: The user must have a Gemini API key to access the LLM features. However, all other functionalities of the tool can be used without the key.
 
 ---
 

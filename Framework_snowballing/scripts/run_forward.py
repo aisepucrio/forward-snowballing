@@ -17,7 +17,7 @@ def generate_paper_id(title):
     return slug or hashlib.md5(title.encode()).hexdigest()[:10]
 
 def fallback_via_requests(doi):
-    fields = "title,year,venue,abstract,authors,citations.title,citations.authors,citations.year,citations.venue,citations.externalIds,citations.abstract"
+    fields = "title,year,venue,abstract,authors,citations.title,citations.authors,citations.year,citations.venue,citations.externalIds,citations.abstract,citations.citationCount"
     url = f"https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}?fields={fields}"
     print(f"[DEBUG] Fallback via API REST: {url}", file=sys.stderr)
 
@@ -61,30 +61,21 @@ def search_combined(doi):
     sch = SemanticScholar(timeout=100)
     cleaned_doi = doi.split('doi.org/')[-1].strip()
 
-    # Busca no OpenAlex
     openalex_data = fallback_openalex(cleaned_doi)
     paper_data = fallback_via_requests(cleaned_doi)
 
-    # Se ambos existem e têm mesmo DOI, prioriza OpenAlex.
     if openalex_data and paper_data and openalex_data.get("doi") == paper_data.get("doi"):
         openalex_data['api'] = 'openalex+semantic'
         return openalex_data
-
-    # Se ambos existem mas DOIs diferentes, ainda junta as citações (mais conservador seria alertar)
     elif openalex_data and paper_data:
         openalex_data['citations'] += paper_data.get('citations', [])
         openalex_data['citations_count'] = len(openalex_data['citations'])
         openalex_data['api'] = 'openalex+semantic (doi mismatch)'
         return openalex_data
-
-    # Se só OpenAlex
     elif openalex_data:
         return openalex_data
-
-    # Se só Semantic Scholar
     elif paper_data:
         return paper_data
-
     else:
         print(json.dumps({"error": f"Artigo com DOI {doi} não encontrado."}))
         sys.exit(1)
@@ -100,6 +91,8 @@ def parse_citations(paper):
         authors = c.get('authors', [])
         autores = [{"name": a.get('name', '-')} for a in authors]
 
+        total_citations_received = c.get('citationCount', 0)  # <-- Adicionado aqui
+
         citation_obj = {
             "paperId": generate_paper_id(title),
             "title": title,
@@ -107,7 +100,8 @@ def parse_citations(paper):
             "year": year,
             "venue": venue,
             "doi": doi,
-            "abstract": abstract
+            "abstract": abstract,
+            "citations_count": total_citations_received  # <-- Adicionado aqui
         }
         citations.append(citation_obj)
     return citations
@@ -157,12 +151,9 @@ def main():
         citations = parse_citations(paper)
         contar_citacoes_por_fonte({"citations": citations}, paper.get("api", "desconhecida"))
 
-
         with open('output.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(json.dumps(result, ensure_ascii=False, indent=2)) 
-
-
 
     except Exception:
         traceback.print_exc(file=sys.stderr)
