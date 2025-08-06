@@ -34,7 +34,7 @@
 
     <div class="d-flex justify-content-center mb-3">
       <input type="text" id="searchInput" placeholder="Enter DOI" class="form-control w-50 rounded" />
-      <button onclick="buscarArtigo()" class="btn btn-success ms-2">Buscar</button>
+      <button onclick="buscarArtigo()" class="btn btn-success ms-2">Search</button>
     </div>
 
     <div id="resultado" class="mt-4"></div>
@@ -43,7 +43,7 @@
       <div id="citationsHeader" class="d-flex justify-content-between align-items-center">
         <h3>Cited By</h3>
         <button id="downloadBtn" title="Baixar citações (CSV)" class="btn btn-link p-0">
-          Download CSV
+          Download
         </button>
       </div>
 
@@ -62,6 +62,7 @@
               <th>Abstract</th>
               <th>Year</th>
               <th>Venue</th>
+              <th>Doi</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -187,6 +188,7 @@
           <td></td> 
           <td>${cit.year || '-'}</td>
           <td>${cit.venue || '-'}</td>
+          <td>${cit.doi || '-'}</td>
         `;
         tr.replaceChild(abstractCell, tr.children[1]);
 

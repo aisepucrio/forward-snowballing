@@ -1,17 +1,25 @@
 # 🧠 Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal
 
 
-This repository contains:
+This repository brings together two main components:
 
-- The data used for a comparative study between tools implementing *forward snowballing*;
-- An automation tool with a web interface, developed to assist researchers in the process of:
-  - Automatic article search via *forward snowballing*;
-  - Screening articles based on inclusion and exclusion criteria;
-  - Using LLMs to support decision making.
+🔎 1. Comparative study of forward snowballing tools
+  - Data and scripts used in a comparative analysis of different tools that implement forward 
+    snowballing.
+  - The results of this analysis are described in the article referenced in this repository.
+  - This analysis served as the basis for the development of the automated tool also included 
+    in  this repository.
+  - The step-by-step guide for reproducing the analysis is available in the tools_analysis directory.
+
+🛠️ 2. Automated tool with web interface
+  - Developed to assist researchers in the following tasks:
+    - Automatic article retrieval via forward snowballing;
+    - Initial analysis of the retrieved articles;
+    - Article screening based on inclusion and exclusion criteria, with support from LLMs.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16102191.svg)](https://doi.org/10.5281/zenodo.16102191)
 
-Access the full paper [here](SBES_IIER_2025___Snowballing.pdf)
+Access the full paper [here](<Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal.pdf>)
 
 ## 📚 Citation
 
@@ -46,11 +54,8 @@ If you use this work, please cite the following paper:
 ---
 
 ## 🗂️ A. Repository Organization
-
-**1. `inicial_analisys` (Datasets):**
-- Data collected from a seed article, from 5 tools supporting forward snowballing.
-- Jupyter Notebook with initial comparative analysis of the data returned by the tools.
-- Structure prepared to facilitate data extension and exploration.
+**1. `tools_analisys` (Analysis of 5 tools):**
+    The structure and description of this directory are provided in its own README file.
 
 **2. `Framework_Snowballing` (Prototype):**
 - `controllers/`: application logic.
@@ -63,23 +68,24 @@ If you use this work, please cite the following paper:
 ---
 
 ## ▶️ B. How to Run the Code
-
-1. Download the repository and unzip the files.
-2. Install the required libraries (Node.js and Python).
-3. Insert your Gemini API key into the file `analisa.js`.
-
-> ⚠️ Note: The user must have a Gemini API key to access the LLM features. However, all other functionalities of the tool can be used without the key.
-
----
-
-## 📦 C. Requirements
-
 The project was developed and validated on **Linux** environments.  
 Users operating on different systems may need to adjust certain commands or dependencies accordingly.
 
-This project uses Node.js and Python. The requirements are organized as follows:
+1. Download the repository and unzip the files.
+2. To use the inclusion and exclusion criteria analysis feature with LLM support, you must add your Gemini API key to the analisa.js file.
+  - Navigate to the file:
+  ```bash
+    cd ./Framework_snowballing/scripts/
+  ```
+  - Open the analisa.js file and set your API key:
+  ```bash
+    API_KEY = 'YOUR_API_KEY'
+  ```
 
-### Node.js & Python
+⚠️ Note: Only the LLM-based screening feature requires a Gemini API key. All other functionalities of the tool can be used without it.
+
+3. Install the required libraries (Node.js and Python).
+
 - Dependencies are listed in the `package.json` file.
 - Required libraries are listed in the `requirements.txt` .
 ```bash
@@ -100,6 +106,7 @@ This project uses Node.js and Python. The requirements are organized as follows:
   `http://localhost:3000`
   ```
 - Enter the DOI of the seed article and click **Search**.
+- A tutorial on how to use the tool and the expected outputs on each screen is available [here](<Tool Usage Tutorial.pdf>).
 
 ## 📄 License
 

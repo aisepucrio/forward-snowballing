@@ -2,7 +2,7 @@ import google.generativeai as genai
 import sys
 import json
 
-API_KEY='SUA_CHAVE_AQUI'
+API_KEY='API_KEY'
 
 genai.configure(api_key=API_KEY)
 
@@ -123,7 +123,7 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos):
                 raise ValueError("Sem resultados extraídos")
         except Exception as e:
             print(f"[ERRO Análise] Artigo '{artigo.get('title', '')}': {e}", file=sys.stderr)
-            criterios = {f"Critério {i+1}": "Erro" for i in range(4)}
+            criterios = {f"Criteria": "It was not possible to analyze the criterion. Please check the submitted data or try again later." for i in range(1)}
             resultados.append({
                 "Título": artigo.get("title", ""),
                 "Resultados": criterios

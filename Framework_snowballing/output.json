@@ -4,8 +4,69 @@
   "year": 2021,
   "venue": "-",
   "abstract": "-",
-  "citations_count": 90,
+  "citations_count": 92,
   "citations": [
+    {
+      "paperId": "sesr-eval-dataset-for-evaluating-llms-in-the-title",
+      "title": "SESR-Eval: Dataset for Evaluating LLMs in the Title-Abstract Screening of Systematic Reviews",
+      "authors": [
+        {
+          "name": "Aleksi Huotala"
+        },
+        {
+          "name": "Miikka Kuutila"
+        },
+        {
+          "name": "Mika V Mantyla"
+        }
+      ],
+      "year": 2025,
+      "venue": "",
+      "doi": "-",
+      "abstract": "Background: The use of large language models (LLMs) in the title-abstract screening process of systematic reviews (SRs) has shown promising results, but suffers from limited performance evaluation. Aims: Create a benchmark dataset to evaluate the performance of LLMs in the title-abstract screening process of SRs. Provide evidence whether using LLMs in title-abstract screening in software engineering is advisable. Method: We start with 169 SR research artifacts and find 24 of those to be suitable for inclusion in the dataset. Using the dataset we benchmark title-abstract screening using 9 LLMs. Results: We present the SESR-Eval (Software Engineering Systematic Review Evaluation) dataset containing 34,528 labeled primary studies, sourced from 24 secondary studies published in software engineering (SE) journals. Most LLMs performed similarly and the differences in screening accuracy between secondary studies are greater than differences between LLMs. The cost of using an LLM is relatively low - less than $40 per secondary study even for the most expensive model. Conclusions: Our benchmark enables monitoring AI performance in the screening task of SRs in software engineering. At present, LLMs are not yet recommended for automating the title-abstract screening process, since accuracy varies widely across secondary studies, and no LLM managed a high recall with reasonable precision. In future, we plan to investigate factors that influence LLM screening performance between studies.",
+      "citations_count": 0
+    },
+    {
+      "paperId": "prompting-for-performance-exploring-llms-for-confi",
+      "title": "Prompting for Performance: Exploring LLMs for Configuring Software",
+      "authors": [
+        {
+          "name": "Helge Spieker"
+        },
+        {
+          "name": "Théo Matricon"
+        },
+        {
+          "name": "Nassim Belmecheri"
+        },
+        {
+          "name": "Jørn Eirik Betten"
+        },
+        {
+          "name": "Gauthier Lyan"
+        },
+        {
+          "name": "Heraldo Borges"
+        },
+        {
+          "name": "Q. Mazouni"
+        },
+        {
+          "name": "Dennis Gross"
+        },
+        {
+          "name": "Arnaud Gotlieb"
+        },
+        {
+          "name": "M. Acher"
+        }
+      ],
+      "year": 2025,
+      "venue": "",
+      "doi": "-",
+      "abstract": "Software systems usually provide numerous configuration options that can affect performance metrics such as execution time, memory usage, binary size, or bitrate. On the one hand, making informed decisions is challenging and requires domain expertise in options and their combinations. On the other hand, machine learning techniques can search vast configuration spaces, but with a high computational cost, since concrete executions of numerous configurations are required. In this exploratory study, we investigate whether large language models (LLMs) can assist in performance-oriented software configuration through prompts. We evaluate several LLMs on tasks including identifying relevant options, ranking configurations, and recommending performant configurations across various configurable systems, such as compilers, video encoders, and SAT solvers. Our preliminary results reveal both positive abilities and notable limitations: depending on the task and systems, LLMs can well align with expert knowledge, whereas hallucinations or superficial reasoning can emerge in other cases. These findings represent a first step toward systematic evaluations and the design of LLM-based solutions to assist with software configuration.",
+      "citations_count": 0
+    },
     {
       "paperId": "linux-kernel-configurations-at-scale-a-dataset-for",
       "title": "Linux Kernel Configurations at Scale: A Dataset for Performance and Evolution Analysis",
@@ -372,7 +433,7 @@
       "venue": "ACM-REP",
       "doi": "10.1145/3641525.3663621",
       "abstract": "Reproducibility (a.k.a., determinism in some cases) constitutes a fundamental aspect in various fields of computer science, such as floating-point computations in numerical analysis and simulation, concurrency models in parallelism, reproducible builds for third parties integration and packaging, and containerization for execution environments. These concepts, while pervasive across diverse concerns, often exhibit intricate inter-dependencies, making it challenging to achieve a comprehensive understanding. In this short and vision paper we delve into the application of software engineering techniques, specifically variability management, to systematically identify and explicit points of variability that may give rise to reproducibility issues (e.g., language, libraries, compiler, virtual machine, OS, environment variables, etc.). The primary objectives are: i) gaining insights into the variability layers and their possible interactions, ii) capturing and documenting configurations for the sake of reproducibility, and iii) exploring diverse configurations to replicate, and hence validate and ensure the robustness of results. By adopting these methodologies, we aim to address the complexities associated with reproducibility and replicability in modern software systems and environments, facilitating a more comprehensive and nuanced perspective on these critical aspects.",
-      "citations_count": 0
+      "citations_count": 1
     },
     {
       "paperId": "paving-a-path-for-a-combined-family-of-feature-tog",
@@ -449,7 +510,7 @@
       "venue": "ACM Transactions on Software Engineering and Methodology",
       "doi": "10.48550/arXiv.2403.03322",
       "abstract": "Performance is arguably the most crucial attribute that reflects the quality of a configurable software system. However, given the increasing scale and complexity of modern software, modeling and predicting how various configurations can impact performance becomes one of the major challenges in software maintenance. As such, performance is often modeled without having a thorough knowledge of the software system, but relying mainly on data, which fits precisely with the purpose of deep learning. In this article, we conduct a comprehensive review exclusively on the topic of deep learning for performance learning of configurable software, covering 1,206 searched papers spanning six indexing services, based on which 99 primary papers were extracted and analyzed. Our results outline key statistics, taxonomy, strengths, weaknesses, and optimal usage scenarios for techniques related to the preparation of configuration data, the construction of deep learning performance models, the evaluation of these models, and their utilization in various software configuration-related tasks. We also identify the good practices and potentially problematic phenomena from the studies surveyed, together with a comprehensive summary of actionable suggestions and insights into future opportunities within the field. To promote open science, all the raw results of this survey can be accessed at our repository: https://github.com/ideas-labo/DCPL-SLR.",
-      "citations_count": 5
+      "citations_count": 6
     },
     {
       "paperId": "a-demonstration-of-end-user-code-customization-usi",
@@ -512,7 +573,7 @@
       "venue": "Journal of Systems and Software",
       "doi": "10.1016/j.jss.2023.111883",
       "abstract": null,
-      "citations_count": 0
+      "citations_count": 1
     },
     {
       "paperId": "unleashing-the-power-of-implicit-feedback-in-softw",
@@ -621,7 +682,7 @@
       "venue": "Software Product Lines Conference",
       "doi": "10.1145/3579027.3608972",
       "abstract": "Programming variability is central to the design and implementation of software systems that can adapt to a variety of contexts and requirements, providing increased flexibility and customization. Managing the complexity that arises from having multiple features, variations, and possible configurations is known to be highly challenging for software developers. In this paper, we explore how large language model (LLM)-based assistants can support the programming of variability.We report on new approaches made possible with LLM-based assistants, like: features and variations can be implemented as prompts; augmentation of variability out of LLM-based domain knowledge; seamless implementation of variability in different kinds of artefacts, programming languages, and frameworks, at different binding times (compile-time or run-time). We are sharing our data (prompts, sessions, generated code, etc.) to support the assessment of the effectiveness and robustness of LLMs for variability-related tasks.",
-      "citations_count": 14
+      "citations_count": 16
     },
     {
       "paperId": "generative-ai-for-reengineering-variants-into-soft",
@@ -638,7 +699,7 @@
       "venue": "Software Product Lines Conference",
       "doi": "10.1145/3579028.3609016",
       "abstract": "The migration and reengineering of existing variants into a software product line (SPL) is an error-prone and time-consuming activity. Many extractive approaches have been proposed, spanning different activities from feature identification and naming to the synthesis of reusable artefacts. In this paper, we explore how large language model (LLM)-based assistants can support domain analysts and developers. We revisit four illustrative cases of the literature where the challenge is to migrate variants written in different formalism (UML class diagrams, Java, GraphML, statecharts). We systematically report on our experience with ChatGPT-4, describing our strategy to prompt LLMs and documenting positive aspects but also failures. We compare the use of LLMs with state-of-the-art approach, BUT4Reuse. While LLMs offer potential in assisting domain analysts and developers in transitioning software variants into SPLs, their intrinsic stochastic nature and restricted ability to manage large variants or complex structures necessitate a semiautomatic approach, complete with careful review, to counteract inaccuracies.",
-      "citations_count": 14
+      "citations_count": 15
     },
     {
       "paperId": "true-variability-shining-through-taxonomy-mining",
@@ -768,7 +829,7 @@
       "venue": "ACM Computing Surveys",
       "doi": "10.1145/3572905",
       "abstract": "Machine learning (ML) techniques increase the effectiveness of software engineering (SE) lifecycle activities. We systematically collected, quality-assessed, summarized, and categorized 83 reviews in ML for SE published between 2009 and 2022, covering 6,117 primary studies. The SE areas most tackled with ML are software quality and testing, while human-centered areas appear more challenging for ML. We propose a number of ML for SE research challenges and actions, including conducting further empirical validation and industrial studies on ML, reconsidering deficient SE methods, documenting and automating data collection and pipeline processes, reexamining how industrial practitioners distribute their proprietary data, and implementing incremental ML approaches.",
-      "citations_count": 25
+      "citations_count": 28
     },
     {
       "paperId": "specialization-of-run-time-configuration-space-at-",
@@ -848,7 +909,7 @@
       "venue": "International Conference on Automated Software Engineering",
       "doi": "10.1145/3551349.3559499",
       "abstract": "To secure computer infrastructure, we need to configure all security-relevant settings. We need security experts to identify security-relevant settings, but this process is time-consuming and expensive. Our proposed solution uses state-of-the-art natural language processing to classify settings as security-relevant based on their description. Our evaluation shows that our trained classifiers do not perform well enough to replace the human security experts but can help them classify the settings. By publishing our labeled data sets and the code of our trained model, we want to help security experts analyze configuration settings and enable further research in this area.",
-      "citations_count": 5
+      "citations_count": 6
     },
     {
       "paperId": "defining-categorical-reasoning-of-numerical-featur",
@@ -1113,7 +1174,7 @@
       "venue": "European Conference on Computer Systems",
       "doi": "10.1145/3492321.3519575",
       "abstract": "Modern computer systems are highly configurable, with the total variability space sometimes larger than the number of atoms in the universe. Understanding and reasoning about the performance behavior of highly configurable systems, over a vast and variable space, is challenging. State-of-the-art methods for performance modeling and analyses rely on predictive machine learning models, therefore, they become (i) unreliable in unseen environments (e.g., different hardware, workloads), and (ii) may produce incorrect explanations. To tackle this, we propose a new method, called Unicorn, which (i) captures intricate interactions between configuration options across the software-hardware stack and (ii) describes how such interactions can impact performance variations via causal inference. We evaluated Unicorn on six highly configurable systems, including three on-device machine learning systems, a video encoder, a database management system, and a data analytics pipeline. The experimental results indicate that Unicorn outperforms state-of-the-art performance debugging and optimization methods in finding effective repairs for performance faults and finding configurations with near-optimal performance. Further, unlike the existing methods, the learned causal performance models reliably predict performance for new environments.",
-      "citations_count": 31
+      "citations_count": 32
     },
     {
       "paperId": "input-sensitivity-on-the-performance-of-configurab",
@@ -1136,7 +1197,7 @@
       "venue": "Journal of Systems and Software",
       "doi": "10.1016/j.jss.2023.111671",
       "abstract": null,
-      "citations_count": 7
+      "citations_count": 8
     },
     {
       "paperId": "transfer-learning-across-variants-and-versions-the",
@@ -1165,7 +1226,7 @@
       "venue": "IEEE Transactions on Software Engineering",
       "doi": "10.1109/TSE.2021.3116768",
       "abstract": "With large scale and complex configurable systems, it is hard for users to choose the right combination of options (i.e., configurations) in order to obtain the wanted trade-off between functionality and performance goals such as speed or size. Machine learning can help in relating these goals to the configurable system options, and thus, predict the effect of options on the outcome, typically after a costly training step. However, many configurable systems evolve at such a rapid pace that it is impractical to retrain a new model from scratch for each new version. In this paper, we propose a new method to enable transfer learning of binary size predictions among versions of the same configurable system. Taking the extreme case of the Linux kernel with its <inline-formula><tex-math notation=\"LaTeX\">$\\approx 14,500$</tex-math><alternatives><mml:math><mml:mrow><mml:mo>≈</mml:mo><mml:mn>14</mml:mn><mml:mo>,</mml:mo><mml:mn>500</mml:mn></mml:mrow></mml:math><inline-graphic xlink:href=\"martin-ieq1-3116768.gif\"/></alternatives></inline-formula> configuration options, we first investigate how binary size predictions of kernel size degrade over successive versions. We show that the direct reuse of an accurate prediction model from 2017 quickly becomes inaccurate when Linux evolves, up to a 32% mean error by August 2020. We thus propose a new approach for transfer evolution-aware model shifting (<sc>tEAMS</sc>). It leverages the structure of a configurable system to transfer an initial predictive model towards its future versions with a minimal amount of extra processing for each version. We show that <sc>tEAMS</sc> vastly outperforms state of the art approaches over the 3 years history of Linux kernels, from 4.13 to 5.8.",
-      "citations_count": 38
+      "citations_count": 40
     },
     {
       "paperId": "a-comparison-of-performance-specialization-learnin",
@@ -1269,7 +1330,7 @@
       "venue": "Journal of Intelligence and Information Systems",
       "doi": "10.1007/s10844-021-00666-5",
       "abstract": "Constraint solving is applied in different application contexts. Examples thereof are the configuration of complex products and services, the determination of production schedules, and the determination of recommendations in online sales scenarios. Constraint solvers apply, for example, search heuristics to assure adequate runtime performance and prediction quality. Several approaches have already been developed showing that machine learning (ML) can be used to optimize search processes in constraint solving. In this article, we provide an overview of the state of the art in applying ML approaches to constraint solving problems including constraint satisfaction, SAT solving, answer set programming (ASP) and applications thereof such as configuration, constraint-based recommendation, and model-based diagnosis. We compare and discuss the advantages and disadvantages of these approaches and point out relevant directions for future work.",
-      "citations_count": 23
+      "citations_count": 24
     },
     {
       "paperId": "predicting-design-impactful-changes-in-modern-code",
@@ -1774,7 +1835,7 @@
       "venue": "IEEE Access",
       "doi": "10.1109/ACCESS.2021.3072165",
       "abstract": "Context-aware recommender systems dedicated to online social networks experienced noticeable growth in the last few years. This has led to more research being done in this area stimulated by the omnipresence of smartphones and the latest web technologies. These systems are able to detect specific user needs and adapt recommendations to actual user context. In this research, we present a comprehensive review of context-aware recommender systems developed for social networks. For this purpose, we used a systematic literature review methodology which clearly defined the scope, the objective, the timeframe, the methods, and the tools to undertake this research. Our focus is to investigate approaches and techniques used in the development of context-aware recommender systems for social networks and identify the research gaps, challenges, and opportunities in this field. In order to have a clear vision of the research potential in the field, we considered research articles published between 2015 and 2020 and used a research portal giving access to major scientific research databases. Primary research articles selected are reviewed and the recommendation process is analyzed to identify the approach, the techniques, and the context elements employed in the development of the recommendation systems. The paper presents the detail of the review study, provides a synthesis of the results, proposes an evaluation based on measurable evaluation tools developed in this study, and advocates future research and development pathways in this interesting field.",
-      "citations_count": 28
+      "citations_count": 29
     },
     {
       "paperId": "monte-carlo-simulations-for-variability-analyses-i",
