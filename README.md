@@ -17,7 +17,7 @@ This repository brings together two main components:
     - Initial analysis of the retrieved articles;
     - Article screening based on inclusion and exclusion criteria, with support from LLMs.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16102191.svg)](https://doi.org/10.5281/zenodo.16102191)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16755858.svg)](https://doi.org/10.5281/zenodo.16755858)
 
 Access the full paper [here](<Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal.pdf>)
 
