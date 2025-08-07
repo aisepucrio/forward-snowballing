@@ -19,7 +19,7 @@ This repository brings together two main components:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16755858.svg)](https://doi.org/10.5281/zenodo.16755858)
 
-Access the full paper [here](paper_SBES_IIER_2025.pdf)
+Access the full paper [here](SBES_IIER_2025___Snowballing.pdf)
 
 ## 📚 Citation
 
