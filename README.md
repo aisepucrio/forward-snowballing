@@ -26,11 +26,13 @@ Access the full paper [here](SBES_IIER_2025___Snowballing.pdf)
 If you use this work, please cite the following paper:
 
 ```bibtex
-@inproceedings{JanuarioSBES2025,
-  title={Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal},
-  author={Januário, Jailma and Nicolau, Maria Isabel and Felizardo, Katia R. and Pereira, Juliana Alves},
-  booktitle={Brazilian Symposium on Software Engineering Insightful Ideas and Emerging Results Track (SBES IIER).ACM, Recife, PE },
-  year={2025}
+@Inproceedings{januario2025:SBES,
+  author = {Januário, Jailma and Nicolau, Maria Isabel and Felizardo, Katia Romero and Pereira, Juliana Alves},
+  title     = {Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal},
+  year      = {2025},
+  pages     = {1–7},
+  booktitle = {Brazilian Symposium on Software Engineering, Insightful Ideas and Emerging Results Track (SBES IIER)},  
+  publisher = {SOL}
 }
 ```
 ---
