@@ -4,14 +4,11 @@
   <meta charset="UTF-8" />
   <title>Snowballing Forward - Criteria Application</title>
 
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
     <div class="container-fluid">
       <a class="navbar-brand fs-4" href="index.html">Snowballing Forward</a>
@@ -27,7 +24,6 @@
     </div>
   </nav>
 
-  <!-- Content -->
   <main class="container mt-5 pt-5">
     <h1 class="mb-4">Define Inclusion and Exclusion Criteria</h1>
 
@@ -42,11 +38,25 @@
         <textarea class="form-control" id="exclusao" rows="4" placeholder="Enter exclusion criteria, one per line..."></textarea>
       </div>
 
-      <button type="submit" class="btn btn-primary">
+      <button id="analisarBtn" type="submit" class="btn btn-primary">
         <span id="btnTexto">Apply Criteria</span>
         <span id="btnLoading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
       </button>
     </form>
+
+    <div class="mt-4">
+      <p id="statusAnalise" class="text-muted mb-2"></p>
+      <div class="progress" style="height: 24px;">
+        <div
+          id="progressoAnalise"
+          class="progress-bar progress-bar-striped progress-bar-animated"
+          role="progressbar"
+          style="width: 0%;"
+        >
+          0%
+        </div>
+      </div>
+    </div>
 
     <hr />
 
@@ -58,7 +68,6 @@
     <div id="resultadoAnalise" class="mt-3" data-resultados-raw=""></div>
   </main>
 
-  <!-- Scripts -->
   <script>
     let artigosIncluidos = [];
 
@@ -72,6 +81,21 @@
       }
     });
 
+    function dividirEmLotes(array, tamanhoLote = 10) {
+      const lotes = [];
+      for (let i = 0; i < array.length; i += tamanhoLote) {
+        lotes.push(array.slice(i, i + tamanhoLote));
+      }
+      return lotes;
+    }
+
+    function prepararArtigosParaAnalise(artigos) {
+      return artigos.map(artigo => ({
+        title: artigo.title || '',
+        abstract: artigo.abstract || ''
+      }));
+    }
+
     function montarTabela(resultados) {
       if (!Array.isArray(resultados) || resultados.length === 0) {
         return '<p class="text-muted">No results available.</p>';
@@ -83,6 +107,7 @@
           Object.keys(r.Resultados).forEach(c => criteriosSet.add(c));
         }
       });
+
       const colunas = Array.from(criteriosSet);
 
       let html = '<div class="table-responsive"><table class="table table-bordered table-hover align-middle">';
@@ -96,9 +121,10 @@
 
       resultados.forEach(r => {
         html += `<tr><td><strong>${r.Título || '(Untitled)'}</strong></td>`;
+
         colunas.forEach(col => {
           const valorBruto = r.Resultados?.[col] || '-';
-          const valor = valorBruto.toLowerCase();
+          const valor = String(valorBruto).toLowerCase();
 
           let badge = valorBruto;
           if (valor === 'sim') {
@@ -111,6 +137,7 @@
 
           html += `<td class="text-center">${badge}</td>`;
         });
+
         html += '</tr>';
       });
 
@@ -127,15 +154,16 @@
           Object.keys(r.Resultados).forEach(c => criteriosSet.add(c));
         }
       });
-      const colunas = Array.from(criteriosSet);
 
+      const colunas = Array.from(criteriosSet);
       const header = ['Title', ...colunas];
       const linhas = [header.join(',')];
 
       resultados.forEach(r => {
-        const linha = [r.Título];
+        const linha = [r.Título || ''];
         colunas.forEach(col => {
-          let val = r.Resultados[col] || '';
+          let val = r.Resultados?.[col] || '';
+          val = String(val);
           if (val.includes(',') || val.includes('"') || val.includes('\n')) {
             val = `"${val.replace(/"/g, '""')}"`;
           }
@@ -147,6 +175,56 @@
       return linhas.join('\n');
     }
 
+    async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
+      const artigosLimpos = prepararArtigosParaAnalise(artigos);
+      const tamanhoLote = 10;
+      const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
+      const resultadosFinais = [];
+
+      const statusEl = document.getElementById('statusAnalise');
+      const progressoEl = document.getElementById('progressoAnalise');
+
+      statusEl.textContent = `Starting analysis... 0/${artigosLimpos.length}`;
+      progressoEl.style.width = '0%';
+      progressoEl.textContent = '0%';
+
+      for (let i = 0; i < lotes.length; i++) {
+        const lote = lotes[i];
+
+        const payload = {
+          criteriosInclusao: criteriosInclusao,
+          criteriosExclusao: criteriosExclusao,
+          artigos: lote
+        };
+
+        const res = await fetch('http://localhost:3000/api/articles/analisar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error(`Error analyzing batch ${i + 1}`);
+        }
+
+        const resultadosLote = await res.json();
+        resultadosFinais.push(...resultadosLote);
+
+        const processados = Math.min((i + 1) * tamanhoLote, artigosLimpos.length);
+        const percentual = Math.round((processados / artigosLimpos.length) * 100);
+
+        statusEl.textContent = `Analyzing articles... ${processados}/${artigosLimpos.length}`;
+        progressoEl.style.width = `${percentual}%`;
+        progressoEl.textContent = `${percentual}%`;
+      }
+
+      statusEl.textContent = `Analysis finished: ${artigosLimpos.length}/${artigosLimpos.length}`;
+      progressoEl.style.width = '100%';
+      progressoEl.textContent = '100%';
+
+      return resultadosFinais;
+    }
+
     document.getElementById('criteriosForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -154,6 +232,7 @@
       const exclusao = document.getElementById('exclusao').value.trim();
       const btnTexto = document.getElementById('btnTexto');
       const btnLoading = document.getElementById('btnLoading');
+      const analisarBtn = document.getElementById('analisarBtn');
 
       if (!inclusao && !exclusao) {
         alert('Please fill in at least one of the fields with criteria.');
@@ -165,44 +244,21 @@
         return;
       }
 
-      let artigosParaEnviar = artigosIncluidos;
-
-      if (artigosIncluidos.length > 20) {
-        const confirmar = confirm(`You are about to send ${artigosIncluidos.length} articles to the LLM. Do you wish to continue?`);
-        if (!confirmar) {
-          return;
-        }
-      } else {
-        artigosParaEnviar = artigosIncluidos.slice(0, 20);
-      }
-
-      const payload = {
-        criteriosInclusao: inclusao,
-        criteriosExclusao: exclusao,
-        artigos: artigosParaEnviar.map(a => ({
-          title: a.title,
-          abstract: a.abstract || ''
-        })),
-      };
-
       btnTexto.classList.add('d-none');
       btnLoading.classList.remove('d-none');
+      analisarBtn.disabled = true;
 
       try {
-        const res = await fetch('http://localhost:3000/api/articles/analisar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        const resultados = await analisarEmLotes(
+          artigosIncluidos,
+          inclusao,
+          exclusao
+        );
 
-        if (!res.ok) throw new Error('Error analyzing articles');
-
-        const resultados = await res.json();
         const tabelaHTML = montarTabela(resultados);
 
         const divResultado = document.getElementById('resultadoAnalise');
         divResultado.innerHTML = tabelaHTML;
-
         divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
 
       } catch (err) {
@@ -212,6 +268,7 @@
       } finally {
         btnTexto.classList.remove('d-none');
         btnLoading.classList.add('d-none');
+        analisarBtn.disabled = false;
       }
     });
 
@@ -248,7 +305,6 @@
     });
   </script>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
