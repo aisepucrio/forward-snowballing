@@ -40,21 +40,15 @@
       <h3 class="mb-4">Summary</h3>
       <div class="row g-4">
         <div class="col-md-4">
-          <div class="card-resumo bg-primary text-white">
+          <div class="card-resumo">
             <h5>Total Articles</h5>
             <p id="total-artigos">0</p>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card-resumo bg-info text-white">
-            <h5>Articles by year</h5>
-            <ul id="artigos-ano" class="resumo-list"></ul>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card-resumo bg-warning text-dark">
+          <div class="card-resumo">
             <h5>Articles by venue</h5>
-            <ul id="artigos-venue" class="resumo-list"></ul>
+            <p id="total-venue">0</p>
           </div>
         </div>
       </div>
@@ -63,10 +57,10 @@
     <section class="mb-5">
       <h3 class="mb-4">Graphics</h3>
       <div class="row g-4">
-        <div class="col-md-6">
+        <div class="col-md-6 quadro">
           <canvas id="graficoAno" height="300"></canvas>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-6 quadro">
           <canvas id="graficoVenue" height="300"></canvas>
         </div>
       </div>
@@ -75,8 +69,7 @@
 
   <script>
     const totalArtigosEl = document.getElementById('total-artigos');
-    const artigosAnoEl = document.getElementById('artigos-ano');
-    const artigosVenueEl = document.getElementById('artigos-venue');
+    const totalVenueEl = document.getElementById('total-venue');
 
     function normalizeArticles(data) {
       return data.map(item => ({
@@ -96,6 +89,7 @@
     }, {});
 
     function fillList(el, obj) {
+      if (!el) return;
       el.innerHTML = '';
       Object.entries(obj).sort().forEach(([key, val]) => {
         const li = document.createElement('li');
@@ -108,8 +102,7 @@
       const porAno = countBy(artigos, 'year');
       const porVenue = countBy(artigos, 'venue');
       totalArtigosEl.textContent = artigos.length;
-      fillList(artigosAnoEl, porAno);
-      fillList(artigosVenueEl, porVenue);
+      totalVenueEl.textContent = Object.keys(porVenue).length;
 
       if (window.chartAno) window.chartAno.destroy();
       if (window.chartVenue) window.chartVenue.destroy();

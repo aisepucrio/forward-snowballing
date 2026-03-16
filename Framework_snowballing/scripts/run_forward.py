@@ -4,7 +4,7 @@ import traceback
 import re
 import hashlib
 import requests
-
+sys.stdout.reconfigure(encoding='utf-8')
 
 REQUEST_TIMEOUT = 10
 USER_AGENT = "forward-snowballing-app/1.0"
