@@ -1,35 +1,165 @@
+/* Autofill na primeira tela (sem busca realizada) */
+body:not(.busca-realizada) input:-webkit-autofill,
+body:not(.busca-realizada) input:-webkit-autofill:focus,
+body:not(.busca-realizada) input:-webkit-autofill:hover,
+body:not(.busca-realizada) input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f1f1f1 inset !important;
+  box-shadow: 0 0 0 1000px #f1f1f1 inset !important;
+  -webkit-text-fill-color: #000 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Autofill na segunda tela (com busca realizada)*/
+body.busca-realizada input:-webkit-autofill,
+body.busca-realizada input:-webkit-autofill:focus,
+body.busca-realizada input:-webkit-autofill:hover,
+body.busca-realizada input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color: #000 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 body {
-  background-color: #f8f9fa;
+  font-family: 'Poppins', sans-serif;
+  background-color: #ffffff;
   margin: 0;
-  padding-top: 20px;
-  min-height: 60vh;
+  padding-top: 70px;
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
 }
 
+body.busca-realizada{
+  background-color: #F2F2F2;
+}
+
+/* NAVBAR */
+.navbar {
+  transition: all 0.3s ease;
+}
+
+.navbar .nav-link {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #000000 !important;
+}
+
+/* BOTÕES NAV */
+.btn-nav-custom {
+  background-color: #d5d5d5 !important;
+  color: #333 !important;
+  border-radius: 20px !important;
+  padding: 8px 20px !important;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-nav-custom:hover {
+  background-color: #c5c5c5 !important;
+  transform: translateY(-1px);
+}
+
+/*  NAVBAR APÓS BUSCA */
+body.busca-realizada .navbar {
+  background-color: #d5d5d5 !important;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+/* estado normal */
+#searchForm > div {
+  width: 500px;
+  transition: all 0.3s ease;
+}
+
+body.busca-realizada #searchForm > div {
+  width: 600px;
+  max-width: 90vw; 
+  height: 24;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#searchForm input[type="search"],
+#searchForm button {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* fonte peso e tamanho do botão Search*/
+#searchForm button {
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 20px;
+
+}
+
+body.busca-realizada .navbar .nav-link,
+body.busca-realizada .navbar .navbar-brand {
+  color: #000000 !important;
+}
+
+/* BRAND */
+.brand-home {
+  display: none !important;
+}
+
+
+/* TÍTULO */
+.text-center h1 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 64px;
+  color: #000;
+  margin: 0;
+}
+
+.text-center p {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #000;
+  margin: 0;
+}
+
+/* ESTADO APÓS BUSCA */
 body.busca-realizada {
   align-items: flex-start;
   padding-top: 100px;
 }
 
+/* CONTAINER */
 .container {
   width: 100%;
   max-width: 1400px;
   padding: 0 30px;
 }
+.th-citedby {
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
 
+/* TABELA */
 table {
   width: 100%;
   background-color: white;
   border-radius: 10px;
   overflow: hidden;
 }
+.titulo-seed {
+  font-weight: 700;
+  font-size: 30px;
 
+}
 .table th {
   background-color: #f8f9fa;
   text-align: center;
+  font-weight: 700
 }
 
 .table td {
@@ -37,6 +167,7 @@ table {
   background-color: #f8f9fa;
 }
 
+/* LINKS */
 a {
   text-decoration: none;
 }
@@ -49,12 +180,51 @@ h3 {
   margin-top: 30px;
 }
 
+/* CITAÇÕES */
 #citationsSection {
   display: none;
   position: relative;
   margin-top: 30px;
 }
 
+/* ESTADO INICIAL */
+#navbarLogo {
+  display: none;
+}
+
+#searchForm {
+  transition: all 0.4s ease;
+}
+
+#headerContainer {
+  transition: all 0.4s ease;
+}
+
+body.busca-realizada #headerContainer {
+  display: none;
+}
+
+body.busca-realizada #navbarLogo {
+  display: block;
+}
+
+body.busca-realizada #searchForm {
+  position: fixed;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+}
+
+body.busca-realizada #resultado {
+  margin-top: 120px;
+}
+
+body.busca-realizada #citationsSection {
+  margin-top: 20px;
+}
+
+/* HEADER CITAÇÕES */
 #citationsHeader {
   display: flex;
   align-items: center;
@@ -66,20 +236,23 @@ h3 {
   margin: 0;
 }
 
-#downloadBtn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-size: 1rem;
-  text-decoration: none;
-  color: #0d6efd;
+/* BOTÃO SELECT ALL */
+#selectAllBtn {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-#downloadBtn:hover {
-  text-decoration: underline;
+#selectAllBtn.active {
+  background-color: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
 }
 
+#selectAllBtn.active:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+/* ABSTRACT */
 .abstract-cell {
   max-width: 280px;
   white-space: nowrap;
@@ -88,6 +261,7 @@ h3 {
   cursor: pointer;
 }
 
+/* BOTÕES TRIAGEM */
 .btn-triagem {
   font-size: 0.85rem;
   padding: 0.25rem 0.5rem;
@@ -103,6 +277,10 @@ h3 {
   vertical-align: middle;
 }
 
+/* LOGO */
+
+
+/* BOTÕES INCLUIR/EXCLUIR */
 .btn-incluir.active {
   background-color: #198754;
   color: white;
@@ -117,6 +295,19 @@ h3 {
   box-shadow: 0 0 6px #dc3545aa;
 }
 
+.btn-incluir:not(.active):hover {
+  background-color: #bbdfbd;
+  color: #333;
+  cursor: pointer;
+}
+
+.btn-excluir:not(.active):hover {
+  background-color: #e1bfc1;
+  color: #333;
+  cursor: pointer;
+}
+
+/* TALVEZ */
 .btn-talvez.active {
   background-color: #ffc107;
   color: black;
@@ -124,7 +315,20 @@ h3 {
   box-shadow: 0 0 6px #ffc107aa;
 }
 
-/* Card flutuante do abstract */
+/* TABELA FULL WIDTH */
+.table-responsive {
+  width: 100vw;
+  max-width: 100vw;
+  overflow-x: auto;
+  margin-left: calc(-50vw + 50%);
+}
+
+.table-responsive table {
+  width: 100%;
+  min-width: 1200px;
+}
+
+/* CARD ABSTRACT */
 #abstractCard {
   display: none;
   position: absolute;
@@ -148,4 +352,10 @@ h3 {
   max-height: 300px;
   overflow-y: auto;
   white-space: pre-wrap;
+}
+.navbar a:hover {
+  text-decoration: none !important;
+}
+body:not(.busca-realizada) .main-brand {
+  display: none !important;
 }

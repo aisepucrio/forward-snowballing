@@ -4,7 +4,7 @@ import traceback
 import re
 import hashlib
 import requests
-
+sys.stdout.reconfigure(encoding='utf-8') #deixar esta linha sempre no projeto, pq precisa para o windows
 
 REQUEST_TIMEOUT = 10
 USER_AGENT = "forward-snowballing-app/1.0"

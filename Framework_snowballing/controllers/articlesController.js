@@ -32,7 +32,7 @@ exports.searchByDOI = (req, res) => {
   }
 
   // Comando com aspas para proteger espaços e caracteres especiais
-  const command = `python3 "${pathToPythonScript}" ${doi}`;
+  const command = `python "${pathToPythonScript}" ${doi}`;
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
