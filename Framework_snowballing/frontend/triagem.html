@@ -115,52 +115,96 @@ rel="stylesheet">
       });
     }
 
-    function atualizarCoresBarras(anoClicado = null, dadosPorAno) {
-
-      const corDestacada = '#000000'; 
-      const corOpaca = 'rgba(0, 0, 0, 0.3)';
-
-      if (!window.chartAno) return;
-
-      if (!dadosPorAno || typeof dadosPorAno !== 'object') {
-        console.error('dadosPorAno inválido:', dadosPorAno);
-        return;
-      }
-      
-      const anos = Object.keys(dadosPorAno);
-      const novasCores = anos.map(ano => {
-        if (anoClicado === null) {
-          return corDestacada;
-        } else if (ano === anoClicado) {
-          return corDestacada;
-        } else {
-          return corOpaca;
-        }
-      });
-      
-      window.chartAno.data.datasets[0].backgroundColor = novasCores;
-      window.chartAno.update();
-    }
-
     function atualizarResumoEgraficos(artigos) {
       const porAno = countBy(artigos, 'year');
-      const porVenue = countBy(artigos, 'venue');
+      const porVenueTotal = countBy(artigos, 'venue');
+      
       totalArtigosEl.textContent = artigos.length;
-      totalVenueEl.textContent = Object.keys(porVenue).length;
+      totalVenueEl.textContent = Object.keys(porVenueTotal).length;
 
       if (window.chartAno) window.chartAno.destroy();
       if (window.chartVenue) window.chartVenue.destroy();
 
-      let anoSelecionado = null;
-
       const corNormal = '#000000';
+      const corDestacada = '#000000';
+      const corOpaca = 'rgba(0, 0, 0, 0.3)';
+      
+      let anosSelecionados = Object.keys(porAno);
 
-      document.getElementById('checkbox').addEventListener('change', function(e) {
-        if (this.checked) {
-          anoSelecionado = null;
-          atualizarCoresBarras(anoSelecionado, porAno);
+      function filtrarArtigosPorAnosSelecionados() {
+        return artigos.filter(artigo => anosSelecionados.includes(artigo.year.toString()));
+      }
+
+      function atualizarGraficoVenues() {
+        const artigosFiltrados = filtrarArtigosPorAnosSelecionados();
+        const venuesFiltrados = countBy(artigosFiltrados, 'venue');
+        
+        if (window.chartVenue) {
+          window.chartVenue.destroy();
         }
-      });
+        
+        const cores_hex = [
+          '#5D8AA8', '#367588', '#2F4F4F', '#3F7CAC', '#264348', '#004242', '#2C5F71', '#5B8D89', '#628B7B',
+          '#436D61', '#1D475C', '#78B2AB', '#509C87', '#47836C', '#2D7452', '#33596F', '#006B5E', '#1F4F4F',
+          '#176D6D', '#1A5B6E', '#2E6B6B', '#008080', '#42736E', '#3B7A70', '#206B5E', '#3B6D6D', '#1E5945', '#236B54'
+        ];
+
+        window.chartVenue = new Chart(document.getElementById('graficoVenue'), {
+          type: 'pie',
+          data: {
+            labels: Object.keys(venuesFiltrados),
+            datasets: [{ 
+              data: Object.values(venuesFiltrados), 
+              backgroundColor: cores_hex.slice(0, Object.keys(venuesFiltrados).length)
+            }]
+          },
+          options: { 
+            plugins: { legend: { position: 'right' } },
+            onClick: (event, elements) => {
+              if (elements && elements.length > 0) {
+                const elementIndex = elements[0].index;
+                const venue = Object.keys(venuesFiltrados)[elementIndex];
+                const quantidade = Object.values(venuesFiltrados)[elementIndex];
+              }
+            }
+          }
+        });
+        
+      }
+
+      function atualizarCoresBarras(anosSelecionados) {
+        if (!window.chartAno) return;
+        
+        if (!anosSelecionados || anosSelecionados.length === 0) {
+          console.error('anosSelecionados inválido');
+          return;
+        }
+        
+        const anos = Object.keys(porAno);
+        const novasCores = anos.map(ano => {
+          if (anosSelecionados.includes(ano)) {
+            return corDestacada;
+          } else {
+            return corOpaca;
+          }
+        });
+        
+        window.chartAno.data.datasets[0].backgroundColor = novasCores;
+        window.chartAno.update();
+        
+        atualizarGraficoVenues();
+      }
+
+      function todosAnosSelecionados() {
+        return anosSelecionados.length === Object.keys(porAno).length;
+      }
+
+      function atualizarCheckbox() {
+        const checkbox = document.getElementById('checkbox');
+        if (checkbox) {
+          checkbox.checked = todosAnosSelecionados();
+        }
+      }
 
       window.chartAno = new Chart(document.getElementById('graficoAno'), {
         type: 'bar',
@@ -179,29 +223,57 @@ rel="stylesheet">
               const elementIndex = elements[0].index;
               const ano = Object.keys(porAno)[elementIndex];
               const quantidade = Object.values(porAno)[elementIndex];
+
+              const index = anosSelecionados.indexOf(ano);
               
+              if (index === -1) {
+                anosSelecionados.push(ano);
+              } else {
+                if (anosSelecionados.length > 1) {
+                  anosSelecionados.splice(index, 1);
+                } else {
+                  alert('At least one year must be selected.');
+                  return;
+                }
+              }
               
-              anoSelecionado = ano;
-              atualizarCoresBarras(anoSelecionado, porAno);
+              anosSelecionados.sort();
+                            
+              atualizarCoresBarras(anosSelecionados);
+              
+              atualizarCheckbox();
             }
           }
         }
       });
 
-      const cores_hex = [
-        '#5D8AA8', '#367588', '#2F4F4F', '#3F7CAC', '#264348', '#004242', '#2C5F71', '#5B8D89', '#628B7B',
-        '#436D61', '#1D475C', '#78B2AB', '#509C87', '#47836C', '#2D7452', '#33596F', '#006B5E', '#1F4F4F',
-        '#176D6D', '#1A5B6E', '#2E6B6B', '#008080', '#42736E', '#3B7A70', '#206B5E', '#3B6D6D', '#1E5945', '#236B54'
-      ];
-
-      window.chartVenue = new Chart(document.getElementById('graficoVenue'), {
-        type: 'pie',
-        data: {
-          labels: Object.keys(porVenue),
-          datasets: [{ data: Object.values(porVenue), backgroundColor: cores_hex }]
-        },
-        options: { plugins: { legend: { position: 'right' } } }
-      });
+      setTimeout(() => {
+        const checkbox = document.getElementById('checkbox');
+        if (!checkbox) {
+          console.error('Checkbox não encontrado');
+          return;
+        }
+        
+        const novoCheckbox = checkbox.cloneNode(true);
+        checkbox.parentNode.replaceChild(novoCheckbox, checkbox);
+        
+        novoCheckbox.checked = true;
+        
+        novoCheckbox.addEventListener('change', function(e) {
+          if (this.checked) {
+            anosSelecionados = Object.keys(porAno);
+          } else {            
+            const todosAnos = Object.keys(porAno);
+            anosSelecionados = [todosAnos[0]];
+            
+            this.checked = false;
+          }
+          
+          atualizarCoresBarras(anosSelecionados);
+        });
+      }, 100);
+      
+      atualizarCoresBarras(anosSelecionados);
     }
 
     function carregarArtigosLocal() {
@@ -211,7 +283,7 @@ rel="stylesheet">
       }
       try {
         const dados = JSON.parse(window.name);
-        const artigos = normalizeArticles(dados.filter(a => a.selecionado === 'incluir')); // só os incluídos
+        const artigos = normalizeArticles(dados.filter(a => a.selecionado === 'incluir'));
         atualizarResumoEgraficos(artigos);
       } catch (e) {
         alert('Error loading screening data:  ' + e.message);
