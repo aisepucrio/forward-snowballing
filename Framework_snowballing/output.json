@@ -1098,7 +1098,7 @@
       "venue": "ACM Transactions on Software Engineering and Methodology",
       "doi": "10.1145/3611663",
       "abstract": "A Software Product Line (SPL) is a family of similar programs. Each program is defined by a unique set of features, called a configuration, that satisfies all feature constraints. “What configuration achieves the best performance for a given workload?” is the SPLOptimization (SPLO) challenge. SPLO is daunting: just 80 unconstrained features yield 1024 unique configurations, which equals the estimated number of stars in the universe. We explain (a) how uniform random sampling and random search algorithms solve SPLO more efficiently and accurately than current machine-learned performance models and (b) how to compute statistical guarantees on the quality of a returned configuration; i.e., it is within x% of optimal with y% confidence.",
-      "citations_count": 7
+      "citations_count": 8
     },
     {
       "paperId": "care-finding-root-causes-of-configuration-issues-i",
@@ -1185,7 +1185,7 @@
       "venue": "ACM Computing Surveys",
       "doi": "10.1145/3572905",
       "abstract": "Machine learning (ML) techniques increase the effectiveness of software engineering (SE) lifecycle activities. We systematically collected, quality-assessed, summarized, and categorized 83 reviews in ML for SE published between 2009 and 2022, covering 6,117 primary studies. The SE areas most tackled with ML are software quality and testing, while human-centered areas appear more challenging for ML. We propose a number of ML for SE research challenges and actions, including conducting further empirical validation and industrial studies on ML, reconsidering deficient SE methods, documenting and automating data collection and pipeline processes, reexamining how industrial practitioners distribute their proprietary data, and implementing incremental ML approaches.",
-      "citations_count": 36
+      "citations_count": 37
     },
     {
       "paperId": "specialization-of-run-time-configuration-space-at-",
@@ -1724,7 +1724,7 @@
       "venue": "IEEE Working Conference on Mining Software Repositories",
       "doi": "10.1109/msr52588.2021.00059",
       "abstract": "Companies have adopted modern code review as a key technique for continuously monitoring and improving the quality of software changes. One of the main motivations for this is the early detection of design impactful changes, to prevent that design-degrading ones prevail after each code review. Even though design degradation symptoms often lead to changes’ rejections, practices of modern code review alone are actually not sufficient to avoid or mitigate design decay. Software design degrades whenever one or more symptoms of poor structural decisions, usually represented by smells, end up being introduced by a change. Design degradation may be related to both technical and social aspects in collaborative code reviews. Unfortunately, there is no study that investigates if code review stakeholders, e.g, reviewers, could benefit from approaches to distinguish and predict design impactful changes with technical and/or social aspects. By analyzing 57,498 reviewed code changes from seven open-source systems, we report an investigation on prediction of design impactful changes in modern code review. We evaluated the use of six ML algorithms to predict design impactful changes. We also extracted and assessed 41 different features based on both social and technical aspects. Our results show that Random Forest and Gradient Boosting are the best algorithms. We also observed that the use of technical features results in more precise predictions. However, the use of social features alone, which are available even before the code review starts (e.g., for team managers or change assigners), also leads to highly-accurate prediction. Therefore social and/or technical prediction models can be used to support further design inspection of suspicious changes early in a code review process. Finally, we provide an enriched dataset that allows researchers to investigate the context behind design impactful changes during the code review process.",
-      "citations_count": 38
+      "citations_count": 39
     },
     {
       "paperId": "an-overview-of-recommender-systems-and-machine-lea",
