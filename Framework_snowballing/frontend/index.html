@@ -152,20 +152,51 @@
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   }
 
+  function getActionLabel(selecionado) {
+    if (selecionado === 'incluir') return 'Include';
+    if (selecionado === 'excluir') return 'Exclude';
+    return '-';
+  }
+
+  function looksLikeDOI(value) {
+    if (!value) return false;
+    const text = value.trim();
+    return /^10\.\d{4,9}\/\S+$/i.test(text) || /doi\.org\/10\.\d{4,9}\/\S+/i.test(text);
+  }
+
+  function buildSearchURL(inputValue) {
+    const value = inputValue.trim();
+    const params = new URLSearchParams();
+
+    if (looksLikeDOI(value)) {
+      params.set('doi', value);
+      params.set('title', '-');
+    } else {
+      params.set('doi', '-');
+      params.set('title', value);
+    }
+
+    return `http://localhost:3000/api/articles/search?${params.toString()}`;
+  }
+
   function buscarArtigo() {
     const input = document.getElementById('searchInput');
-    const doi = input.value.trim();
+    const inputValue = input.value.trim();
+
     input.blur();
-    if (!doi) {
-      alert('Please enter a DOI to search.');
+
+    if (!inputValue) {
+      alert('Please enter a DOI or title to search.');
       return;
     }
-    // MOSTRAR SPINNER
+
     document.getElementById('loadingSpinner').style.display = 'block';
     document.getElementById('resultado').innerHTML = '';
     document.getElementById('citationsSection').style.display = 'none';
 
-    fetch(`http://localhost:3000/api/articles/search?doi=${encodeURIComponent(doi)}`)
+    const url = buildSearchURL(inputValue);
+
+    fetch(url)
       .then(res => {
         if (!res.ok) throw new Error('Article not found or API error');
         return res.json();
@@ -173,6 +204,7 @@
       .then(data => {
         document.getElementById('loadingSpinner').style.display = 'none';
         document.body.classList.add('busca-realizada');
+
         window.seedData = {
           ...data,
           abstractExpanded: false
@@ -186,6 +218,7 @@
 
         mostrarResultado(window.seedData);
         mostrarCitacoes(window.citationsData);
+        atualizarBotaoIncludeAll();
       })
       .catch(err => {
         document.getElementById('loadingSpinner').style.display = 'none';
@@ -212,6 +245,8 @@
 
     const authors = formatAuthors(artigo.authors);
     const abstractPreview = truncateText(artigo.abstract || '-', 200);
+    const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
+    const citedByToShow = artigo.citations_retrieved || artigo.citations_count || '-';
 
     const cardHTML = `
       <div class="card shadow-sm mb-4">
@@ -230,8 +265,8 @@
           <ul class="list-group list-group-flush mt-3">
             <li class="list-group-item"><strong>Year:</strong> ${escapeHtml(artigo.year || '-')}</li>
             <li class="list-group-item"><strong>Venue:</strong> ${escapeHtml(artigo.venue || '-')}</li>
-            <li class="list-group-item"><strong>DOI:</strong> ${formatDOILink(artigo.input_doi)}</li>
-            <li class="list-group-item"><strong>Cited by:</strong> ${escapeHtml(artigo.citations_count || '-')}</li>
+            <li class="list-group-item"><strong>DOI:</strong> ${formatDOILink(doiToShow)}</li>
+            <li class="list-group-item"><strong>Cited by:</strong> ${escapeHtml(citedByToShow)}</li>
           </ul>
         </div>
       </div>
@@ -249,8 +284,8 @@
       citSection.style.display = 'none';
       return;
     }
+
     document.getElementById('navbarSnowballing').style.display = 'flex';
-    
 
     function createActionButton(type, title, icon, artigoData, selecionado) {
       const btn = document.createElement('button');
@@ -374,24 +409,21 @@
 
     cit.selecionado = acao;
     mostrarCitacoes(window.citationsData);
-    // atualiza estado do botão Include All
     atualizarBotaoIncludeAll();
   }
 
   function atualizarBotaoIncludeAll() {
     const btn = document.getElementById('selectAllBtn');
-    if (!window.citationsData || window.citationsData.length === 0) return;
+    if (!btn || !window.citationsData || window.citationsData.length === 0) return;
 
-    // verifica se todos estão incluídos
     const allIncluded = window.citationsData.every(c => c.selecionado === 'incluir');
 
     if (allIncluded) {
-      btn.classList.add('active');  // botão "pressionado"
+      btn.classList.add('active');
     } else {
-      btn.classList.remove('active'); // botão normal
+      btn.classList.remove('active');
     }
   }
-
 
   function baixarCitationsCSV() {
     const citations = (window.citationsData || []).filter(
@@ -445,7 +477,6 @@
     atualizarBotaoIncludeAll();
   });
 
-
   function irParaTriagem() {
     if (!window.citationsData || window.citationsData.length === 0) {
       alert('No citations to send to screening.');
@@ -493,8 +524,13 @@
       });
     }
   });
-</script>
 
+  document.getElementById('searchInput').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      buscarArtigo();
+    }
+  });
+</script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

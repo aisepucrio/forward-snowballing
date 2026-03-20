@@ -4,6 +4,7 @@ const { exec } = require('child_process');
 
 const outputPath = path.join(__dirname, '../output.json');
 const pathToPythonScript = path.join(__dirname, '..', 'scripts', 'run_forward.py');
+
 function lerOutput() {
   if (!fs.existsSync(outputPath)) return null;
   try {
@@ -11,6 +12,11 @@ function lerOutput() {
   } catch {
     return null;
   }
+}
+
+function escapeShellArg(value) {
+  if (value === undefined || value === null) return '-';
+  return String(value).replace(/"/g, '\\"');
 }
 
 // Retorna as citações do output.json
@@ -23,21 +29,30 @@ exports.getMockPapers = (req, res) => {
   res.json(data.citations);
 };
 
-// Busca o artigo pelo DOI, executando o script Python para atualizar os dados
+// Busca o artigo pelo DOI ou título, executando o script Python
 exports.searchByDOI = (req, res) => {
-  const { doi } = req.query;
+  const doi = req.query.doi || '-';
+  const title = req.query.title || '-';
 
-  if (!doi) {
-    return res.status(400).json({ error: 'DOI não fornecido' });
+  if ((!doi || doi === '-') && (!title || title === '-')) {
+    return res.status(400).json({ error: 'DOI ou título devem ser informados' });
   }
 
-  // Comando com aspas para proteger espaços e caracteres especiais
-  const command = `python "${pathToPythonScript}" ${doi}`;
+  const safeDoi = escapeShellArg(doi);
+  const safeTitle = escapeShellArg(title);
+
+  const command = `python3 "${pathToPythonScript}" "${safeDoi}" "${safeTitle}"`;
+
+  console.log('Executando comando:', command);
+  console.log('DOI recebido:', doi);
+  console.log('TITLE recebido:', title);
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
-      console.error('Erro executando script Python:', stderr);
-      return res.status(500).json({ error: 'Erro ao buscar o artigo via script Python.' });
+      console.error('Erro executando script Python:', stderr || stdout || error.message);
+      return res.status(500).json({
+        error: stderr || stdout || 'Erro ao buscar o artigo via script Python.'
+      });
     }
 
     try {
@@ -46,6 +61,8 @@ exports.searchByDOI = (req, res) => {
       res.json(data);
     } catch (e) {
       console.error('Erro ao processar JSON do script Python:', e);
+      console.error('STDOUT recebido:', stdout);
+      console.error('STDERR recebido:', stderr);
       res.status(500).json({ error: 'Erro ao processar resposta do script Python.' });
     }
   });
