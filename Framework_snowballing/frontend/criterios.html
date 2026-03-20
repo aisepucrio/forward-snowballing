@@ -71,10 +71,33 @@
         </div>
       </div>
     </div>
+    <div id="tabelaArtigosContainer" class="mt-4">
+      <h2 class="fw-semibold mb-3">Selected Articles</h2>
+
+      <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover table-striped align-middle mb-0 w-100">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Abstract</th>
+              <th>Authors</th>
+              <th>Year</th>
+              <th>Venue</th>
+              <th>DOI</th>
+              <th>Cited by</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaArtigosBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+
 
     <hr />
 
-    <div class="d-flex justify-content-between align-items-center mt-4">
+    <div id="analysisSection" class="d-none justify-content-between align-items-center mt-4" style="display: none;">
+
       <h2 class="mb-0 fw-semibold">Analysis Results</h2>
       <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
           <i class="bi bi-box-arrow-up"></i> Export
@@ -87,15 +110,101 @@
   <script>
     let artigosIncluidos = [];
 
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '-';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatAuthors(authors) {
+      if (!authors) return '-';
+
+      if (Array.isArray(authors)) {
+        if (authors.length === 0) return '-';
+        return authors.map(a => a?.name || a).join('; ');
+      }
+
+      if (typeof authors === 'string') return authors;
+
+      return '-';
+    }
+
+    function formatDOILink(doi) {
+      if (!doi || doi === '-') return '-';
+      return `<a href="https://doi.org/${encodeURIComponent(doi)}" target="_blank">${escapeHtml(doi)}</a>`;
+    }
+
+    function truncateText(text, maxLength = 100) {
+      if (!text) return '-';
+      return text.length > maxLength
+        ? text.substring(0, maxLength) + '...'
+        : text;
+    }
+
+    function mostrarTabelaArtigos(artigos) {
+      const tbody = document.getElementById('tabelaArtigosBody');
+
+      if (!artigos || artigos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">No articles selected.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+
+      artigos.forEach(artigo => {
+        const tr = document.createElement('tr');
+
+        const titleCell = document.createElement('td');
+        titleCell.textContent = artigo.title || '-';
+
+        const abstractCell = document.createElement('td');
+        abstractCell.innerHTML = `
+          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span>
+        `;
+
+        const authorsCell = document.createElement('td');
+        authorsCell.textContent = formatAuthors(artigo.authors);
+
+        const yearCell = document.createElement('td');
+        yearCell.textContent = artigo.year || '-';
+
+        const venueCell = document.createElement('td');
+        venueCell.textContent = artigo.venue || '-';
+
+        const doiCell = document.createElement('td');
+        doiCell.innerHTML = formatDOILink(artigo.doi);
+
+        const citedByCell = document.createElement('td');
+        citedByCell.textContent = artigo.citations_count || '-';
+
+        tr.appendChild(titleCell);
+        tr.appendChild(abstractCell);
+        tr.appendChild(authorsCell);
+        tr.appendChild(yearCell);
+        tr.appendChild(venueCell);
+        tr.appendChild(doiCell);
+        tr.appendChild(citedByCell);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+
+
     window.addEventListener('load', () => {
       try {
         artigosIncluidos = JSON.parse(window.name || '[]');
-        if (!Array.isArray(artigosIncluidos)) throw new Error('Not an array');
-      } catch (e) {
-        console.error('Error parsing window.name data:', e);
+      } catch {
         artigosIncluidos = [];
       }
+
+      mostrarTabelaArtigos(artigosIncluidos);
     });
+
 
     function dividirEmLotes(array, tamanhoLote = 10) {
       const lotes = [];
@@ -244,6 +353,21 @@
     document.getElementById('criteriosForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const inclusaoInput = document.getElementById('inclusaoInput');
+      const exclusaoInput = document.getElementById('exclusaoInput');
+
+      // Se houver texto nos inputs, cria as tags automaticamente
+      if (inclusaoInput.value.trim()) {
+        criarTag(document.getElementById('inclusaoBox'), inclusaoInput.value.trim(), 'bg-success');
+        inclusaoInput.value = '';
+      }
+
+      if (exclusaoInput.value.trim()) {
+        criarTag(document.getElementById('exclusaoBox'), exclusaoInput.value.trim(), 'bg-danger');
+        exclusaoInput.value = '';
+      }
+
+      // Obtém todas as tags
       const inclusao = obterTags('inclusaoBox')
         .map((c, i) => `${i + 1}. ${c}`)
         .join('\n');
@@ -251,6 +375,7 @@
       const exclusao = obterTags('exclusaoBox')
         .map((c, i) => `${i + 1}. ${c}`)
         .join('\n');
+
       const btnTexto = document.getElementById('btnTexto');
       const btnLoading = document.getElementById('btnLoading');
       const analisarBtn = document.getElementById('analisarBtn');
@@ -265,6 +390,7 @@
         return;
       }
 
+      // Mostra loading
       btnTexto.classList.add('d-none');
       btnLoading.classList.remove('d-none');
       analisarBtn.disabled = true;
@@ -276,7 +402,12 @@
           exclusao
         );
 
+        document.getElementById('tabelaArtigosContainer').style.display = 'none';
+
+
         const tabelaHTML = montarTabela(resultados);
+        document.getElementById('analysisSection').classList.remove('d-none');
+        document.getElementById('analysisSection').classList.add('d-flex');
 
         const divResultado = document.getElementById('resultadoAnalise');
         divResultado.innerHTML = tabelaHTML;
@@ -284,15 +415,15 @@
 
       } catch (err) {
         alert('Error: ' + err.message);
-        document.getElementById('resultadoAnalise').innerHTML = `<p class="text-danger">${err.message}</p>`;
-        document.getElementById('resultadoAnalise').dataset.resultadosRaw = '';
+        const divResultado = document.getElementById('resultadoAnalise');
+        divResultado.innerHTML = `<p class="text-danger">${err.message}</p>`;
+        divResultado.dataset.resultadosRaw = '';
       } finally {
         btnTexto.classList.remove('d-none');
         btnLoading.classList.add('d-none');
         analisarBtn.disabled = false;
       }
     });
-
     document.getElementById('downloadBtn').addEventListener('click', () => {
       const divResultado = document.getElementById('resultadoAnalise');
       const resultadosText = divResultado.dataset.resultadosRaw;
