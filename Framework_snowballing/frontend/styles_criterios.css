@@ -38,15 +38,21 @@ body {
 }
 
 .badge.ic-tag {
-  background-color: #4bb74f; 
+  background-color: #70e774; 
   color: white;
 }
 
 .badge.ec-tag {
-  background-color: #f44336; 
+  background-color: #f86d63; 
   color: white;
 }
 
+.tag-prefix {
+  font-weight: 700;
+}
+.ic-tag,
+.ec-tag {
+  font-weight: 400;} 
 
 .badge .btn-close {
   filter: invert(1);
