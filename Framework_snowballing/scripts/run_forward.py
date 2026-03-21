@@ -5,6 +5,7 @@ import traceback
 from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
 from services.deduplication import deduplicate_citations
+from services.cache import init_db, get_cached, save_to_cache
 
 
 def main():
@@ -19,8 +20,23 @@ def main():
             print(json.dumps({"error": "DOI ou título devem ser informados"}))
             sys.exit(1)
 
+        # 🔧 normaliza DOI
+        doi = normalize_doi(doi) if doi else None
+
+        # 🔥 inicializa banco
+        init_db()
+
+        # 🔥 CHECA CACHE ANTES DE TUDO
+        cached = get_cached(doi=doi, title=title)
+        if cached:
+            print("[CACHE HIT]", file=sys.stderr)
+            print(json.dumps(cached, ensure_ascii=False, indent=2))
+            return
+
+        # limpa cache das APIs (opcional)
         clear_caches()
 
+        # 🚀 chama APIs
         paper = search_combined(doi=doi, title=title)
 
         raw_citations = paper.get("citations", [])
@@ -28,7 +44,7 @@ def main():
         final_citations = enrich_incomplete_citations(deduped_citations)
 
         result = {
-            "input_doi": normalize_doi(doi) or "-",
+            "input_doi": doi or "-",
             "input_title": title or "-",
             "resolved_doi": normalize_doi(paper.get("doi")) or "-",
             "data_source": paper.get("api", "-"),
@@ -44,6 +60,15 @@ def main():
             "citations": final_citations,
         }
 
+        # salva no cache
+        print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
+        save_to_cache(
+            doi=result.get("resolved_doi"),
+            title=result.get("title"),
+            data=result
+        )
+
+        # salva arquivo local (se quiser manter)
         with open("output.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
