@@ -21,37 +21,37 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
 
     # Prompt pedindo JSON estrito
     prompt = f"""
-Você é um pesquisador de Engenharia de Software conduzindo uma Revisão Sistemática.
-Avalie o artigo com base nos critérios. Responda SOMENTE com JSON VÁLIDO (sem markdown, sem texto extra).
+    Você é um pesquisador de Engenharia de Software conduzindo uma Revisão Sistemática.
+    Avalie o artigo com base nos critérios. Responda SOMENTE com JSON VÁLIDO (sem markdown, sem texto extra).
 
-ARTIGO
-- title: {title}
-- abstract: {summary}
+    ARTIGO
+    - title: {title}
+    - abstract: {summary}
 
-CRITÉRIOS DE INCLUSÃO (marque Sim/Não)
-{chr(10).join([f"- {inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
+    CRITÉRIOS DE INCLUSÃO (marque Sim/Não)
+    {chr(10).join([f"- {inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
 
-CRITÉRIOS DE EXCLUSÃO (marque Sim/Não)
-{chr(10).join([f"- {exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
+    CRITÉRIOS DE EXCLUSÃO (marque Sim/Não)
+    {chr(10).join([f"- {exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
 
-FORMATO EXATO DE SAÍDA (JSON):
-{{
-  "Título": "<repita o título do artigo>",
-  "Resultados": {{
-    "{'": "Sim|Não", "'.join(inc_ids + exc_ids)}": "Sim|Não"
-  }},
-  "ResumoDecisao": {{
-    "decisao": "inclusão|exclusão",
-    "confianca": 0.0,
-    "justificativa_curta": "<1 frase curta>"
-  }}
-}}
+    FORMATO EXATO DE SAÍDA (JSON):
+    {{
+    "Título": "<repita o título do artigo>",
+    "Resultados": {{
+        "{'": "Sim|Não", "'.join(inc_ids + exc_ids)}": "Sim|Não"
+    }},
+    "ResumoDecisao": {{
+        "decisao": "inclusão|exclusão",
+        "confianca": 0.0,
+        "justificativa_curta": "<1 frase curta>"
+    }}
+    }}
 
-Regras:
-- Use apenas "Sim" ou "Não" nas chaves de Resultados.
-- "confianca" deve ser um número entre 0.0 e 1.0.
-- Não inclua nenhuma chave além das pedidas.
-"""
+    Regras:
+    - Use apenas "Sim" ou "Não" nas chaves de Resultados.
+    - "confianca" deve ser um número entre 0.0 e 1.0.
+    - Não inclua nenhuma chave além das pedidas.
+    """
 
     try:
         resp = ollama.chat(

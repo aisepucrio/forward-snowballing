@@ -11,7 +11,7 @@ exports.analisar = (req, res) => {
   const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos });
 
   // Caminho absoluto para o script Python:
-  const scriptPath = path.join(__dirname, '..', 'scripts', 'analisa.py');
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');
 
   const pythonProcess = spawn('python', [scriptPath]);
 

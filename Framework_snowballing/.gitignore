@@ -1,0 +1,20 @@
+# Banco de dados
+*.db
+cache/
+
+# Arquivos gerados
+output.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Ambiente virtual
+venv/
+.venv/
+
+# VSCode
+.vscode/
+
+# Sistema
+.DS_Store
