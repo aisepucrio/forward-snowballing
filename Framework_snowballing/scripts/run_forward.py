@@ -23,10 +23,10 @@ def main():
         # 🔧 normaliza DOI
         doi = normalize_doi(doi) if doi else None
 
-        # 🔥 inicializa banco
+        # inicializa banco
         init_db()
 
-        # 🔥 CHECA CACHE ANTES DE TUDO
+        # CHECA CACHE ANTES DE TUDO
         cached = get_cached(doi=doi, title=title)
         if cached:
             print("[CACHE HIT]", file=sys.stderr)
