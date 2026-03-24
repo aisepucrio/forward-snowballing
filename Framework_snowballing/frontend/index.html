@@ -211,7 +211,8 @@
     document.getElementById('resultado').innerHTML = '';
     document.getElementById('citationsSection').style.display = 'none';
 
-    const url = buildSearchURL(inputValue);
+    const url = buildSearchURL(inputValue);   
+
 
     fetch(url)
       .then(res => {
