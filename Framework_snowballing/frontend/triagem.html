@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,12 +12,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <link rel="stylesheet" href="styles_triagem.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
-rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <!-- Navbar -->
- <!-- Menu navbar -->
+  <!-- Menu navbar -->
   <nav class="navbar navbar-expand-lg navbar-light fixed-top">
     <div class="container-fluid">
       <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
@@ -90,11 +91,15 @@ rel="stylesheet">
 
     function normalizeArticles(data) {
       return data.map(item => ({
-        paperId: item.paperId || '',
+        // Tenta pegar o ID do Semantic Scholar, ou o DOI, ou gera um aleatório
+        paperId: item.paperId || item.doi || Math.random().toString(36).substr(2, 9),
         title: item.title || "Untitled",
         abstract: item.abstract || "No abstract available",
         year: item.year || "N/A",
+        // Compatibilidade de Venue (Local de publicação)
         venue: item.venue || (item.publicationVenue && item.publicationVenue.name) || "N/A",
+        // Compatibilidade de Citações (OpenAlex usa citationCount, Semantic usa citations_count)
+        citations: item.citationCount || item.citations_count || 0,
         selecionado: item.selecionado || null
       }));
     }
@@ -118,7 +123,7 @@ rel="stylesheet">
     function atualizarResumoEgraficos(artigos) {
       const porAno = countBy(artigos, 'year');
       const porVenueTotal = countBy(artigos, 'venue');
-      
+
       totalArtigosEl.textContent = artigos.length;
       totalVenueEl.textContent = Object.keys(porVenueTotal).length;
 
@@ -128,7 +133,7 @@ rel="stylesheet">
       const corNormal = '#000000';
       const corDestacada = '#000000';
       const corOpaca = 'rgba(0, 0, 0, 0.3)';
-      
+
       let anosSelecionados = Object.keys(porAno);
 
       function filtrarArtigosPorAnosSelecionados() {
@@ -138,11 +143,11 @@ rel="stylesheet">
       function atualizarGraficoVenues() {
         const artigosFiltrados = filtrarArtigosPorAnosSelecionados();
         const venuesFiltrados = countBy(artigosFiltrados, 'venue');
-        
+
         if (window.chartVenue) {
           window.chartVenue.destroy();
         }
-        
+
         const cores_hex = [
           '#5D8AA8', '#367588', '#2F4F4F', '#3F7CAC', '#264348', '#004242', '#2C5F71', '#5B8D89', '#628B7B',
           '#436D61', '#1D475C', '#78B2AB', '#509C87', '#47836C', '#2D7452', '#33596F', '#006B5E', '#1F4F4F',
@@ -153,12 +158,12 @@ rel="stylesheet">
           type: 'pie',
           data: {
             labels: Object.keys(venuesFiltrados),
-            datasets: [{ 
-              data: Object.values(venuesFiltrados), 
+            datasets: [{
+              data: Object.values(venuesFiltrados),
               backgroundColor: cores_hex.slice(0, Object.keys(venuesFiltrados).length)
             }]
           },
-          options: { 
+          options: {
             plugins: { legend: { position: 'right' } },
             onClick: (event, elements) => {
               if (elements && elements.length > 0) {
@@ -169,17 +174,17 @@ rel="stylesheet">
             }
           }
         });
-        
+
       }
 
       function atualizarCoresBarras(anosSelecionados) {
         if (!window.chartAno) return;
-        
+
         if (!anosSelecionados || anosSelecionados.length === 0) {
           console.error('anosSelecionados inválido');
           return;
         }
-        
+
         const anos = Object.keys(porAno);
         const novasCores = anos.map(ano => {
           if (anosSelecionados.includes(ano)) {
@@ -188,10 +193,10 @@ rel="stylesheet">
             return corOpaca;
           }
         });
-        
+
         window.chartAno.data.datasets[0].backgroundColor = novasCores;
         window.chartAno.update();
-        
+
         atualizarGraficoVenues();
       }
 
@@ -210,13 +215,13 @@ rel="stylesheet">
         type: 'bar',
         data: {
           labels: Object.keys(porAno),
-          datasets: [{ 
-            data: Object.values(porAno), 
+          datasets: [{
+            data: Object.values(porAno),
             backgroundColor: Object.keys(porAno).map(() => corNormal)
           }]
         },
-        options: { 
-          plugins: { legend: { display: false } }, 
+        options: {
+          plugins: { legend: { display: false } },
           scales: { y: { beginAtZero: true } },
           onClick: (event, elements) => {
             if (elements && elements.length > 0) {
@@ -225,7 +230,7 @@ rel="stylesheet">
               const quantidade = Object.values(porAno)[elementIndex];
 
               const index = anosSelecionados.indexOf(ano);
-              
+
               if (index === -1) {
                 anosSelecionados.push(ano);
               } else {
@@ -236,11 +241,11 @@ rel="stylesheet">
                   return;
                 }
               }
-              
+
               anosSelecionados.sort();
-                            
+
               atualizarCoresBarras(anosSelecionados);
-              
+
               atualizarCheckbox();
             }
           }
@@ -253,26 +258,26 @@ rel="stylesheet">
           console.error('Checkbox não encontrado');
           return;
         }
-        
+
         const novoCheckbox = checkbox.cloneNode(true);
         checkbox.parentNode.replaceChild(novoCheckbox, checkbox);
-        
+
         novoCheckbox.checked = true;
-        
-        novoCheckbox.addEventListener('change', function(e) {
+
+        novoCheckbox.addEventListener('change', function (e) {
           if (this.checked) {
             anosSelecionados = Object.keys(porAno);
-          } else {            
+          } else {
             const todosAnos = Object.keys(porAno);
             anosSelecionados = [todosAnos[0]];
-            
+
             this.checked = false;
           }
-          
+
           atualizarCoresBarras(anosSelecionados);
         });
       }, 100);
-      
+
       atualizarCoresBarras(anosSelecionados);
     }
 
@@ -308,4 +313,5 @@ rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

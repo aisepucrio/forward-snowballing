@@ -13,7 +13,7 @@ exports.analisar = (req, res) => {
   // Caminho absoluto para o script Python:
   const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');
 
-  const pythonProcess = spawn('python', [scriptPath]);
+  const pythonProcess = spawn('python3', [scriptPath]);
 
   let output = '';
   let errorOutput = '';

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <title>Snowballing Forward</title>
@@ -11,61 +12,72 @@
   <link rel="stylesheet" href="styles_index.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body class="home-page"></body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white">
-    <div class="container-fluid">
-      <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
-        <img src="/images/logo-snowballing.png" alt="Logo" style="height:32px; margin-right:8px;">
-        SnowBalling
-      </a>
-      <a class="navbar-brand fs-4 fw-bold brand-home d-flex align-items-center gap-2" href="/" id="navbarSnowballing" style="display:none;">
-        <img id="navbarLogo" src="/images/logo-snowballing.png" style="height:32px;">
-        SnowBalling
-      </a>
-      
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white">
+  <div class="container-fluid">
+    <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
+      <img src="/images/logo-snowballing.png" alt="Logo" style="height:32px; margin-right:8px;">
+      SnowBalling
+    </a>
+    <a class="navbar-brand fs-4 fw-bold brand-home d-flex align-items-center gap-2" href="/" id="navbarSnowballing"
+      style="display:none;">
+      <img id="navbarLogo" src="/images/logo-snowballing.png" style="height:32px;">
+      SnowBalling
+    </a>
 
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <ul class="navbar-nav gap-2"> <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="criterios.html">Criteria Applications</a>
-          </li>
-        </ul>
-      </div>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav gap-2">
+        <li class="nav-item">
+          <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link btn-nav-custom" href="criterios.html">Criteria Applications</a>
+        </li>
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>
 
-  <!-- Conteúdo -->
+<!-- Conteúdo -->
 <div class="container-fluid px-4">
   <div id="headerContainer" class="text-center mb-4">
     <div id="logoContainer" class="logotipo mb-10">
       <img src="/images/logo-snowballing.png" alt="Snowballing Logo" style="height: 140px; width: 133;">
     </div>
-    
+
     <h1 class="fw-semibold mb-4" style="font-size:80px;">SnowBalling</h1>
     <p class="text-black fw-semibold">Search by DOI</p>
   </div>
 
+  <div class="d-flex justify-content-center mb-3">
+    <div class="btn-group" role="group" aria-label="Snowballing Mode">
+      <input type="radio" class="btn-check" name="snowballMode" id="modeForward" value="forward" checked>
+      <label class="btn btn-outline-success px-4" for="modeForward">
+        <i class="bi bi-arrow-up-right-circle me-1"></i> Citations (Forward)
+      </label>
+
+      <input type="radio" class="btn-check" name="snowballMode" id="modeBackward" value="backward">
+      <label class="btn btn-outline-success px-4" for="modeBackward">
+        <i class="bi bi-arrow-down-left-circle me-1"></i> References (Backward)
+      </label>
+    </div>
+  </div>
+
   <form id="searchForm" class="d-flex justify-content-center mb-4" onsubmit="buscarArtigo(); return false;">
-  
-    <div class="d-flex align-items-center shadow-sm"
-        style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
+
+    <div class="d-flex align-items-center shadow-sm" style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
 
       <i class="bi bi-search text-muted me-2"></i>
 
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Enter DOI"
-        class="form-control border-0 bg-transparent"
-        style="box-shadow:none;"
-      >
+      <input type="text" id="searchInput" placeholder="Enter DOI" class="form-control border-0 bg-transparent"
+        style="box-shadow:none;">
 
       <button type="submit" class="btn btn-success ms-2 px-4">
         Search
@@ -75,7 +87,7 @@
 
   </form>
 
-<!-- LOADING SPINNER -->
+  <!-- LOADING SPINNER -->
   <div id="loadingSpinner" class="text-center my-4" style="display:none;">
     <div class="spinner-border text-success" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -168,6 +180,9 @@
     const value = inputValue.trim();
     const params = new URLSearchParams();
 
+    // CAPTURA O MODO SELECIONADO
+    const mode = document.querySelector('input[name="snowballMode"]:checked').value;
+
     if (looksLikeDOI(value)) {
       params.set('doi', value);
       params.set('title', '-');
@@ -175,6 +190,8 @@
       params.set('doi', '-');
       params.set('title', value);
     }
+
+    params.set('type', mode); // Adiciona o tipo (forward ou backward)
 
     return `http://localhost:3000/api/articles/search?${params.toString()}`;
   }
@@ -205,13 +222,20 @@
         document.getElementById('loadingSpinner').style.display = 'none';
         document.body.classList.add('busca-realizada');
 
-        window.seedData = {
-          ...data,
-          abstractExpanded: false
-        };
+        const mode = document.querySelector('input[name="snowballMode"]:checked').value;
 
-        window.citationsData = (data.citations || []).map(c => ({
+        // AJUSTE DE TÍTULO DINÂMICO
+        const headerText = mode === 'forward' ? 'Cited By' : 'References';
+        document.querySelector('#citationsHeader h3').textContent = headerText;
+
+        window.seedData = { ...data, abstractExpanded: false };
+
+        // MAPEIA OS DADOS CORRETOS (references ou citations)
+        const listToDisplay = mode === 'forward' ? (data.citations || []) : (data.references || []);
+
+        window.citationsData = listToDisplay.map(c => ({
           ...c,
+          paperId: c.paperId || c.doi || Math.random().toString(36), // Garante um ID para o clique
           selecionado: c.selecionado || null,
           abstractExpanded: false
         }));
@@ -219,17 +243,9 @@
         mostrarResultado(window.seedData);
         mostrarCitacoes(window.citationsData);
         atualizarBotaoIncludeAll();
-      })
-      .catch(err => {
-        document.getElementById('loadingSpinner').style.display = 'none';
-        document.getElementById('resultado').innerHTML =
-          '<p class="text-danger">Erro: ' + err.message + '</p>';
-        document.getElementById('citationsSection').style.display = 'none';
-        document.querySelector('#tabela-triagem tbody').innerHTML = '';
-        window.citationsData = [];
-        window.seedData = null;
       });
   }
+
 
   function toggleSeedAbstract() {
     if (!window.seedData) return;
@@ -257,11 +273,10 @@
             ${escapeHtml(abstractPreview)}<br>
             <small class="text-primary">${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}</small>
           </p>
-          ${
-            artigo.abstractExpanded
-              ? `<div class="card-text mb-2"><strong>Full Abstract:</strong> <p>${escapeHtml(artigo.abstract || 'Abstract unavailable.')}</p></div>`
-              : ''
-          }
+          ${artigo.abstractExpanded
+        ? `<div class="card-text mb-2"><strong>Full Abstract:</strong> <p>${escapeHtml(artigo.abstract || 'Abstract unavailable.')}</p></div>`
+        : ''
+      }
           <ul class="list-group list-group-flush mt-3">
             <li class="list-group-item"><strong>Year:</strong> ${escapeHtml(artigo.year || '-')}</li>
             <li class="list-group-item"><strong>Venue:</strong> ${escapeHtml(artigo.venue || '-')}</li>
@@ -351,8 +366,9 @@
       doiCell.innerHTML = formatDOILink(cit.doi);
 
       const citedByCell = document.createElement('td');
-      citedByCell.textContent = cit.citations_count || '-';
-
+      // Tenta pegar de ambos os campos possíveis
+      citedByCell.textContent = cit.citations_count || cit.citationCount || '-';
+      
       const tdActions = document.createElement('td');
       tdActions.classList.add('text-nowrap');
 
@@ -532,7 +548,8 @@
   });
 </script>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
