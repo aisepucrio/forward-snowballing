@@ -3,7 +3,20 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
+main {
+  margin: 10px; 
+  padding: 20px; 
+  box-sizing: border-box;
+}
 
+main h1,
+main h2,
+main form,
+main .form-control,
+main .table-responsive,
+main button {
+  margin-bottom: 20px; 
+}
 /* NAVBAR */
 .navbar {
   background-color: #d5d5d5 !important;
@@ -13,14 +26,61 @@ body {
   padding-top: 0;       
   padding-bottom: 0;
 }
+/* Fundo do tooltip */
+.tooltip-custom .tooltip-inner {
+  background-color: #5c5a5c9e; 
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
 
+.tooltip-custom.bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: #5c5a5c9e;
+}
+
+.tooltip-custom.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color:#5c5a5c9e;
+}
+
+.tooltip-custom.bs-tooltip-start .tooltip-arrow::before {
+  border-left-color: #5c5a5c9e;
+}
+
+.tooltip-custom.bs-tooltip-end .tooltip-arrow::before {
+  border-right-color: #5c5a5c9e;
+}
 .navbar .nav-link {
   font-family: 'Poppins', sans-serif;
   font-size: 16px;
   font-weight: 400;
   color: #000000 !important;
 }
+/* Cabeçalho IC */
+th.col-ic {
+  background-color: #000;
+  color: #fff;
+}
 
+/* Cabeçalho EC */
+th.col-ec {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Células IC */
+td.col-ic {
+  background-color: #e8f5e9; 
+}
+
+/* Células EC */
+td.col-ec {
+  background-color: #fdecea;
+}
+th.col-ic, th.col-ec {
+  background: linear-gradient(90deg, #000, #333);
+  color: #fff;
+}
 /* BOTÕES NAV */
 .btn-nav-custom {
   background-color: #d5d5d5 !important;
@@ -56,4 +116,8 @@ body {
 
 .badge .btn-close {
   filter: invert(1);
+}
+
+.espacamento-nav {
+  margin: 1rem;
 }

@@ -6,6 +6,8 @@ from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
+#em caso de erro com charmap.
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 def main():

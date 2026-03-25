@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Snowballing Forward - Criteria Application</title>
+  <title>SnowMap - Criteria Application</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
@@ -16,13 +16,13 @@
     <div class="container-fluid">
       <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
         <img src="/images/logo-snowballing.png" alt="Logo" style="height:32px; margin-right:8px;">
-        SnowBalling
+        SnowMap
       </a> 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <div class="collapse navbar-collapse justify-content-end espacamento-nav" id="navbarNav">
         <ul class="navbar-nav gap-2"> <li class="nav-item">
             <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
           </li>
@@ -34,21 +34,38 @@
     </div>
   </nav>
 
-  <main class="container mt-5 pt-5">
+  <main class="mt-5 pt-5">
     <h1 class="mb-4 fw-semibold">Define Inclusion and Exclusion Criteria</h1>
 
     <form id="criteriosForm">
       <div class="mb-3">
         <label for="inclusao" class="form-label">Inclusion Criteria</label>
         <div id="inclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
-          <input id="inclusaoInput" type="text" class="border-0 flex-grow-1" placeholder="Enter inclusion criteria..." style="outline:none;">
+          <input id="inclusaoInput"
+            type="text"
+            class="border-0 flex-grow-1"
+            placeholder="Enter inclusion criteria..."
+            style="outline:none;"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            data-bs-custom-class="tooltip-custom"
+            title="Press ENTER to add multiple criteria">
         </div>
       </div>
 
       <div class="mb-3">
         <label for="exclusao" class="form-label">Exclusion Criteria</label>
         <div id="exclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
-          <input id="exclusaoInput" type="text" class="border-0 flex-grow-1" placeholder="Enter exclusion criteria..." style="outline:none;">
+          <input id="exclusaoInput"
+            type="text"
+            class="border-0 flex-grow-1"
+            placeholder="Enter exclusion criteria..."
+            style="outline:none;"
+            font-family="Poppins"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            data-bs-custom-class="tooltip-custom"
+            title="Press ENTER to add multiple criteria">
         </div>
       </div>
 
@@ -60,7 +77,7 @@
 
     <div class="mt-4">
       <p id="statusAnalise" class="text-muted mb-2"></p>
-      <div class="progress" style="height: 24px;">
+      <div id="progressContainer" class="progress" style="height: 24px;">
         <div
           id="progressoAnalise"
           class="progress-bar progress-bar-striped progress-bar-animated bg-success"
@@ -72,7 +89,13 @@
       </div>
     </div>
     <div id="tabelaArtigosContainer" class="mt-4">
-      <h2 class="fw-semibold mb-3">Selected Articles</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 id="tituloTabela" class="fw-semibold mb-0">Selected Articles</h2>
+
+        <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm d-none">
+          <i class="bi bi-box-arrow-up"></i> Export
+        </button>
+      </div>
 
       <div class="table-responsive shadow-sm rounded">
         <table class="table table-hover table-striped align-middle mb-0 w-100">
@@ -96,13 +119,6 @@
 
     <hr />
 
-    <div id="analysisSection" class="d-none justify-content-between align-items-center mt-4" style="display: none;">
-
-      <h2 class="mb-0 fw-semibold">Analysis Results</h2>
-      <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-box-arrow-up"></i> Export
-      </button>
-    </div>
 
     <div id="resultadoAnalise" class="mt-3" data-resultados-raw=""></div>
   </main>
@@ -145,49 +161,77 @@
         : text;
     }
 
-    function mostrarTabelaArtigos(artigos) {
+    function mostrarTabelaArtigos(artigos, resultados = []) {
       const tbody = document.getElementById('tabelaArtigosBody');
+      const thead = document.querySelector('#tabelaArtigosContainer thead tr');
 
       if (!artigos || artigos.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7">No articles selected.</td></tr>';
         return;
       }
 
+      const criteriosSet = new Set();
+      resultados.forEach(r => {
+        if (r.Resultados) {
+          Object.keys(r.Resultados).forEach(c => criteriosSet.add(c));
+        }
+      });
+
+      const colunas = Array.from(criteriosSet);
+
+      thead.innerHTML = `
+        <th>Title</th>
+        <th>Abstract</th>
+        <th>Authors</th>
+        <th>Year</th>
+        <th>Venue</th>
+        <th>DOI</th>
+        <th>Cited by</th>
+        ${colunas.map(c => {
+          const classe = c.startsWith('IC') ? 'col-ic' : 'col-ec';
+          return `<th class="${classe}">${c}</th>`;
+        }).join('')}
+      `;
+
       tbody.innerHTML = '';
 
-      artigos.forEach(artigo => {
+      artigos.forEach((artigo, index) => {
         const tr = document.createElement('tr');
 
-        const titleCell = document.createElement('td');
-        titleCell.textContent = artigo.title || '-';
-
-        const abstractCell = document.createElement('td');
-        abstractCell.innerHTML = `
-          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span>
+        tr.innerHTML = `
+          <td>${escapeHtml(artigo.title || '-')}</td>
+          <td>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</td>
+          <td>${escapeHtml(formatAuthors(artigo.authors))}</td>
+          <td>${artigo.year || '-'}</td>
+          <td>${escapeHtml(artigo.venue || '-')}</td>
+          <td>${formatDOILink(artigo.doi)}</td>
+          <td>${artigo.citations_count || '-'}</td>
         `;
 
-        const authorsCell = document.createElement('td');
-        authorsCell.textContent = formatAuthors(artigo.authors);
+        const resultado = resultados[index];
 
-        const yearCell = document.createElement('td');
-        yearCell.textContent = artigo.year || '-';
+        colunas.forEach(col => {
+          const valorBruto = resultado?.Resultados?.[col] || '-';
+          const valor = String(valorBruto).toLowerCase();
 
-        const venueCell = document.createElement('td');
-        venueCell.textContent = artigo.venue || '-';
+          let badge = valorBruto;
 
-        const doiCell = document.createElement('td');
-        doiCell.innerHTML = formatDOILink(artigo.doi);
+          if (valor === 'sim') {
+            badge = `<span class="badge bg-success">&#10003</span>`;
+          } else if (valor === 'não' || valor === 'nao') {
+            badge = `<span class="badge bg-danger">&#10007</span>`;
+          } else if (valor === 'erro') {
+            badge = `<span class="badge bg-warning text-dark">Error</span>`;
+          }
 
-        const citedByCell = document.createElement('td');
-        citedByCell.textContent = artigo.citations_count || '-';
+          const td = document.createElement('td');
+          const classe = col.startsWith('IC') ? 'col-ic' : 'col-ec';
+td.classList.add(classe);
+          td.className = 'text-center';
+          td.innerHTML = badge;
 
-        tr.appendChild(titleCell);
-        tr.appendChild(abstractCell);
-        tr.appendChild(authorsCell);
-        tr.appendChild(yearCell);
-        tr.appendChild(venueCell);
-        tr.appendChild(doiCell);
-        tr.appendChild(citedByCell);
+          tr.appendChild(td);
+        });
 
         tbody.appendChild(tr);
       });
@@ -219,19 +263,6 @@
         title: artigo.title || '',
         abstract: artigo.abstract || ''
       }));
-    }
-
-    function montarTabela(resultados) {
-      if (!Array.isArray(resultados) || resultados.length === 0) {
-        return '<p class="text-muted">No results available.</p>';
-      }
-
-      const criteriosSet = new Set();
-      resultados.forEach(r => {
-        if (r.Resultados) {
-          Object.keys(r.Resultados).forEach(c => criteriosSet.add(c));
-        }
-      });
 
       const colunas = Array.from(criteriosSet);
 
@@ -346,6 +377,7 @@
       statusEl.textContent = `Analysis finished: ${artigosLimpos.length}/${artigosLimpos.length}`;
       progressoEl.style.width = '100%';
       progressoEl.textContent = '100%';
+      document.getElementById('progressContainer').classList.add('d-none');
 
       return resultadosFinais;
     }
@@ -402,15 +434,11 @@
           exclusao
         );
 
-        document.getElementById('tabelaArtigosContainer').style.display = 'none';
-
-
-        const tabelaHTML = montarTabela(resultados);
-        document.getElementById('analysisSection').classList.remove('d-none');
-        document.getElementById('analysisSection').classList.add('d-flex');
+        mostrarTabelaArtigos(artigosIncluidos, resultados);
+        document.getElementById('tituloTabela').textContent = 'Analysis Results';
+        document.getElementById('downloadBtn').classList.remove('d-none');
 
         const divResultado = document.getElementById('resultadoAnalise');
-        divResultado.innerHTML = tabelaHTML;
         divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
 
       } catch (err) {
@@ -521,6 +549,8 @@
     }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
   ativarInputTags('inclusaoInput', 'inclusaoBox', 'bg-success');
   ativarInputTags('exclusaoInput', 'exclusaoBox', 'bg-danger');
 });
