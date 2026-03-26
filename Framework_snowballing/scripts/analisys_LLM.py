@@ -36,8 +36,8 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
 
     FORMATO EXATO DE SAÍDA (JSON):
     {{
-    "Título": "<repita o título do artigo>",
-    "Resultados": {{
+    "title": "<repita o título do artigo>",
+    "results": {{
         "{'": "Sim|Não", "'.join(inc_ids + exc_ids)}": "Sim|Não"
     }},
     "ResumoDecisao": {{
@@ -48,7 +48,7 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
     }}
 
     Regras:
-    - Use apenas "Sim" ou "Não" nas chaves de Resultados.
+    - Use apenas "Sim" ou "Não" nas chaves de results.
     - "confianca" deve ser um número entre 0.0 e 1.0.
     - Não inclua nenhuma chave além das pedidas.
     """
@@ -76,7 +76,7 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
         data = json.loads(json_text)
 
         # Validações simples
-        if "Título" not in data or "Resultados" not in data:
+        if "title" not in data or "results" not in data:
             raise ValueError("JSON faltando campos obrigatórios")
 
         return data
@@ -84,8 +84,8 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
     except Exception as e:
         print(f"[ERRO Ollama] ao classificar artigo '{title}': {e}", file=sys.stderr)
         return {
-            "Título": title or "",
-            "Resultados": {"Criteria": "It was not possible to analyze the criterion. Please check the submitted data or try again later."},
+            "title": title or "",
+            "results": {"Criteria": "It was not possible to analyze the criterion. Please check the submitted data or try again later."},
             "ResumoDecisao": {
                 "decisao": "exclusão",
                 "confianca": 0.0,
@@ -95,15 +95,15 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
 
 
 def analisar(criterios_inclusao, criterios_exclusao, artigos):
-    resultados = []
+    results = []
     for artigo in artigos:
         title = artigo.get("title", "")
         abstract = artigo.get("abstract", "")
 
         out = classificar_artigo(title, abstract, criterios_inclusao, criterios_exclusao)
-        resultados.append(out)
+        results.append(out)
 
-    return resultados
+    return results
 
 
 if __name__ == "__main__":
@@ -114,5 +114,5 @@ if __name__ == "__main__":
     criterios_exclusao = data.get("criteriosExclusao", "")
     artigos = data.get("artigos", [])
 
-    resultados = analisar(criterios_inclusao, criterios_exclusao, artigos)
-    print(json.dumps(resultados, ensure_ascii=False))
+    results = analisar(criterios_inclusao, criterios_exclusao, artigos)
+    print(json.dumps(results, ensure_ascii=False))
