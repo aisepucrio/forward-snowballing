@@ -1,0 +1,187 @@
+[33mcommit a4beffb850bb746b26a75edeacb1a97ffbd6434e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: JailmaJanuario <jailmajanuario@gmail.com>
+Date:   Fri Mar 20 13:32:56 2026 -0300
+
+    alterações interface - laiza - 2
+
+[1mdiff --git a/Framework_snowballing/frontend/criterios.html b/Framework_snowballing/frontend/criterios.html[m
+[1mindex e57363b..fa2acf0 100644[m
+[1m--- a/Framework_snowballing/frontend/criterios.html[m
+[1m+++ b/Framework_snowballing/frontend/criterios.html[m
+[36m@@ -71,10 +71,33 @@[m
+         </div>[m
+       </div>[m
+     </div>[m
+[32m+[m[32m    <div id="tabelaArtigosContainer" class="mt-4">[m
+[32m+[m[32m      <h2 class="fw-semibold mb-3">Selected Articles</h2>[m
+[32m+[m
+[32m+[m[32m      <div class="table-responsive shadow-sm rounded">[m
+[32m+[m[32m        <table class="table table-hover table-striped align-middle mb-0 w-100">[m
+[32m+[m[32m          <thead>[m
+[32m+[m[32m            <tr>[m
+[32m+[m[32m              <th>Title</th>[m
+[32m+[m[32m              <th>Abstract</th>[m
+[32m+[m[32m              <th>Authors</th>[m
+[32m+[m[32m              <th>Year</th>[m
+[32m+[m[32m              <th>Venue</th>[m
+[32m+[m[32m              <th>DOI</th>[m
+[32m+[m[32m              <th>Cited by</th>[m
+[32m+[m[32m            </tr>[m
+[32m+[m[32m          </thead>[m
+[32m+[m[32m          <tbody id="tabelaArtigosBody"></tbody>[m
+[32m+[m[32m        </table>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    </div>[m
+[32m+[m
+[32m+[m
+ [m
+     <hr />[m
+ [m
+[31m-    <div class="d-flex justify-content-between align-items-center mt-4">[m
+[32m+[m[32m    <div id="analysisSection" class="d-none justify-content-between align-items-center mt-4" style="display: none;">[m
+[32m+[m
+       <h2 class="mb-0 fw-semibold">Analysis Results</h2>[m
+       <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">[m
+           <i class="bi bi-box-arrow-up"></i> Export[m
+[36m@@ -87,16 +110,102 @@[m
+   <script>[m
+     let artigosIncluidos = [];[m
+ [m
+[32m+[m[32m    function escapeHtml(text) {[m
+[32m+[m[32m      if (text === null || text === undefined) return '-';[m
+[32m+[m[32m      return String(text)[m
+[32m+[m[32m        .replace(/&/g, '&amp;')[m
+[32m+[m[32m        .replace(/</g, '&lt;')[m
+[32m+[m[32m        .replace(/>/g, '&gt;')[m
+[32m+[m[32m        .replace(/"/g, '&quot;')[m
+[32m+[m[32m        .replace(/'/g, '&#039;');[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    function formatAuthors(authors) {[m
+[32m+[m[32m      if (!authors) return '-';[m
+[32m+[m
+[32m+[m[32m      if (Array.isArray(authors)) {[m
+[32m+[m[32m        if (authors.length === 0) return '-';[m
+[32m+[m[32m        return authors.map(a => a?.name || a).join('; ');[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      if (typeof authors === 'string') return authors;[m
+[32m+[m
+[32m+[m[32m      return '-';[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    function formatDOILink(doi) {[m
+[32m+[m[32m      if (!doi || doi === '-') return '-';[m
+[32m+[m[32m      return `<a href="https://doi.org/${encodeURIComponent(doi)}" target="_blank">${escapeHtml(doi)}</a>`;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    function truncateText(text, maxLength = 100) {[m
+[32m+[m[32m      if (!text) return '-';[m
+[32m+[m[32m      return text.length > maxLength[m
+[32m+[m[32m        ? text.substring(0, maxLength) + '...'[m
+[32m+[m[32m        : text;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    function mostrarTabelaArtigos(artigos) {[m
+[32m+[m[32m      const tbody = document.getElementById('tabelaArtigosBody');[m
+[32m+[m
+[32m+[m[32m      if (!artigos || artigos.length === 0) {[m
+[32m+[m[32m        tbody.innerHTML = '<tr><td colspan="7">No articles selected.</td></tr>';[m
+[32m+[m[32m        return;[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      tbody.innerHTML = '';[m
+[32m+[m
+[32m+[m[32m      artigos.forEach(artigo => {[m
+[32m+[m[32m        const tr = document.createElement('tr');[m
+[32m+[m
+[32m+[m[32m        const titleCell = document.createElement('td');[m
+[32m+[m[32m        titleCell.textContent = artigo.title || '-';[m
+[32m+[m
+[32m+[m[32m        const abstractCell = document.createElement('td');[m
+[32m+[m[32m        abstractCell.innerHTML = `[m
+[32m+[m[32m          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span>[m
+[32m+[m[32m        `;[m
+[32m+[m
+[32m+[m[32m        const authorsCell = document.createElement('td');[m
+[32m+[m[32m        authorsCell.textContent = formatAuthors(artigo.authors);[m
+[32m+[m
+[32m+[m[32m        const yearCell = document.createElement('td');[m
+[32m+[m[32m        yearCell.textContent = artigo.year || '-';[m
+[32m+[m
+[32m+[m[32m        const venueCell = document.createElement('td');[m
+[32m+[m[32m        venueCell.textContent = artigo.venue || '-';[m
+[32m+[m
+[32m+[m[32m        const doiCell = document.createElement('td');[m
+[32m+[m[32m        doiCell.innerHTML = formatDOILink(artigo.doi);[m
+[32m+[m
+[32m+[m[32m        const citedByCell = document.createElement('td');[m
+[32m+[m[32m        citedByCell.textContent = artigo.citations_count || '-';[m
+[32m+[m
+[32m+[m[32m        tr.appendChild(titleCell);[m
+[32m+[m[32m        tr.appendChild(abstractCell);[m
+[32m+[m[32m        tr.appendChild(authorsCell);[m
+[32m+[m[32m        tr.appendChild(yearCell);[m
+[32m+[m[32m        tr.appendChild(venueCell);[m
+[32m+[m[32m        tr.appendChild(doiCell);[m
+[32m+[m[32m        tr.appendChild(citedByCell);[m
+[32m+[m
+[32m+[m[32m        tbody.appendChild(tr);[m
+[32m+[m[32m      });[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m
+[32m+[m
+     window.addEventListener('load', () => {[m
+       try {[m
+         artigosIncluidos = JSON.parse(window.name || '[]');[m
+[31m-        if (!Array.isArray(artigosIncluidos)) throw new Error('Not an array');[m
+[31m-      } catch (e) {[m
+[31m-        console.error('Error parsing window.name data:', e);[m
+[32m+[m[32m      } catch {[m
+         artigosIncluidos = [];[m
+       }[m
+[32m+[m
+[32m+[m[32m      mostrarTabelaArtigos(artigosIncluidos);[m
+     });[m
+ [m
+[32m+[m
+     function dividirEmLotes(array, tamanhoLote = 10) {[m
+       const lotes = [];[m
+       for (let i = 0; i < array.length; i += tamanhoLote) {[m
+[36m@@ -244,6 +353,21 @@[m
+     document.getElementById('criteriosForm').addEventListener('submit', async (e) => {[m
+       e.preventDefault();[m
+ [m
+[32m+[m[32m      const inclusaoInput = document.getElementById('inclusaoInput');[m
+[32m+[m[32m      const exclusaoInput = document.getElementById('exclusaoInput');[m
+[32m+[m
+[32m+[m[32m      // Se houver texto nos inputs, cria as tags automaticamente[m
+[32m+[m[32m      if (inclusaoInput.value.trim()) {[m
+[32m+[m[32m        criarTag(document.getElementById('inclusaoBox'), inclusaoInput.value.trim(), 'bg-success');[m
+[32m+[m[32m        inclusaoInput.value = '';[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      if (exclusaoInput.value.trim()) {[m
+[32m+[m[32m        criarTag(document.getElementById('exclusaoBox'), exclusaoInput.value.trim(), 'bg-danger');[m
+[32m+[m[32m        exclusaoInput.value = '';[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // Obtém todas as tags[m
+       const inclusao = obterTags('inclusaoBox')[m
+         .map((c, i) => `${i + 1}. ${c}`)[m
+         .join('\n');[m
+[36m@@ -251,6 +375,7 @@[m
+       const exclusao = obterTags('exclusaoBox')[m
+         .map((c, i) => `${i + 1}. ${c}`)[m
+         .join('\n');[m
+[32m+[m
+       const btnTexto = document.getElementById('btnTexto');[m
+       const btnLoading = document.getElementById('btnLoading');[m
+       const analisarBtn = document.getElementById('analisarBtn');[m
+[36m@@ -265,6 +390,7 @@[m
+         return;[m
+       }[m
+ [m
+[32m+[m[32m      // Mostra loading[m
+       btnTexto.classL
