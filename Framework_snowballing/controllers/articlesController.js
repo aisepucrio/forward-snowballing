@@ -41,8 +41,8 @@ exports.searchByDOI = (req, res) => {
   const safeDoi = escapeShellArg(doi);
   const safeTitle = escapeShellArg(title);
 
-  /*const pythonPath = "C:\\Python314\\python.exe";
-  const command = `"${pythonPath}" -X utf8 "${pathToPythonScript}" "${safeDoi}" "${safeTitle}"`;*/
+  const pythonPath = "C:\\Python314\\python.exe";
+  const command = `"${pythonPath}" -X utf8 "${pathToPythonScript}" "${safeDoi}" "${safeTitle}"`;
 
   console.log('Executando comando:', command);
   console.log('DOI recebido:', doi);
