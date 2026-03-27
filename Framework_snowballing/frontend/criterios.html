@@ -229,11 +229,19 @@
     }
 
     function toggleAbstract(index) {
-      artigosIncluidos[index].abstractExpanded =
-        !artigosIncluidos[index].abstractExpanded;
+      artigosIncluidos[index].abstractExpanded = !artigosIncluidos[index].abstractExpanded;
 
-      mostrarTabelaArtigos(artigosIncluidos);
+      const divResultado = document.getElementById('resultadoAnalise');
+      const resultadosText = divResultado.dataset.resultadosRaw;
+
+      if (resultadosText) {
+        const resultados = JSON.parse(resultadosText);
+        mostrarTabelaComResultados(artigosIncluidos, resultados);
+      } else {
+        mostrarTabelaArtigos(artigosIncluidos);
+      }
     }
+
 
 
 
