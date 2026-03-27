@@ -40,7 +40,14 @@
     <form id="criteriosForm">
       <div class="mb-3">
         <label for="inclusao" class="form-label">Inclusion Criteria</label>
-        <div id="inclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
+        <div id="inclusaoBox"
+          class="form-control d-flex flex-wrap gap-2"
+          style="min-height: 80px;"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          data-bs-custom-class="tooltip-custom"
+          title="To add multiple criteria, press ENTER after writing each one.">
+
           <input id="inclusaoInput" type="text" class="border-0 flex-grow-1" placeholder="Enter inclusion criteria..." style="outline:none;">
         </div>
       </div>
@@ -72,8 +79,18 @@
       </div>
     </div>
     <div id="tabelaArtigosContainer" class="mt-4">
-      <h2 class="fw-semibold mb-3">Selected Articles</h2>
 
+      <!-- Título inicial -->
+      <h2 id="selectedTitle" class="fw-semibold mb-3">Selected Articles</h2>
+
+      <div id="analysisSection" class="d-none justify-content-between align-items-center mb-3">
+        <h2 class="mb-0 fw-semibold">Analysis Results</h2>
+        <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-box-arrow-up"></i> Export
+        </button>
+      </div>
+
+      <!-- Tabela -->
       <div class="table-responsive shadow-sm rounded">
         <table class="table table-hover table-striped align-middle mb-0 w-100">
           <thead>
@@ -90,21 +107,10 @@
           <tbody id="tabelaArtigosBody"></tbody>
         </table>
       </div>
+
     </div>
+    <div id="resultadoAnalise" data-resultados-raw="" style="display:none;"></div>
 
-
-
-    <hr />
-
-    <div id="analysisSection" class="d-none justify-content-between align-items-center mt-4" style="display: none;">
-
-      <h2 class="mb-0 fw-semibold">Analysis Results</h2>
-      <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-box-arrow-up"></i> Export
-      </button>
-    </div>
-
-    <div id="resultadoAnalise" class="mt-3" data-resultados-raw=""></div>
   </main>
 
   <script>
@@ -155,16 +161,25 @@
 
       tbody.innerHTML = '';
 
-      artigos.forEach(artigo => {
+      artigos.forEach((artigo, index) => {
+
         const tr = document.createElement('tr');
 
         const titleCell = document.createElement('td');
         titleCell.textContent = artigo.title || '-';
 
         const abstractCell = document.createElement('td');
+        abstractCell.style.cursor = 'pointer';
+
         abstractCell.innerHTML = `
-          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span>
+          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span><br>
+          <small class="text-primary">
+            ${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}
+          </small>
         `;
+
+        abstractCell.addEventListener('click', () => toggleAbstract(index));
+
 
         const authorsCell = document.createElement('td');
         authorsCell.textContent = formatAuthors(artigo.authors);
@@ -190,20 +205,52 @@
         tr.appendChild(citedByCell);
 
         tbody.appendChild(tr);
+        if (artigo.abstractExpanded) {
+          const abstractRow = document.createElement('tr');
+          abstractRow.className = 'table-light';
+
+          const td = document.createElement('td');
+          td.colSpan = 7;
+
+          td.innerHTML = `
+            <div class="p-3">
+              <strong>Full Abstract:</strong>
+              <p class="mb-0 mt-2">
+                ${escapeHtml(artigo.abstract || 'Abstract unavailable.')}
+              </p>
+            </div>
+  `;
+
+  abstractRow.appendChild(td);
+  tbody.appendChild(abstractRow);
+}
+
       });
     }
+
+    function toggleAbstract(index) {
+      artigosIncluidos[index].abstractExpanded =
+        !artigosIncluidos[index].abstractExpanded;
+
+      mostrarTabelaArtigos(artigosIncluidos);
+    }
+
 
 
 
     window.addEventListener('load', () => {
       try {
-        artigosIncluidos = JSON.parse(window.name || '[]');
+        artigosIncluidos = JSON.parse(window.name || '[]').map(a => ({
+          ...a,
+          abstractExpanded: false
+        }));
       } catch {
         artigosIncluidos = [];
       }
 
       mostrarTabelaArtigos(artigosIncluidos);
     });
+
 
 
     function dividirEmLotes(array, tamanhoLote = 10) {
@@ -221,9 +268,13 @@
       }));
     }
 
-    function montarTabela(resultados) {
-      if (!Array.isArray(resultados) || resultados.length === 0) {
-        return '<p class="text-muted">No results available.</p>';
+    function mostrarTabelaComResultados(artigos, resultados) {
+      const tbody = document.getElementById('tabelaArtigosBody');
+      const theadRow = document.querySelector('#tabelaArtigosContainer thead tr');
+
+      if (!artigos || artigos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">No articles selected.</td></tr>';
+        return;
       }
 
       const criteriosSet = new Set();
@@ -235,40 +286,111 @@
 
       const colunas = Array.from(criteriosSet);
 
-      let html = '<div class="table-responsive"><table class="table table-bordered table-hover align-middle">';
-      html += '<thead class="table-dark"><tr><th>Title</th>';
+      
+      while (theadRow.children.length > 7) {
+        theadRow.removeChild(theadRow.lastChild);
+      }
 
       colunas.forEach(col => {
-        html += `<th>${col}</th>`;
+        const th = document.createElement('th');
+        th.textContent = col;
+        th.style.backgroundColor = 'black';
+        th.style.color = 'white';
+        th.style.textAlign = 'center';
+        theadRow.appendChild(th);
+
+
       });
 
-      html += '</tr></thead><tbody>';
 
-      resultados.forEach(r => {
-        html += `<tr><td><strong>${r.title || '(Untitled)'}</strong></td>`;
+      tbody.innerHTML = '';
+
+      artigos.forEach((artigo, index) => {
+        const resultado = resultados[index];
+        const tr = document.createElement('tr');
+
+        // mesmas colunas antigas
+        const titleCell = document.createElement('td');
+        titleCell.textContent = artigo.title || '-';
+
+        const abstractCell = document.createElement('td');
+        abstractCell.style.cursor = 'pointer';
+        abstractCell.innerHTML = `
+          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span><br>
+          <small class="text-primary">
+            ${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}
+          </small>
+        `;
+
+abstractCell.addEventListener('click', () => toggleAbstract(index));
+
+        const authorsCell = document.createElement('td');
+        authorsCell.textContent = formatAuthors(artigo.authors);
+
+        const yearCell = document.createElement('td');
+        yearCell.textContent = artigo.year || '-';
+
+        const venueCell = document.createElement('td');
+        venueCell.textContent = artigo.venue || '-';
+
+        const doiCell = document.createElement('td');
+        doiCell.innerHTML = formatDOILink(artigo.doi);
+
+        const citedByCell = document.createElement('td');
+        citedByCell.textContent = artigo.citations_count || '-';
+
+        tr.appendChild(titleCell);
+        tr.appendChild(abstractCell);
+        tr.appendChild(authorsCell);
+        tr.appendChild(yearCell);
+        tr.appendChild(venueCell);
+        tr.appendChild(doiCell);
+        tr.appendChild(citedByCell);
 
         colunas.forEach(col => {
-          const valorBruto = r.results?.[col] || '-';
+          const td = document.createElement('td');
+
+          const valorBruto = resultado?.results?.[col] || '-';
           const valor = String(valorBruto).toLowerCase();
 
-          let badge = valorBruto;
           if (valor === 'sim') {
-            badge = `<span class="badge bg-success">Yes</span>`;
+            td.innerHTML = `<span class="badge bg-success">Yes</span>`;
           } else if (valor === 'não' || valor === 'nao') {
-            badge = `<span class="badge bg-danger">No</span>`;
+            td.innerHTML = `<span class="badge bg-danger">No</span>`;
           } else if (valor === 'erro') {
-            badge = `<span class="badge bg-warning text-dark">Error</span>`;
+            td.innerHTML = `<span class="badge bg-warning text-dark">Error</span>`;
+          } else {
+            td.textContent = valorBruto;
           }
 
-          html += `<td class="text-center">${badge}</td>`;
+          td.classList.add('text-center');
+          tr.appendChild(td);
         });
 
-        html += '</tr>';
-      });
+        tbody.appendChild(tr);
+        if (artigo.abstractExpanded) {
+          const abstractRow = document.createElement('tr');
+          abstractRow.className = 'table-light';
 
-      html += '</tbody></table></div>';
-      return html;
+          const td = document.createElement('td');
+          td.colSpan = 7 + colunas.length;
+
+          td.innerHTML = `
+            <div class="p-3">
+              <strong>Full Abstract:</strong>
+              <p class="mb-0 mt-2">
+                ${escapeHtml(artigo.abstract || 'Abstract unavailable.')}
+              </p>
+            </div>
+          `;
+
+          abstractRow.appendChild(td);
+          tbody.appendChild(abstractRow);
+        }
+
+      });
     }
+
 
     function jsonParaCSV(resultados) {
       if (!resultados || resultados.length === 0) return '';
@@ -346,6 +468,11 @@
       statusEl.textContent = `Analysis finished: ${artigosLimpos.length}/${artigosLimpos.length}`;
       progressoEl.style.width = '100%';
       progressoEl.textContent = '100%';
+      setTimeout(() => {
+        document.querySelector('.progress').style.display = 'none';
+        statusEl.style.display = 'none';
+      }, 800);
+
 
       return resultadosFinais;
     }
@@ -401,16 +528,19 @@
           inclusao,
           exclusao
         );
+        const divResultado = document.getElementById('resultadoAnalise');
+        divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
 
-        document.getElementById('tabelaArtigosContainer').style.display = 'none';
 
 
-        const tabelaHTML = montarTabela(resultados);
+        document.getElementById('selectedTitle').style.display = 'none';
+
         document.getElementById('analysisSection').classList.remove('d-none');
         document.getElementById('analysisSection').classList.add('d-flex');
 
-        const divResultado = document.getElementById('resultadoAnalise');
-        divResultado.innerHTML = tabelaHTML;
+        mostrarTabelaComResultados(artigosIncluidos, resultados);
+
+  
         divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
 
       } catch (err) {
@@ -494,8 +624,8 @@
 
         if (restantes.length === 0) {
           input.placeholder = container.id === 'inclusaoBox' 
-            ? 'Enter inclusion criteria and press ENTER...' 
-            : 'Enter exclusion criteria and press ENTER...';
+            ? 'Enter inclusion criteria...' 
+            : 'Enter exclusion criteria...';
         }
       });
 
@@ -523,6 +653,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   ativarInputTags('inclusaoInput', 'inclusaoBox', 'bg-success');
   ativarInputTags('exclusaoInput', 'exclusaoBox', 'bg-danger');
+
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggerList.forEach(el => {
+  new bootstrap.Tooltip(el);
+  });
 });
   </script>
 
