@@ -19,6 +19,24 @@ function escapeShellArg(value) {
   return String(value).replace(/"/g, '\\"');
 }
 
+const { execSync } = require('child_process');
+
+function tryCommand(command) {
+  try {
+    return execSync(command, { encoding: 'utf8' }).split(/\r?\n/)[0].trim();
+  } catch {
+    return null;
+  }
+}
+
+function findPythonExecutable() {
+  if (process.platform === 'win32') {
+    return tryCommand('where python') || tryCommand('where python3');
+  }
+
+  return tryCommand('which python3') || tryCommand('which python');
+}
+
 // Retorna as citações do output.json
 exports.getMockPapers = (req, res) => {
   const data = lerOutput();
@@ -41,7 +59,7 @@ exports.searchByDOI = (req, res) => {
   const safeDoi = escapeShellArg(doi);
   const safeTitle = escapeShellArg(title);
 
-  const pythonPath = "C:\\Python314\\python.exe";
+  const pythonPath = findPythonExecutable()
   const command = `"${pythonPath}" -X utf8 "${pathToPythonScript}" "${safeDoi}" "${safeTitle}"`;
 
   console.log('Executando comando:', command);

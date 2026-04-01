@@ -1,3 +1,6 @@
+#Variáveis de ambiente
+.env
+
 # Banco de dados
 *.db
 cache/
