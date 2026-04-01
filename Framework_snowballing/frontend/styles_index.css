@@ -37,8 +37,9 @@ body {
 
 body.busca-realizada{
   background-color: #F2F2F2;
+  align-items: flex-start;
+  padding-top: 100px;
 }
-
 
 /* NAVBAR */
 .navbar {
@@ -81,13 +82,10 @@ body.busca-realizada .navbar {
   align-items: center;
 }
 
-
-/* estado normal */
 #searchForm > div {
   width: 500px;
   transition: all 0.3s ease;
 }
-
 
 body.busca-realizada #searchForm > div {
   width: 600px;
@@ -97,22 +95,28 @@ body.busca-realizada #searchForm > div {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+/*
+>>>>>>> 33b8534 (alteracoes no front 3 - laiza)
+body.busca-realizada #searchForm {
+  position: fixed;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+}
+*/
 
 #searchForm input[type="search"],
 #searchForm button {
   font-family: 'Poppins', sans-serif !important;
 }
 
-
 /* fonte peso e tamanho do botão Search*/
 #searchForm button {
   font-weight: 500;
   font-size: 14px;
   border-radius: 20px;
-
-
 }
-
 
 body.busca-realizada .navbar .nav-link,
 body.busca-realizada .navbar .navbar-brand {
@@ -145,14 +149,6 @@ body.busca-realizada .navbar .navbar-brand {
   color: #000;
   margin: 0;
 }
-
-
-/* ESTADO APÓS BUSCA */
-body.busca-realizada {
-  align-items: flex-start;
-  padding-top: 100px;
-}
-
 
 /* CONTAINER */
 .container {
@@ -240,22 +236,6 @@ body.busca-realizada #headerContainer {
 body.busca-realizada #navbarLogo {
   display: block;
 }
-<<<<<<< HEAD
-/* 
-=======
-/*
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
-body.busca-realizada #searchForm {
-  position: fixed;
-  top: 7px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2000;
-} */
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 
 body.busca-realizada #resultado {
   margin-top: 120px;
@@ -420,18 +400,10 @@ body:not(.busca-realizada) .main-brand {
   display: none !important;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 .espacamento-nav {
   margin: 1rem;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 .navbar .container-fluid {
   display: flex;
   align-items: center;
@@ -439,104 +411,52 @@ body:not(.busca-realizada) .main-brand {
   gap: 10px;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 .navbar-search-box {
   max-width: 450px;
   width: 100%;
   background: #fff;
-  border-radius: 999px; /* totalmente circular */
+  border-radius: 999px;
   padding: 6px 14px;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
-.navbar-search-box input {
-  border-radius: 999px;
-}
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 .navbar-search-box button {
   border-radius: 999px;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 #navbarSearchForm {
   flex: 1 1 300px;
   max-width: 500px;
   z-index: 1051;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 #navbarNav {
   flex: 0 0 auto;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 #navbarSnowballing span {
   white-space: nowrap;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 @media (max-width: 992px) {
   #navbarSnowballing span {
     display: none;
   }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
   #navbarSearchForm {
     order: 3;
     width: 100%;
   }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
   #navbarNav {
     order: 4;
     width: 100%;
   }
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
 body.busca-realizada #searchForm {
   display: none !important;
 }
 
-<<<<<<< HEAD
 body.busca-realizada #navbarSearchForm {
   display: flex !important;
 }
-=======
-
-body.busca-realizada #navbarSearchForm {
-  display: flex !important;
-}
-
->>>>>>> 33b8534 (alteracoes no front 3 - laiza)
