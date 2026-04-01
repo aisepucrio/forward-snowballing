@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import json
@@ -22,8 +23,8 @@ CROSSREF_CACHE = {}
 SEMANTIC_CACHE = {}
 
 
-def safe_get(url):
-    headers = {"User-Agent": USER_AGENT}
+def safe_get(url,headers={}):
+    headers.update({"User-Agent": USER_AGENT})
 
     for attempt in range(3):
         try:
@@ -74,6 +75,7 @@ def semantic_fields():
     )
 
 
+
 def fallback_via_requests(doi):
     normalized_doi = normalize_doi(doi)
     if not normalized_doi:
@@ -81,9 +83,15 @@ def fallback_via_requests(doi):
 
     encoded_doi = requests.utils.quote(normalized_doi, safe="")
     fields = semantic_fields()
+
     url = f"https://api.semanticscholar.org/graph/v1/paper/DOI:{encoded_doi}?fields={fields}"
 
-    data = safe_get(url)
+    API_KEY = os.getenv("SEMANTIC_API_KEY")
+    headers = {
+        "x-api-key": API_KEY
+    }
+
+    data = safe_get(url, headers=headers)
     if not data:
         return None
 
@@ -92,6 +100,7 @@ def fallback_via_requests(doi):
         "stage": "doi_lookup_success",
         "normalized_doi": normalized_doi,
     }
+
     return data
 
 
