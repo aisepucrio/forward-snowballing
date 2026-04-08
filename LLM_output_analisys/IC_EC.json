@@ -1,0 +1,7 @@
+{
+    "criteriosInclusao": "IC1: The paper is available on-line and in English.\nIC2: The paper should be about configurable software systems.\nIC3: The paper deals with techniques to statistically learn data from a sample of configurations, as opposed to considering e.g. the single use of optimization techniques to search for the best (set of) configuration(s), and the use of sampling techniques for SPL testing purposes. ",
+    "criteriosExclusao": "EC1: Introductions to special issues, workshops, tutorials, conferences, conference tracks, panels, poster sessions, as well as editorials and books.\nEC2: Short papers (less than or equal to 4 pages) and work-in-progress.\nEC3: Pure artificial intelligence papers.\nEC4: Secondary studies were not included in this review, such as literature reviews, comparative papers, articles presenting lessons learned, position or philosophical papers, with no technical contribution. However, the references of these studies were read in order to identify other relevant primary studies for inclusion through snowballing technique. Moreover, we consider secondary studies in the related work section.",
+    "artigos": [
+        
+    ]
+}
