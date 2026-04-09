@@ -142,6 +142,7 @@ def main():
            "references_count": len(references),
            "references_retrieved": len(references),
            "references": references,
+           "citations": [],
        }
 
 

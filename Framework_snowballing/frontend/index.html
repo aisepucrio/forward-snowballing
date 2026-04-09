@@ -681,6 +681,15 @@
       buscarArtigo();
     }
   });
+
+  document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const inputValue = document.getElementById('searchInput').value.trim();
+    if (inputValue) {
+      buscarArtigo();
+    }
+  });
+});
 </script>
 
 
