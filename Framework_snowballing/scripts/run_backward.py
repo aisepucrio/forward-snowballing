@@ -99,13 +99,13 @@ def main():
 
 
        cached = get_cached(doi=doi, title=title)
-       if cached and cached.get("references"):
-           print("[CACHE HIT - BACKWARD]", file=sys.stderr)
-           print(json.dumps(cached, ensure_ascii=False, indent=2))
-           return
+       if (cached and cached.get("mode") == "backward" and cached.get("references") and len(cached.get("references")) > 0):         
+        print("[CACHE HIT - BACKWARD]", file=sys.stderr)
+        print(json.dumps(cached, ensure_ascii=False, indent=2))
+        return
 
 
-       clear_caches()
+       #clear_caches()
 
 
        # busca principal
@@ -143,13 +143,14 @@ def main():
            "references_retrieved": len(references),
            "references": references,
            "citations": [],
+           "mode": "forward",
        }
 
 
        # salva cache
        print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
        save_to_cache(
-           doi=result.get("resolved_doi"),
+           doi=doi,
            title=result.get("title"),
            data=result
        )
