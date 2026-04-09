@@ -6,6 +6,7 @@ from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
+from run_backward import get_references_openalex
 
 #em caso de erro com charmap.
 sys.stdout.reconfigure(encoding='utf-8')
@@ -31,16 +32,19 @@ def main():
 
         # CHECA CACHE ANTES DE TUDO
         cached = get_cached(doi=doi, title=title)
-        if cached and cached.get("citations")and len(cached.get("citations")) > 0:
+        if (cached and cached.get("mode") == "forward" and cached.get("citations") and len(cached.get("citations")) > 0):
             print("[CACHE HIT]", file=sys.stderr)
             print(json.dumps(cached, ensure_ascii=False, indent=2))
             return
 
         # limpa cache das APIs (opcional)
-        clear_caches()
+        # clear_caches()
 
         # chama APIs
         paper = search_combined(doi=doi, title=title)
+        references = []
+        if paper.get("doi"):
+                references = get_references_openalex(paper.get("doi"))
 
         raw_citations = paper.get("citations", [])
         deduped_citations = deduplicate_citations(raw_citations)
@@ -61,13 +65,15 @@ def main():
             "citationCount": paper.get("citationCount", paper.get("citations_count", 0)),
             "citations_retrieved": len(final_citations),
             "citations": final_citations,
-            
+            "mode": "backward",
+            "references_count": len(references),
+            "references_retrieved": len(references),
         }
 
         # salva no cache
         print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
         save_to_cache(
-            doi=result.get("resolved_doi"),
+            doi=doi,
             title=result.get("title"),
             data=result
         )
