@@ -6,6 +6,7 @@ from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
+
 #em caso de erro com charmap.
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -30,7 +31,7 @@ def main():
 
         # CHECA CACHE ANTES DE TUDO
         cached = get_cached(doi=doi, title=title)
-        if cached:
+        if cached and cached.get("citations")and len(cached.get("citations")) > 0:
             print("[CACHE HIT]", file=sys.stderr)
             print(json.dumps(cached, ensure_ascii=False, indent=2))
             return
@@ -38,7 +39,7 @@ def main():
         # limpa cache das APIs (opcional)
         clear_caches()
 
-        # 🚀 chama APIs
+        # chama APIs
         paper = search_combined(doi=doi, title=title)
 
         raw_citations = paper.get("citations", [])
@@ -60,6 +61,7 @@ def main():
             "citationCount": paper.get("citationCount", paper.get("citations_count", 0)),
             "citations_retrieved": len(final_citations),
             "citations": final_citations,
+            
         }
 
         # salva no cache
