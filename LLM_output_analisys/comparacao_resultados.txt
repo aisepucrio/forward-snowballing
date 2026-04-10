@@ -1,25 +1,27 @@
 Quantos artigos haviam no total do csv: 110
 Quantos artigos foram incluido pelo csv (coluna Selected): 13
-Quantos artigos foram incluidos pelo json (campo ResumoDecisao.decisao): 6
-Quantos artigos foram incluidos pelo json e nao pelo csv: 4
-Quantos artigos foram incluido pelo csv e nao pelo json: 11
-Porcentagem de alinhamento: 86.36%
+Quantos artigos foram incluidos pelo json (campo ResumoDecisao.decisao): 18
+Quantos artigos foram incluidos pelo json e nao pelo csv: 11
+Quantos artigos foram incluido pelo csv e nao pelo json: 6
+Porcentagem de alinhamento: 84.55%
 
 Titulos incluidos pelo json e nao pelo csv:
-- Deep configuration performance learning: A systematic survey and taxonomy
+- Automated identification of security-relevant configuration settings using NLP
+- Baloo: Measuring and modeling the performance configurations of distributed dbms
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
 - Feature-oriented defect prediction
 - FOCloud: feature model guided performance prediction and explanation for deployment configurable cloud applications
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Regression model trees: Compact energy models for complex IoT devices
+- True Variability Shining Through Taxonomy Mining
 - Unicorn: Reasoning about configurable system performance through the lens of causality
+- Unleashing the Power of Implicit Feedback in Software Product Lines: Benefits Ahead
 
 Titulos incluidos pelo csv e nao pelo json:
 - A Monte Carlo tree search conceptual framework for feature model analyses
-- CoMSA: A Modeling-Driven Sampling Approach for Configuration Performance Testing
 - Configuration optimization with limited functional impact
-- Cost-Efficient Construction of Performance Models
 - Featracer: Locating features through assisted traceability
 - Feature Modelling
 - On Programming Variability with Large Language Model-based Assistant
-- Optimization Space Learning: A Lightweight, Noniterative Technique for Compiler Autotuning
-- Out-of-the-Box Prediction of Non-Functional Variant Properties Using Automated Machine Learning
 - Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
-- Specialization of run-time configuration space at compile-time: An exploratory study

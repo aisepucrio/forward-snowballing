@@ -4,18 +4,16 @@ import re
 import sys
 import time
 from pathlib import Path
-
 from dotenv import load_dotenv
 from google import genai
+from prompt_generator import gerar_prompt
 
 BASE_DIR = Path(__file__).resolve().parent
-RESULTADOS_path = BASE_DIR / "resultados.json"
+RESULTADOS_PATH = BASE_DIR / "resultados_gemini.json"
 
-ENV_PATH = Path(__file__).resolve().parent / ".env"
-load_dotenv(ENV_PATH)
-
+load_dotenv(BASE_DIR / ".env")
 API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.1-flash-lite-preview"
 
 if not API_KEY:
     raise ValueError("GEMINI_API_KEY nao definida no arquivo .env")
@@ -29,9 +27,6 @@ class RetryableGeminiError(Exception):
         self.retry_after_seconds = retry_after_seconds
         super().__init__(f"Retry apos {retry_after_seconds}s")
 
-
-def _split_criterios(texto: str):
-    return [c.strip() for c in (texto or "").splitlines() if c.strip()]
 
 
 def extract_retry_delay_seconds(error) -> int | None:
@@ -48,45 +43,7 @@ def extract_retry_delay_seconds(error) -> int | None:
     return None
 
 
-def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
-    inc = _split_criterios(criterios_inclusao)
-    exc = _split_criterios(criterios_exclusao)
-
-    inc_ids = [f"IC{i + 1}" for i in range(len(inc))]
-    exc_ids = [f"EC{i + 1}" for i in range(len(exc))]
-
-    prompt = f"""
-    Voce e um pesquisador de Engenharia de Software conduzindo uma Revisao Sistematica.
-    Avalie o artigo com base nos criterios. Responda SOMENTE com JSON VALIDO (sem markdown, sem texto extra).
-
-    ARTIGO
-    - title: {title}
-    - abstract: {summary}
-
-    CRITERIOS DE INCLUSAO (marque Sim/Nao)
-    {chr(10).join([f"- {inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
-
-    CRITERIOS DE EXCLUSAO (marque Sim/Nao)
-    {chr(10).join([f"- {exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
-
-    FORMATO EXATO DE SAIDA (JSON):
-    {{
-      "title": "<repita o titulo do artigo>",
-      "results": {{
-        "{'": "Sim|Nao", "'.join(inc_ids + exc_ids)}": "Sim|Nao"
-      }},
-      "ResumoDecisao": {{
-        "decisao": "inclusao|exclusao",
-        "confianca": 0.0,
-        "justificativa_curta": "<1 frase curta>"
-      }}
-    }}
-
-    Regras:
-    - Use apenas "Sim" ou "Nao" nas chaves de results.
-    - "confianca" deve ser um numero entre 0.0 e 1.0.
-    - Nao inclua nenhuma chave alem das pedidas.
-    """
+def classificar_artigo(title, prompt):
 
     try:
         resp = client.models.generate_content(
@@ -94,7 +51,6 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
             contents=prompt,
             config={
                 "temperature": 0.1,
-                "max_output_tokens": 600,
             },
         )
 
@@ -103,6 +59,7 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1 or end <= start:
+            print("--\n" + text + "\n--")
             raise ValueError("Resposta nao contem JSON")
 
         json_text = text[start:end + 1]
@@ -117,32 +74,19 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
         retry_delay = extract_retry_delay_seconds(e)
         if retry_delay is not None:
             print(
-                f"[ERRO Gemini] quota/limite ao classificar artigo '{title}'. "
+                f"[ERRO Gemini] Falha de quota ao classificar artigo '{title}'. "
                 f"Aguardando {retry_delay}s para tentar novamente...",
                 file=sys.stderr,
             )
             raise RetryableGeminiError(retry_delay) from e
+        else:
+            print(
+                f"[ERRO Gemini] Falha ao classificar artigo '{title}'. "
+                f"Aguardando 15s para tentar novamente...",
+                file=sys.stderr,
+            )
+            raise RetryableGeminiError(retry_delay) from e
 
-        print(f"[ERRO Gemini] ao classificar artigo '{title}': {e}", file=sys.stderr)
-        return {
-            "title": title or "",
-            "results": {
-                "Criteria": "It was not possible to analyze the criterion. Please check the submitted data or try again later."
-            },
-            "ResumoDecisao": {
-                "decisao": "exclusao",
-                "confianca": 0.0,
-                "justificativa_curta": "Falha ao processar com o modelo.",
-            },
-        }
-
-
-import json
-import sys
-import time
-from pathlib import Path
-
-RESULTADOS_PATH = Path("resultados.json")
 
 
 def normalizar_titulo(title):
@@ -175,6 +119,7 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos):
         title = artigo.get("title", "")
         abstract = artigo.get("abstract", "")
         title_normalizado = normalizar_titulo(title)
+        prompt = gerar_prompt(title, abstract, criterios_inclusao, criterios_exclusao)
 
         if title_normalizado in titulos_processados:
             print(f"Artigo ja processado, pulando: {title}", file=sys.stderr)
@@ -186,15 +131,16 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos):
 
         while True:
             try:
-                out = classificar_artigo(title, abstract, criterios_inclusao, criterios_exclusao)
+                out = classificar_artigo(title, prompt)
                 break
             except RetryableGeminiError as retry_error:
                 time.sleep(retry_error.retry_after_seconds)
+                time.sleep(REQUEST_INTERVAL_SECONDS)
 
         results.append(out)
         titulos_processados.add(title_normalizado)
 
-        with RESULTADOS_path.open("w", encoding="utf-8") as f:
+        with RESULTADOS_PATH.open("w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
 
 
@@ -212,4 +158,3 @@ def gerar_analise(json_path):
 
 if __name__ == "__main__":
     gerar_analise("articles.json")
-

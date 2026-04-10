@@ -1,0 +1,34 @@
+[
+  {
+    "title": "Machine learning for software engineering: A tertiary study",
+    "results": {
+      "IC1": "Sim",
+      "IC2": "Sim",
+      "IC3": "Sim",
+      "EC1": "Nao",
+      "EC2": "Nao",
+      "EC3": "Nao",
+      "EC4": "Nao"
+    },
+    "ResumoDecisao": {
+      "decisao": "inclusao",
+      "confianca": 0.8
+    }
+  },
+  {
+    "title": "Context-aware recommender systems for social networks: review, challenges and opportunities",
+    "results": {
+      "IC1": "Sim",
+      "IC2": "Nao",
+      "IC3": "Nao",
+      "EC1": "Nao",
+      "EC2": "Nao",
+      "EC3": "Nao",
+      "EC4": "Sim"
+    },
+    "ResumoDecisao": {
+      "decisao": "inclusao",
+      "confianca": 0.8
+    }
+  }
+]
