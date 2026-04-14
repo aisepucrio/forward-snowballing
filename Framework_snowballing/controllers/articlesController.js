@@ -3,7 +3,8 @@ const fs = require('fs');
 const { exec } = require('child_process');
 
 const outputPath = path.join(__dirname, '../output.json');
-const pathToPythonScript = path.join(__dirname, '..', 'scripts', 'run_forward.py');
+
+
 
 function lerOutput() {
   if (!fs.existsSync(outputPath)) return null;
@@ -51,6 +52,9 @@ exports.getMockPapers = (req, res) => {
 exports.searchByDOI = (req, res) => {
   const doi = req.query.doi || '-';
   const title = req.query.title || '-';
+  const type = req.query.type || 'forward';
+  const scriptName = type === 'backward' ? 'run_backward.py' : 'run_forward.py'; 
+  const pathToPythonScript = path.join(__dirname, '..', 'scripts', scriptName); 
 
   if ((!doi || doi === '-') && (!title || title === '-')) {
     return res.status(400).json({ error: 'DOI ou título devem ser informados' });
