@@ -7,6 +7,9 @@ import ollama
 
 BASE_DIR = Path(__file__).resolve().parent
 RESULTADOS_PATH = BASE_DIR / "resultados_llama32.json"
+if not RESULTADOS_PATH.exists() or not RESULTADOS_PATH.read_text(encoding="utf-8").strip():
+    RESULTADOS_PATH.write_text("[]", encoding="utf-8")
+
 
 def _split_criterios(texto: str):
     return [c.strip() for c in (texto or "").splitlines() if c.strip()]
@@ -34,35 +37,38 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
     exc_ids = [f"EC{i + 1}" for i in range(len(exc))]
 
     prompt = f"""
-    Voce e um pesquisador de Engenharia de Software conduzindo uma Revisao Sistematica.
-    Avalie o artigo com base nos criterios. Responda SOMENTE com JSON VALIDO (sem markdown, sem texto extra).
+    You are a expert researcher conducing a Systematic Review.
+    Evaluate the article based on the criteria. Answer ONLY with VALID JSON (no markdown, no extra text).
 
-    ARTIGO
+    ARTICLE TO ANALYZE:
     - title: {title}
     - abstract: {summary}
 
-    CRITERIOS DE INCLUSAO (marque Sim/Nao)
+    INCLUSION CRITERIA (mark Yes/No)
     {chr(10).join([f"- {inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
 
-    CRITERIOS DE EXCLUSAO (marque Sim/Nao)
+    EXCLUSION CRITERIA (mark Yes/No)
     {chr(10).join([f"- {exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
 
-    FORMATO EXATO DE SAIDA (JSON):
+    EXACT OUTPUT FORMAT (JSON):
     {{
       "title": "<repita o titulo do artigo>",
       "results": {{
-        "{'": "Sim|Nao", "'.join(inc_ids + exc_ids)}": "Sim|Nao"
+        "{'": "Yes|No", "'.join(inc_ids + exc_ids)}": "Yes|No"
       }},
-      "ResumoDecisao": {{
-        "decisao": "inclusao|exclusao",
-        "confianca": 0.0-1.0
+      "Decision": {{
+        "decision": "inclusion|exclusion",
+        "confidence": 0.0-1.0
       }}
     }}
 
     Regras:
-    - Use apenas "Sim" ou "Nao" nas chaves de results.
-    - "confianca" deve ser um numero entre 0.0 e 1.0.
-    - Nao inclua nenhuma chave alem das pedidas.
+    - Use only "Yes" ou "No" in the result for each criteria.
+    - "confidence" must be a number between 0.0 and 1.0.
+    - If any exclusion criterion is marked "Yes", the decision must be "exclusion".
+    - If any inclusion criterion is marked "No", the decision must be "exclusion".
+    - Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
+    - Do not include any keys other than the requested ones.
     """
 
     try:

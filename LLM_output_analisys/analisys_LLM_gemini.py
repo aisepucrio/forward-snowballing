@@ -44,7 +44,6 @@ def extract_retry_delay_seconds(error) -> int | None:
 
 
 def classificar_artigo(title, prompt):
-
     try:
         resp = client.models.generate_content(
             model=MODEL_NAME,
@@ -82,6 +81,7 @@ def classificar_artigo(title, prompt):
         else:
             print(
                 f"[ERRO Gemini] Falha ao classificar artigo '{title}'. "
+                f"Erro: {e}. "
                 f"Aguardando 15s para tentar novamente...",
                 file=sys.stderr,
             )
@@ -134,7 +134,8 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos):
                 out = classificar_artigo(title, prompt)
                 break
             except RetryableGeminiError as retry_error:
-                time.sleep(retry_error.retry_after_seconds)
+                if retry_error.retry_after_seconds:
+                    time.sleep(retry_error.retry_after_seconds)
                 time.sleep(REQUEST_INTERVAL_SECONDS)
 
         results.append(out)

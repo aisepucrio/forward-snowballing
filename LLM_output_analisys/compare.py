@@ -1,14 +1,7 @@
-import csv
 import json
 import re
 import unicodedata
 from pathlib import Path
-
-
-BASE_DIR = Path(__file__).resolve().parent
-CSV_PATH = BASE_DIR / "source.csv"
-JSON_PATH = BASE_DIR / "resultados.json"
-OUTPUT_TXT_PATH = BASE_DIR / "comparacao_resultados.txt"
 
 
 def normalize_text(value: str) -> str:
@@ -19,106 +12,216 @@ def normalize_text(value: str) -> str:
     return text
 
 
-def csv_selected_to_bool(value: str) -> bool:
-    return normalize_text(value) in {"yes", "sim", "true", "1", "incluir", "inclusao"}
+def decision_to_bool(value: str) -> bool:
+    normalized = normalize_text(value)
+    return normalized in {"inclusion", "include", "included", "yes", "true", "1"}
 
 
-def json_decision_to_bool(value: str) -> bool:
-    return normalize_text(value) in {"inclusao", "incluir", "include", "included", "yes", "sim", "true", "1"}
+def is_countable_decision(value: str) -> bool:
+    normalized = normalize_text(value)
+    return normalized in {
+        "inclusion", "include", "included", "yes", "true", "1",
+        "exclusion", "exclude", "excluded", "no", "false", "0",
+    }
 
 
-def load_csv_articles(path: Path) -> dict:
-    articles = {}
+def carregar_json(path):
+    path = Path(path)
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
-    with path.open("r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            title = (row.get("Title") or "").strip()
-            if not title:
+
+def classify_criterion_value(value: str) -> str:
+    normalized = normalize_text(value)
+    if normalized in {"yes", "sim", "true", "1"}:
+        return "yes"
+    if normalized in {"no", "nao", "não", "false", "0"}:
+        return "no"
+    return "not_conclusive"
+
+
+def count_criteria_distribution(data):
+    counts = {}
+
+    for item in data:
+        results = item.get("results", {})
+        if not isinstance(results, dict):
+            continue
+
+        for criterion, value in results.items():
+            criterion_name = str(criterion or "").strip().upper()
+            if not re.fullmatch(r"(IC|EC)\d+", criterion_name):
                 continue
 
-            key = normalize_text(title)
-            articles[key] = {
-                "title": title,
-                "included": csv_selected_to_bool(row.get("Selected", "")),
-            }
+            if criterion_name not in counts:
+                counts[criterion_name] = {
+                    "yes": 0,
+                    "no": 0,
+                    "not_conclusive": 0,
+                    "total": 0,
+                }
 
-    return articles
+            bucket = classify_criterion_value(value)
+            counts[criterion_name][bucket] += 1
+            counts[criterion_name]["total"] += 1
+
+    return dict(sorted(
+        counts.items(),
+        key=lambda item: (
+            0 if item[0].startswith("IC") else 1,
+            int(re.search(r"\d+", item[0]).group()),
+        ),
+    ))
 
 
-def load_json_results(path: Path) -> dict:
-    with path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
+def build_criteria_distribution_lines(source_data, llm_data):
+    source_counts = count_criteria_distribution(source_data)
+    llm_counts = count_criteria_distribution(llm_data)
 
-    results = {}
+    all_criteria = sorted(
+        set(source_counts.keys()) | set(llm_counts.keys()),
+        key=lambda item: (
+            0 if item.startswith("IC") else 1,
+            int(re.search(r"\d+", item).group()),
+        ),
+    )
+
+    lines = ["", "Distribuicao por criterio:"]
+
+    if not all_criteria:
+        lines.append("- Nenhum criterio encontrado")
+        return lines
+
+    for criterion in all_criteria:
+        llm_values = llm_counts.get(criterion, {"yes": 0, "no": 0, "not_conclusive": 0, "total": 0})
+        source_values = source_counts.get(criterion, {"yes": 0, "no": 0, "not_conclusive": 0, "total": 0})
+
+        llm_total = llm_values["total"]
+        source_total = source_values["total"]
+
+        llm_yes_pct = (llm_values["yes"] / llm_total * 100) if llm_total else 0.0
+        llm_no_pct = (llm_values["no"] / llm_total * 100) if llm_total else 0.0
+        llm_not_conclusive_pct = (llm_values["not_conclusive"] / llm_total * 100) if llm_total else 0.0
+
+        source_yes_pct = (source_values["yes"] / source_total * 100) if source_total else 0.0
+        source_no_pct = (source_values["no"] / source_total * 100) if source_total else 0.0
+        source_not_conclusive_pct = (source_values["not_conclusive"] / source_total * 100) if source_total else 0.0
+
+        lines.append(
+            f"LLM > {criterion}:    Yes {llm_yes_pct:05.2f}% | No {llm_no_pct:05.2f}% | Not conclusive {llm_not_conclusive_pct:05.2f}%"
+        )
+        lines.append(
+            f"Source > {criterion}: Yes {source_yes_pct:05.2f}% | No {source_no_pct:05.2f}% | Not conclusive {source_not_conclusive_pct:05.2f}%"
+        )
+
+    return lines
+
+
+def indexar_por_titulo(data):
+    indexed = {}
+
     for item in data:
         title = (item.get("title") or "").strip()
         if not title:
             continue
 
-        resumo = item.get("ResumoDecisao") or item.get("resumoDecisao") or {}
-        decisao = resumo.get("decisao", "")
-
         key = normalize_text(title)
-        results[key] = {
+        decision = item.get("Decision", {}).get("decision", "")
+
+        indexed[key] = {
             "title": title,
-            "included": json_decision_to_bool(decisao),
+            "included": decision_to_bool(decision),
+            "countable_decision": is_countable_decision(decision),
         }
 
-    return results
+    return indexed
 
 
-def build_report(csv_articles: dict, json_results: dict) -> str:
-    total_csv = len(csv_articles)
-    csv_included = {k for k, v in csv_articles.items() if v["included"]}
-    json_included = {k for k, v in json_results.items() if v["included"]}
+def comparar_jsons(gabarito_path, llm_path, output_txt_path):
+    gabarito_data = carregar_json(gabarito_path)
+    llm_data = carregar_json(llm_path)
+    gabarito = indexar_por_titulo(gabarito_data)
+    llm = indexar_por_titulo(llm_data)
 
-    included_by_json_not_csv = sorted(json_included - csv_included)
-    included_by_csv_not_json = sorted(csv_included - json_included)
+    ignored_keys = {
+        key for key, value in llm.items()
+        if not value.get("countable_decision", False)
+    }
 
-    matched = 0
-    for key, csv_article in csv_articles.items():
-        csv_value = csv_article["included"]
-        json_value = json_results.get(key, {}).get("included", False)
-        if csv_value == json_value:
-            matched += 1
+    all_keys = sorted(
+        (set(gabarito.keys()) | set(llm.keys())) - ignored_keys
+    )
 
-    alignment = (matched / total_csv * 100) if total_csv else 0.0
+    tp = fp = tn = fn = 0
 
-    lines = [
-        f"Quantos artigos haviam no total do csv: {total_csv}",
-        f"Quantos artigos foram incluido pelo csv (coluna Selected): {len(csv_included)}",
-        f"Quantos artigos foram incluidos pelo json (campo ResumoDecisao.decisao): {len(json_included)}",
-        f"Quantos artigos foram incluidos pelo json e nao pelo csv: {len(included_by_json_not_csv)}",
-        f"Quantos artigos foram incluido pelo csv e nao pelo json: {len(included_by_csv_not_json)}",
-        f"Porcentagem de alinhamento: {alignment:.2f}%",
+    incluidos_llm_nao_gabarito = []
+    incluidos_gabarito_nao_llm = []
+
+    for key in all_keys:
+        expected = gabarito.get(key, {}).get("included", False)
+        predicted = llm.get(key, {}).get("included", False)
+
+        if expected and predicted:
+            tp += 1
+        elif not expected and predicted:
+            fp += 1
+            title = llm.get(key, {}).get("title") or gabarito.get(key, {}).get("title") or key
+            incluidos_llm_nao_gabarito.append(title)
+        elif expected and not predicted:
+            fn += 1
+            title = gabarito.get(key, {}).get("title") or llm.get(key, {}).get("title") or key
+            incluidos_gabarito_nao_llm.append(title)
+        else:
+            tn += 1
+
+    total = tp + fp + tn + fn
+    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    accuracy = (tp + tn) / total if total else 0.0
+    precision = tp / (tp + fp) if (tp + fp) else 0.0
+    f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) else 0.0
+
+    report_lines = [
+        "Analise da comparacao entre gabarito e selecao da LLM",
         "",
-        "Titulos incluidos pelo json e nao pelo csv:",
+        f"Artigos ignorados por decisao nao contabilizavel: {len(ignored_keys)}",
+        f"Total de artigos avaliados: {total}",
+        f"True Positives (TP): {tp}",
+        f"False Positives (FP): {fp}",
+        f"True Negatives (TN): {tn}",
+        f"False Negatives (FN): {fn}",
+        "",
+        f"Recall: {recall:.4f}",
+        f"Precision: {precision:.4f}",
+        f"Acuracia: {accuracy:.4f}",
+        f"F1-score: {f1_score:.4f}",
+        "",
+        "Artigos incluidos pela LLM e nao incluidos no gabarito:",
     ]
 
-    if included_by_json_not_csv:
-        lines.extend(f"- {json_results[key]['title']}" for key in included_by_json_not_csv)
+    if incluidos_llm_nao_gabarito:
+        report_lines.extend(f"- {title}" for title in incluidos_llm_nao_gabarito)
     else:
-        lines.append("- Nenhum")
+        report_lines.append("- Nenhum")
 
-    lines.append("")
-    lines.append("Titulos incluidos pelo csv e nao pelo json:")
+    report_lines.extend([
+        "",
+        "Artigos incluidos no gabarito e nao incluidos pela LLM:",
+    ])
 
-    if included_by_csv_not_json:
-        lines.extend(f"- {csv_articles[key]['title']}" for key in included_by_csv_not_json)
+    if incluidos_gabarito_nao_llm:
+        report_lines.extend(f"- {title}" for title in incluidos_gabarito_nao_llm)
     else:
-        lines.append("- Nenhum")
+        report_lines.append("- Nenhum")
 
-    return "\n".join(lines)
+    report_lines.extend(build_criteria_distribution_lines(gabarito_data, llm_data))
 
+    report = "\n".join(report_lines)
 
-def comparar_resultados(BASE_path, RESULTS_path):
-    csv_articles = load_csv_articles(Path(BASE_DIR / BASE_path))
-    json_results = load_json_results(Path(BASE_DIR / RESULTS_path))
-    report = build_report(csv_articles, json_results)
+    output_txt_path = Path(output_txt_path)
+    output_txt_path.write_text(report, encoding="utf-8")
 
-    OUTPUT_TXT_PATH.write_text(report, encoding="utf-8")
+    return report
 
 
 if __name__ == "__main__":
-    comparar_resultados("source.csv", "resultados.json")
+    comparar_jsons("resultados_originais.json", "resultados_gemini.json", "comparacao.txt")
