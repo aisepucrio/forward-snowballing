@@ -52,8 +52,7 @@ exports.getMockPapers = (req, res) => {
 exports.searchByDOI = (req, res) => {
   const doi = req.query.doi || '-';
   const title = req.query.title || '-';
-  const type = req.query.type || 'forward';
-  const scriptName = type === 'backward' ? 'run_backward.py' : 'run_forward.py'; 
+  const scriptName = 'run_backward.py';
   const pathToPythonScript = path.join(__dirname, '..', 'scripts', scriptName); 
 
   if ((!doi || doi === '-') && (!title || title === '-')) {

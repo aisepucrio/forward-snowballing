@@ -17,8 +17,8 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS articles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            doi TEXT,
-            title TEXT,
+            doi TEXT UNIQUE,
+            title TEXT UNIQUE,
             data TEXT
         )
     """)
@@ -30,11 +30,19 @@ def init_db():
 def save_to_cache(doi, title, data):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    serialized = json.dumps(data)
+    normalized_title = title.lower() if title else None
 
-    cursor.execute("""
-        INSERT INTO articles (doi, title, data)
-        VALUES (?, ?, ?)
-    """, (doi, title.lower() if title else None, json.dumps(data)))
+    if doi:
+        cursor.execute("""
+            INSERT INTO articles (doi, title, data) VALUES (?, ?, ?)
+            ON CONFLICT(doi) DO UPDATE SET data = excluded.data, title = excluded.title
+        """, (doi, normalized_title, serialized))
+    elif normalized_title:
+        cursor.execute("""
+            INSERT INTO articles (doi, title, data) VALUES (?, ?, ?)
+            ON CONFLICT(title) DO UPDATE SET data = excluded.data
+        """, (None, normalized_title, serialized))
 
     conn.commit()
     conn.close()

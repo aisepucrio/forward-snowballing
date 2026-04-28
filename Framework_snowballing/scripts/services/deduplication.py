@@ -49,7 +49,7 @@ def deduplicate_citations(raw_citations):
 
         current_best = best_by_key[dedup_key]
         if score_citation(citation_obj) > score_citation(current_best):
-            best_by_key[dedup_key] = citation_obj
+            best_by_key[dedup_key] = merge_prefer_filled(citation_obj, current_best)
         else:
             best_by_key[dedup_key] = merge_prefer_filled(current_best, citation_obj)
 

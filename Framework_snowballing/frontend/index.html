@@ -130,6 +130,9 @@
     <div id="citationsHeader" class="d-flex justify-content-between align-items-center mb-3">
       <h3 class="mb-0 fw-bold">Cited By</h3>
       <div class="d-flex gap-2">
+        <button id="dedupBtn" type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleDedup()">
+          <i class="bi bi-filter"></i> Remove Duplicates
+        </button>
         <button id="selectAllBtn" type="button" class="btn btn-outline-primary btn-sm">
           Include All
         </button>
@@ -286,12 +289,17 @@
           ? (data.citations || [])
           : (data.references || []);
 
-        window.citationsData = listToDisplay.map(c => ({
+        const mappedList = listToDisplay.map((c, i) => ({
           ...c,
-          paperId: c.paperId || c.doi || Math.random().toString(36),
+          paperId: `${c.paperId || c.doi || 'item'}-${i}`,
           selecionado: c.selecionado || null,
           abstractExpanded: false
         }));
+        window.rawCitationsData = mappedList;
+        window.citationsData = [...mappedList];
+        window.dedupApplied = false;
+        const dedupBtn = document.getElementById('dedupBtn');
+        if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
 
 
         mostrarResultado(window.seedData);
@@ -676,6 +684,47 @@
   });
 
 
+  function normalizeDoi(doi) {
+    if (!doi || doi === '-') return null;
+    return doi.trim().toLowerCase()
+      .replace(/^https?:\/\/doi\.org\//, '')
+      .replace(/^doi:/, '');
+  }
+
+  function normalizeTitleJs(title) {
+    if (!title || title === '-') return '';
+    return title.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+  }
+
+  function deduplicateList(list) {
+    const seen = new Set();
+    return list.filter(item => {
+      const doi = normalizeDoi(item.doi);
+      const key = doi ? `doi:${doi}` : `title:${normalizeTitleJs(item.title)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  window.dedupApplied = false;
+
+  function toggleDedup() {
+    window.dedupApplied = !window.dedupApplied;
+    const btn = document.getElementById('dedupBtn');
+
+    if (window.dedupApplied) {
+      window.citationsData = deduplicateList(window.rawCitationsData || []);
+      btn.innerHTML = '<i class="bi bi-filter-circle-fill"></i> Show All';
+    } else {
+      window.citationsData = [...(window.rawCitationsData || [])];
+      btn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
+    }
+
+    mostrarCitacoes(window.citationsData);
+    atualizarBotaoIncludeAll();
+  }
+
   document.getElementById('searchInput').addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       buscarArtigo();
@@ -683,13 +732,38 @@
   });
 
   document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const inputValue = document.getElementById('searchInput').value.trim();
-    if (inputValue) {
-      buscarArtigo();
-    }
+    radio.addEventListener('change', () => {
+      if (window.seedData) {
+        const mode = document.querySelector('input[name="snowballMode"]:checked').value;
+        const headerText = mode === 'forward' ? 'Cited By' : 'References';
+        document.querySelector('#citationsHeader h3').textContent = headerText;
+
+        const listToDisplay = mode === 'forward'
+          ? (window.seedData.citations || [])
+          : (window.seedData.references || []);
+
+        const mappedList = listToDisplay.map((c, i) => ({
+          ...c,
+          paperId: `${c.paperId || c.doi || 'item'}-${i}`,
+          selecionado: c.selecionado || null,
+          abstractExpanded: false
+        }));
+        window.rawCitationsData = mappedList;
+        window.citationsData = [...mappedList];
+        window.dedupApplied = false;
+        const dedupBtn = document.getElementById('dedupBtn');
+        if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
+
+        mostrarCitacoes(window.citationsData);
+        atualizarBotaoIncludeAll();
+      } else {
+        const inputValue = document.getElementById('searchInput').value.trim();
+        if (inputValue) {
+          buscarArtigo();
+        }
+      }
+    });
   });
-});
 </script>
 
 

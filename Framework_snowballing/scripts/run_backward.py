@@ -99,10 +99,11 @@ def main():
 
 
        cached = get_cached(doi=doi, title=title)
-       if (cached and cached.get("mode") == "backward" and cached.get("references") and len(cached.get("references")) > 0):         
-        print("[CACHE HIT - BACKWARD]", file=sys.stderr)
-        print(json.dumps(cached, ensure_ascii=False, indent=2))
-        return
+       if (cached and cached.get("mode") == "combined"
+               and (cached.get("citations") or cached.get("references"))):
+           print("[CACHE HIT]", file=sys.stderr)
+           print(json.dumps(cached, ensure_ascii=False, indent=2))
+           return
 
 
        #clear_caches()
@@ -110,25 +111,24 @@ def main():
 
        # busca principal
        paper = search_combined(doi=doi, title=title)
+       resolved_doi = normalize_doi(paper.get("doi")) or doi
 
+       # citations (forward)
+       raw_citations = paper.get("citations", [])
+       final_citations = enrich_incomplete_citations(raw_citations)
 
+       # references (backward)
        references = paper.get("references", []) or []
-
-
-       if not references and doi:
+       if not references and resolved_doi:
            print("[DEBUG] Fallback OpenAlex...", file=sys.stderr)
-           references = get_references_openalex(doi)
-
-
-       # processamento
-       references = deduplicate_citations(references)
-       references = enrich_incomplete_citations(references)
+           references = get_references_openalex(resolved_doi)
+       final_references = enrich_incomplete_citations(references)
 
 
        result = {
            "input_doi": doi or "-",
            "input_title": title or "-",
-           "resolved_doi": normalize_doi(paper.get("doi")) or doi or "-",
+           "resolved_doi": resolved_doi or "-",
            "data_source": paper.get("api", "-"),
            "title": paper.get("title", "-"),
            "authors": [
@@ -138,12 +138,13 @@ def main():
            "year": paper.get("year", "-"),
            "venue": paper.get("venue", "-"),
            "abstract": paper.get("abstract", "-"),
-           "citations_count": paper.get("citationCount", paper.get("citations_count", 0)),
-           "references_count": len(references),
-           "references_retrieved": len(references),
-           "references": references,
-           "citations": [],
-           "mode": "forward",
+           "citationCount": paper.get("citationCount", paper.get("citations_count", 0)),
+           "citations_retrieved": len(final_citations),
+           "citations": final_citations,
+           "references_count": len(final_references),
+           "references_retrieved": len(final_references),
+           "references": final_references,
+           "mode": "combined",
        }
 
 

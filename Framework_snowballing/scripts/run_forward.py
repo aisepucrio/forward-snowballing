@@ -48,7 +48,8 @@ def main():
 
         raw_citations = paper.get("citations", [])
         deduped_citations = deduplicate_citations(raw_citations)
-        final_citations = enrich_incomplete_citations(deduped_citations)
+        enriched_citations = enrich_incomplete_citations(deduped_citations)
+        final_citations = deduplicate_citations(enriched_citations)
 
         result = {
             "input_doi": doi or "-",
@@ -65,7 +66,7 @@ def main():
             "citationCount": paper.get("citationCount", paper.get("citations_count", 0)),
             "citations_retrieved": len(final_citations),
             "citations": final_citations,
-            "mode": "backward",
+            "mode": "forward",
             "references_count": len(references),
             "references_retrieved": len(references),
         }
