@@ -2,11 +2,13 @@ import sys
 import json
 import traceback
 
+
 from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
 from run_backward import get_references_openalex
+
 
 #em caso de erro com charmap.
 sys.stdout.reconfigure(encoding='utf-8')
@@ -17,18 +19,23 @@ def main():
         doi = sys.argv[1].strip() if len(sys.argv) > 1 else None
         title = sys.argv[2].strip() if len(sys.argv) > 2 else None
 
+
         doi = None if doi in {None, "", "-", "null", "None"} else doi
         title = None if title in {None, "", "-", "null", "None"} else title
+
 
         if not doi and not title:
             print(json.dumps({"error": "DOI ou título devem ser informados"}))
             sys.exit(1)
 
-        # 🔧 normaliza DOI
+
+        # normaliza DOI
         doi = normalize_doi(doi) if doi else None
+
 
         # inicializa banco
         init_db()
+
 
         # CHECA CACHE ANTES DE TUDO
         cached = get_cached(doi=doi, title=title)
@@ -37,8 +44,10 @@ def main():
             print(json.dumps(cached, ensure_ascii=False, indent=2))
             return
 
-        # limpa cache das APIs (opcional)
+
+        # limpa cache das APIs
         # clear_caches()
+
 
         # chama APIs
         paper = search_combined(doi=doi, title=title)
@@ -46,9 +55,17 @@ def main():
         if paper.get("doi"):
                 references = get_references_openalex(paper.get("doi"))
 
+
         raw_citations = paper.get("citations", [])
-        deduped_citations = deduplicate_citations(raw_citations)
-        final_citations = enrich_incomplete_citations(deduped_citations)
+
+
+        # 1. deduplica primeiro
+        deduped = deduplicate_citations(raw_citations)
+
+
+        # 2. depois enriquece
+        final_citations = enrich_incomplete_citations(deduped)
+
 
         result = {
             "input_doi": doi or "-",
@@ -70,6 +87,7 @@ def main():
             "references_retrieved": len(references),
         }
 
+
         # salva no cache
         print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
         save_to_cache(
@@ -78,11 +96,14 @@ def main():
             data=result
         )
 
-        # salva arquivo local (se quiser manter)
+
+        # salva arquivo local
         with open("output.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
+
         print(json.dumps(result, ensure_ascii=False, indent=2))
+
 
     except Exception:
         traceback.print_exc(file=sys.stderr)
