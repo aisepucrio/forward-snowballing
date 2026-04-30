@@ -62,7 +62,16 @@ def safe_get(url, headers=None):
 
     return None
 
-
+def extract_npages(pages):
+    if not pages:
+        return None
+    if "-" in pages:
+        try:
+            start, end = pages.split("-")
+            return int(end) - int(start) + 1
+        except:
+            return None
+    return None
 
 
 def reconstruct_abstract_from_inverted_index(inverted_index):
@@ -289,7 +298,14 @@ def fallback_openalex_by_doi(doi):
         "citations_count": data.get("cited_by_count", 0),
         "api": "openalex",
         "openalex_id": data.get("id"),
-
+        "open_access": data.get("open_access", {}).get("is_oa"),
+        "url": primary_location.get("landing_page_url"),
+        "keywords": [
+            c.get("display_name")
+            for c in data.get("concepts", [])
+            if c.get("display_name")
+        ][:10],
+        "language": data.get("language"),
 
     }
 
@@ -317,10 +333,25 @@ def get_openalex_citations(openalex_id):
             "title": item.get("title"),
             "year": item.get("publication_year"),
             "doi": normalize_doi(item.get("doi")),
+
+            "url": item.get("primary_location", {}).get("landing_page_url"),
+
+            "open_access": item.get("open_access", {}).get("is_oa"),
+
+            "keywords": [
+                c.get("display_name") for c in item.get("concepts", [])
+            ],
+
+            "language": item.get("language"),
+
+            "pages": item.get("biblio", {}).get("first_page"),
+            "numpages": item.get("biblio", {}).get("last_page"),
+
             "authors": [
                 {"name": a.get("author", {}).get("display_name", "-")}
                 for a in item.get("authorships", [])
             ],
+
             "source": "openalex"
         })
 
@@ -398,6 +429,14 @@ def fallback_openalex_by_title(title):
         "citations_count": best.get("cited_by_count", 0),
         "api": "openalex",
         "openalex_id": best.get("id"),
+        "open_access": data.get("open_access", {}).get("is_oa"),
+        "url": primary_location.get("landing_page_url"),
+        "keywords": [
+            c.get("display_name")
+            for c in data.get("concepts", [])
+            if c.get("display_name")
+        ][:10],
+        "language": data.get("language"),
 
 
     }
@@ -501,6 +540,10 @@ def fallback_crossref(doi=None, title=None):
         "authors": authors,
         "citations_count": 0,
         "api": "crossref",
+        "language": item.get("language"),
+        "url": item.get("URL"),
+        "pages": item.get("page"),
+        "numpages": extract_npages(item.get("page")),
     }
 
 
@@ -762,7 +805,8 @@ def enrich_citation(citation):
 
     enriched["paperId"] = generate_paper_id(enriched.get("title", "-"))
     enriched["doi"] = normalize_doi(enriched.get("doi")) or "-"
-
+    
+    print("[DEBUG enriched keys]", enriched.keys(), file=sys.stderr)
 
     return enriched
 

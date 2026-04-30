@@ -82,9 +82,16 @@ def main():
             "citationCount": paper.get("citationCount", paper.get("citations_count", 0)),
             "citations_retrieved": len(final_citations),
             "citations": final_citations,
-            "mode": "backward",
+            "mode": "forward",
             "references_count": len(references),
             "references_retrieved": len(references),
+            "open_access": paper.get("open_access", None),
+            "url": paper.get("url", None),
+            "keywords": paper.get("keywords", []),
+            "language": paper.get("language", None),
+            "pages": paper.get("pages", None),
+            "numpages": paper.get("numpages", None),
+            
         }
 
 
