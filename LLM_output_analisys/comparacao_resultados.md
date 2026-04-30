@@ -59,7 +59,7 @@ LLM > EC4: Yes 32.65% | No 65.31% | Not conclusive 2.04%
 Source > EC4: Yes 18.18% | No 81.82% | Not conclusive 0.00%
 
 
-## Prompt v2 corrigindo nor conclusives IC/EC refeitos
+## Prompt v2 corrigido not conclusives IC/EC refeitos
 
 
 IC/EC
@@ -96,3 +96,5 @@ LLM > EC3:    Yes 00.00% | No 00.00% | Not conclusive 00.00%
 Source > EC3: Yes 05.50% | No 94.50% | Not conclusive 00.00%
 LLM > EC4:    Yes 00.00% | No 00.00% | Not conclusive 00.00%
 Source > EC4: Yes 18.35% | No 81.65% | Not conclusive 00.00%
+
+\\ToDo corrigir correspondências
