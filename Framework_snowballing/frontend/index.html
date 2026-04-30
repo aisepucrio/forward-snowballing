@@ -298,8 +298,7 @@
         window.rawCitationsData = mappedList;
         window.citationsData = [...mappedList];
         window.dedupApplied = false;
-        const dedupBtn = document.getElementById('dedupBtn');
-        if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
+        updateDedupBtn();
 
 
         mostrarResultado(window.seedData);
@@ -707,6 +706,15 @@
     });
   }
 
+  function updateDedupBtn() {
+    const btn = document.getElementById('dedupBtn');
+    if (!btn) return;
+    const list = window.rawCitationsData || [];
+    const dupCount = list.length - deduplicateList(list).length;
+    const badge = dupCount > 0 ? ` (${dupCount})` : '';
+    btn.innerHTML = `<i class="bi bi-filter"></i> Remove Duplicates${badge}`;
+  }
+
   window.dedupApplied = false;
 
   function toggleDedup() {
@@ -718,7 +726,7 @@
       btn.innerHTML = '<i class="bi bi-filter-circle-fill"></i> Show All';
     } else {
       window.citationsData = [...(window.rawCitationsData || [])];
-      btn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
+      updateDedupBtn();
     }
 
     mostrarCitacoes(window.citationsData);
@@ -751,8 +759,7 @@
         window.rawCitationsData = mappedList;
         window.citationsData = [...mappedList];
         window.dedupApplied = false;
-        const dedupBtn = document.getElementById('dedupBtn');
-        if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
+        updateDedupBtn();
 
         mostrarCitacoes(window.citationsData);
         atualizarBotaoIncludeAll();

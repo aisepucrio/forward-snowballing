@@ -69,7 +69,7 @@ exports.searchByDOI = (req, res) => {
   console.log('DOI recebido:', doi);
   console.log('TITLE recebido:', title);
 
-  exec(command, (error, stdout, stderr) => {
+  exec(command, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
     if (error) {
       console.error('Erro executando script Python:', stderr || stdout || error.message);
       return res.status(500).json({
