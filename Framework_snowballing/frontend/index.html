@@ -151,6 +151,12 @@
             <th style="min-width: 180px;">Venue</th>
             <th style="min-width: 180px;">DOI</th>
             <th style="min-width: 100px;">Cited by</th>
+
+            <th style="min-width: 120px;">Open Access</th>
+            <th style="min-width: 180px;">Keywords</th>
+            <th style="min-width: 120px;">Language</th>
+            <th style="min-width: 140px;">Pages</th>
+
             <th style="min-width: 170px;">Actions</th>
           </tr>
         </thead>
@@ -335,6 +341,15 @@
     const citedByToShow = artigo.citations_retrieved || artigo.citations_count || '-';
     const referencesToShow = artigo.references_retrieved || artigo.references_count || '-';
 
+    const openAccessToShow = artigo.open_access || '-';
+    const urlToShow = artigo.url || '-';
+    const keywordsToShow = artigo.keywords || [];
+    const languageToShow = artigo.language || '-';
+    const pagesToShow = artigo.pages || '-';
+    const numpagesToShow = artigo.numpages || '-';
+
+
+
     const cardHTML = `
       <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -464,6 +479,20 @@
       const tdActions = document.createElement('td');
       tdActions.classList.add('text-nowrap');
 
+      const openAccessCell = document.createElement('td');
+      openAccessCell.textContent = cit.open_access ?? '-';
+
+      const keywordsCell = document.createElement('td');
+      keywordsCell.textContent = (cit.keywords || []).join(', ') || '-';
+
+      const languageCell = document.createElement('td');
+      languageCell.textContent = cit.language || '-';
+
+      const pagesCell = document.createElement('td');
+      pagesCell.textContent = cit.pages ? `${cit.pages} (${cit.numpages || '-'})` : '-';
+
+
+
 
       tdActions.append(
         createActionButton('incluir', 'Include', 'check-circle-fill', cit, cit.selecionado),
@@ -478,6 +507,10 @@
       tr.appendChild(venueCell);
       tr.appendChild(doiCell);
       tr.appendChild(citedByCell);
+      tr.appendChild(openAccessCell);
+      tr.appendChild(keywordsCell);
+      tr.appendChild(languageCell);
+      tr.appendChild(pagesCell);
       tr.appendChild(tdActions);
 
 
@@ -560,7 +593,7 @@
     }
 
 
-    let csvContent = "Title,Abstract,Authors,Year,Venue,DOI,Cited by,Actions\n";
+    let csvContent = "Title,Abstract,Authors,Year,Venue,DOI,Cited by,URL,Keywords,Language,Pages,Numpages,Actions\n";
 
 
     citations.forEach(cit => {
@@ -571,10 +604,16 @@
       const venue = `"${String(cit.venue || '-').replace(/"/g, '""')}"`;
       const doi = `"${String(cit.doi || '-').replace(/"/g, '""')}"`;
       const citedBy = `"${String(cit.citations_count || '-').replace(/"/g, '""')}"`;
+      const openAccess = `"${String(cit.open_access || '-').replace(/"/g, '""')}"`;
+      const url = `"${String(cit.url || '-').replace(/"/g, '""')}"`;
+      const keywords = `"${(cit.keywords || []).join('; ').replace(/"/g, '""')}"`;
+      const language = `"${String(cit.language || '-').replace(/"/g, '""')}"`;
+      const pages = `"${String(cit.pages || '-').replace(/"/g, '""')}"`;
+      const numpages = `"${String(cit.numpages || '-').replace(/"/g, '""')}"`;
       const action = `"${String(getActionLabel(cit.selecionado)).replace(/"/g, '""')}"`;
 
 
-      csvContent += `${title},${abstract},${authors},${year},${venue},${doi},${citedBy},${action}\n`;
+      csvContent += `${title},${abstract},${authors},${year},${venue},${doi},${citedBy},${openAccess},${url},${keywords},${language},${pages},${numpages},${action}\n`;
     });
 
 

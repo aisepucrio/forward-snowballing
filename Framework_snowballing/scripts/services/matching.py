@@ -23,6 +23,18 @@ def score_citation(citation):
         score += 1
     if not is_missing(citation.get("doi")):
         score += 4
+    if not is_missing(citation.get("language")):
+        score += 2
+    if not is_missing(citation.get("url")):
+        score += 2
+    if not is_missing(citation.get("pages")):
+        score += 2
+    if not is_missing(citation.get("numpages")):
+        score += 2
+    if not is_missing(citation.get("open_access")):
+        score += 2
+    if not is_missing(citation.get("keywords")):
+        score += 2
 
     return score
 
@@ -30,7 +42,7 @@ def score_citation(citation):
 def merge_prefer_filled(base, extra):
     merged = dict(base)
 
-    for field in ["title", "year", "venue", "abstract", "doi"]:
+    for field in ["title", "year", "venue", "abstract", "doi","language","pages","numpages","open_access","keywords"]:
         if is_missing(merged.get(field)) and not is_missing(extra.get(field)):
             merged[field] = extra[field]
 
