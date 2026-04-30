@@ -122,7 +122,7 @@ def fallback_via_requests(doi):
 
 
     API_KEY = os.getenv("SEMANTIC_API_KEY")
-    headers = {"x-api-key": API_KEY} if API_KEY ekse None
+    headers = {"x-api-key": API_KEY} if API_KEY else None
 
 
     data = safe_get(url, headers=headers)
