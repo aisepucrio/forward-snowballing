@@ -805,6 +805,9 @@ def enrich_citation(citation):
 
     enriched["paperId"] = generate_paper_id(enriched.get("title", "-"))
     enriched["doi"] = normalize_doi(enriched.get("doi")) or "-"
+
+    if (not enriched.get("url") or enriched.get("url") in ["", "-"]) and enriched.get("doi") not in ["", "-"]:
+        enriched["url"] = f"https://doi.org/{enriched['doi']}"
     
     print("[DEBUG enriched keys]", enriched.keys(), file=sys.stderr)
 
@@ -820,6 +823,8 @@ def enrich_incomplete_citations(citations):
     for citation in citations:
         if needs_enrichment(citation):
             citation = enrich_citation(citation)
+        if not citation.get("url") and citation.get("doi") not in [None, "-", ""]:
+            citation["url"] = f"https://doi.org/{citation['doi']}"
         enriched_citations.append(citation)
 
 
