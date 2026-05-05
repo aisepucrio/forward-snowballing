@@ -434,7 +434,7 @@ abstractCell.addEventListener('click', () => toggleAbstract(index));
 
     async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
       const artigosLimpos = prepararArtigosParaAnalise(artigos);
-      const tamanhoLote = 10;
+      const tamanhoLote = 1;
       const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
       const resultadosFinais = [];
 

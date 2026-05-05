@@ -465,7 +465,8 @@
 
 
       const citedByCell = document.createElement('td');
-      citedByCell.textContent = cit.citations_count || '-';
+      const citedByVal = cit.citations_count ?? cit.citationCount;
+      citedByCell.textContent = (citedByVal != null && citedByVal !== 0) ? citedByVal : '-';
 
 
       const tdActions = document.createElement('td');
@@ -577,7 +578,8 @@
       const year = `"${String(cit.year || '-').replace(/"/g, '""')}"`;
       const venue = `"${String(cit.venue || '-').replace(/"/g, '""')}"`;
       const doi = `"${String(cit.doi || '-').replace(/"/g, '""')}"`;
-      const citedBy = `"${String(cit.citations_count || '-').replace(/"/g, '""')}"`;
+      const citedByRaw = cit.citations_count ?? cit.citationCount;
+      const citedBy = `"${String((citedByRaw != null && citedByRaw !== 0) ? citedByRaw : '-').replace(/"/g, '""')}"`;
       const action = `"${String(getActionLabel(cit.selecionado)).replace(/"/g, '""')}"`;
 
 

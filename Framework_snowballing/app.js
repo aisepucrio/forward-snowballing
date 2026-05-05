@@ -20,7 +20,9 @@ app.get('/', (req, res) => {
 
 
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`✅ Server running at: http://localhost:${port}`);
 });
+
+server.setTimeout(0);
 

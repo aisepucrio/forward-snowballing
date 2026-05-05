@@ -21,15 +21,32 @@ exports.analisar = (req, res) => {
 
   const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos });
   const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');
-  const pythonProcess = spawn(pythonPath, [scriptPath]);
+
+  let pythonProcess;
+  try {
+    pythonProcess = spawn(pythonPath, [scriptPath]);
+  } catch (spawnErr) {
+    console.error('Erro ao fazer spawn do Python:', spawnErr.message);
+    return res.status(500).json({ error: 'Não foi possível iniciar o interpretador Python.' });
+  }
 
   let output = '';
   let errorOutput = '';
+  let responded = false;
+
+  function sendError(status, msg) {
+    if (!responded) {
+      responded = true;
+      res.status(status).json({ error: msg });
+    }
+  }
 
   pythonProcess.on('error', (err) => {
     console.error('Falha ao iniciar Python:', err.message);
-    res.status(500).json({ error: 'Não foi possível iniciar o interpretador Python.' });
+    sendError(500, 'Não foi possível iniciar o interpretador Python.');
   });
+
+  pythonProcess.stdin.on('error', () => {});
 
   pythonProcess.stdout.on('data', (data) => { output += data.toString(); });
   pythonProcess.stderr.on('data', (data) => { errorOutput += data.toString(); });
@@ -37,17 +54,26 @@ exports.analisar = (req, res) => {
   pythonProcess.on('close', (code) => {
     if (code !== 0) {
       console.error('Erro no script Python:', errorOutput);
-      return res.status(500).json({ error: 'Erro ao processar os artigos.' });
+      return sendError(500, 'Erro ao processar os artigos.');
     }
     try {
       const resultados = JSON.parse(output);
-      res.json(resultados);
+      if (!responded) {
+        responded = true;
+        res.json(resultados);
+      }
     } catch (err) {
-      console.error('Erro ao parsear JSON do Python:', err);
-      res.status(500).json({ error: 'Resposta inválida do script Python.' });
+      console.error('Erro ao parsear JSON do Python:', err.message);
+      console.error('Output recebido:', output.substring(0, 300));
+      sendError(500, 'Resposta inválida do script Python.');
     }
   });
 
-  pythonProcess.stdin.write(input);
-  pythonProcess.stdin.end();
+  try {
+    pythonProcess.stdin.write(input);
+    pythonProcess.stdin.end();
+  } catch (writeErr) {
+    console.error('Erro ao escrever no stdin:', writeErr.message);
+    sendError(500, 'Erro ao enviar dados para o script Python.');
+  }
 };

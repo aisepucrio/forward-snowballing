@@ -15,7 +15,6 @@ def get_references_openalex(doi):
        clean_doi = normalize_doi(doi)
        url = f"https://api.openalex.org/works/https://doi.org/{clean_doi}"
 
-
        resp = requests.get(url)
        if resp.status_code != 200:
            return []
