@@ -14,161 +14,162 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="home-page"></body>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
+    <div class="container-fluid navbar-inner">
+
+      <!-- Logo -->
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/" id="navbarSnowballing">
+        <img src="/images/logo-snowballing.png" class="logo-nav">
+        <span class="brand-text">SnowBalling</span>
+      </a>
+
+      <!-- Search -->
+      <form id="navbarSearchForm" class="navbar-search d-none" onsubmit="buscarArtigoNavbar(); return false;">
+        <i class="bi bi-search"></i>
+        <input type="text" id="navbarSearchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)">
+        <button type="submit">Search</button>
+      </form>
+
+      <!-- Menu -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav gap-2">
+          <li class="nav-item">
+            <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link btn-nav-custom" href="criterios.html">Criteria Applications</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
 
+  <!-- Conteúdo -->
+  <main class="container-fluid px-4">
+    <div id="headerContainer" class="text-center mb-4">
+      <div class="logotipo mb-10">
+        <img src="/images/logo-snowballing.png" alt="Snowballing Logo" style="height: 15%; width: 15%;">
+      </div>
+
+      <h1 class="fw-semibold mb-4">SnowMap</h1>
+      <p class="text-muted mb-2">The Academic Curator for deep citation mapping and research discovery</p>
+
+      <!-- barras de referencias e citaçoes -->
+
+      <div class="d-flex justify-content-center mb-3">
+        <div class="btn-group" role="group">
+
+          <input type="radio" class="btn-check" name="snowballMode" id="modeForward" value="forward" checked>
+          <label class="btn btn-outline-success px-4" for="modeForward">
+            <i class="bi bi-arrow-up-right-circle me-1"></i> Citations (Forward)
+          </label>
+
+          <input type="radio" class="btn-check" name="snowballMode" id="modeBackward" value="backward">
+          <label class="btn btn-outline-success px-4" for="modeBackward">
+            <i class="bi bi-arrow-down-left-circle me-1"></i> References (Backward)
+          </label>
+
+        </div>
+      </div>
+
+      <p class="text-black">Search by <b>DOI</b> or <b>Title</b></p>
+    </div>
+
+    <form id="searchForm" class="d-flex justify-content-center mb-4" onsubmit="buscarArtigo(); return false;">
+
+      <div class="d-flex align-items-center shadow-sm" style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
 
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light fixed-top bg-white">
-  <div class="container-fluid">
-    <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
-      <img src="/images/logo-snowballing.png" alt="Logo" style="height:32px; margin-right:8px;">
-      <span>
-        SnowMap
-      </span>
-    </a>
-    <a class="navbar-brand fs-4 fw-bold brand-home d-flex align-items-center gap-2" href="/" id="navbarSnowballing"
-      style="display:none;">
-      <img id="navbarLogo" src="/images/logo-snowballing.png" style="height:32px;">
-      <span>
-        SnowMap
-      </span>
-    </a>
-
-    <form id="navbarSearchForm" class="d-none align-items-center ms-3" onsubmit="buscarArtigoNavbar(); return false;">
-      <div class="d-flex align-items-center shadow-sm navbar-search-box">
         <i class="bi bi-search text-muted me-2"></i>
-        <input type="text" id="navbarSearchInput" placeholder="Enter DOI" class="form-control border-0 bg-transparent">
-        <button type="submit" class="btn btn-success ms-2 px-3">
+
+
+        <input type="text" id="searchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)" class="form-control border-0 bg-transparent"
+          style="box-shadow:none;">
+
+
+        <button type="submit" class="btn btn-success ms-2 px-4">
           Search
         </button>
+
+
       </div>
+
+
     </form>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end espacamento-nav" id="navbarNav">
-      <ul class="navbar-nav gap-2">
-        <li class="nav-item">
-          <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link btn-nav-custom" href="criterios.html">Criteria Applications</a>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
 
-
-<!-- Conteúdo -->
-<div class="container-fluid px-4">
-  <div id="headerContainer" class="text-center mb-4">
-    <div id="logoContainer" class="logotipo mb-10">
-      <img src="/images/logo-snowballing.png" alt="Snowballing Logo" style="height: 140px; width: 133;">
-    </div>
-
-    <h1 class="fw-semibold mb-4" style="font-size:80px;">SnowMap</h1>
-    <p class="text-black fw-semibold">Search by DOI or Title</p>
-  </div>
-
-   <!-- barras de referencias e citaçoes -->
-
-   <div class="d-flex justify-content-center mb-3">
-    <div class="btn-group" role="group">
-
-      <input type="radio" class="btn-check" name="snowballMode" id="modeForward" value="forward" checked>
-      <label class="btn btn-outline-success px-4" for="modeForward">
-        <i class="bi bi-arrow-up-right-circle me-1"></i> Citations (Forward)
-      </label>
-
-      <input type="radio" class="btn-check" name="snowballMode" id="modeBackward" value="backward">
-      <label class="btn btn-outline-success px-4" for="modeBackward">
-        <i class="bi bi-arrow-down-left-circle me-1"></i> References (Backward)
-      </label>
-
-    </div>
-  </div>
-
-  <form id="searchForm" class="d-flex justify-content-center mb-4" onsubmit="buscarArtigo(); return false;">
-
-    <div class="d-flex align-items-center shadow-sm" style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
-
-
-      <i class="bi bi-search text-muted me-2"></i>
-
-
-      <input type="text" id="searchInput" placeholder="Enter DOI" class="form-control border-0 bg-transparent"
-        style="box-shadow:none;">
-
-
-      <button type="submit" class="btn btn-success ms-2 px-4">
-        Search
-      </button>
-
-
-    </div>
-
-
-  </form>
-
-
-  <!-- LOADING SPINNER -->
-  <div id="loadingSpinner" class="text-center my-4" style="display:none;">
-    <div class="spinner-border text-success" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-
-
-  <div id="resultado" class="mt-4"></div>
-
-
-  <div id="citationsSection" style="display:none;">
-    <div id="citationsHeader" class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0 fw-bold">Cited By</h3>
-      <div class="d-flex gap-2">
-        <button id="selectAllBtn" type="button" class="btn btn-outline-primary btn-sm">
-          Include All
-        </button>
-        <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-box-arrow-up"></i> Export
-        </button>
+    <!-- LOADING SPINNER -->
+    <div id="loadingSpinner" class="text-center my-4" style="display:none;">
+      <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
     </div>
 
 
-    <div id="citationsList" class="table-responsive shadow-sm rounded">
-      <table class="table table-hover table-striped align-middle mb-0 w-100" id="tabela-triagem">
-        <thead>
-          <tr>
-            <th style="min-width: 260px;">Title</th>
-            <th style="min-width: 240px;">Abstract</th>
-            <th style="min-width: 120px;">Authors</th>
-            <th style="min-width: 90px;">Year</th>
-            <th style="min-width: 180px;">Venue</th>
-            <th style="min-width: 180px;">DOI</th>
-            <th style="min-width: 100px;">Cited by</th>
+    <div id="resultado" class="mt-4"></div>
 
-            <th style="min-width: 120px;">Open Access</th>
-            <th style="min-width: 180px;">URL</th>
-            <th style="min-width: 180px;">Keywords</th>
-            <th style="min-width: 120px;">Language</th>
-            <th style="min-width: 140px;">Pages</th>
 
-            <th style="min-width: 170px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <div id="citationsSection" style="display:none;">
+      <div id="citationsHeader" class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 fw-bold">Cited By</h3>
+        <div class="d-flex gap-2">
+          <button id="selectAllBtn" type="button" class="btn btn-outline-primary btn-sm">
+            Include All
+          </button>
+          <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-box-arrow-up"></i> Export
+          </button>
+        </div>
+      </div>
+
+
+      <div id="citationsList" class="table-responsive shadow-sm rounded">
+        <table class="table table-hover table-striped align-middle mb-0 w-100" id="tabela-triagem">
+          <thead>
+            <tr>
+              <th style="min-width: 260px;">Title</th>
+              <th style="min-width: 240px;">Abstract</th>
+              <th style="min-width: 120px;">Authors</th>
+              <th style="min-width: 90px;">Year</th>
+              <th style="min-width: 180px;">Venue</th>
+              <th style="min-width: 180px;">DOI</th>
+              <th style="min-width: 100px;">Cited by</th>
+
+              <th style="min-width: 120px;">Open Access</th>
+              <th style="min-width: 180px;">URL</th>
+              <th style="min-width: 180px;">Keywords</th>
+              <th style="min-width: 120px;">Language</th>
+              <th style="min-width: 140px;">Pages</th>
+
+              <th style="min-width: 170px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</div>
+  </main>
+  <footer class="footer-custom">
+    <div class="footer-inner">
 
+      <div class="footer-left">
+        <img src="/images/logo-snowballing.png">
+        <span>SnowBalling</span>
+      </div>
 
+      <div class="footer-right">
+        © 2026 AISE Lab (Artificial Intelligence and Software Engineering)
+      </div>
 
+    </div>
+  </footer>
+</body>
 
 <script>
   function escapeHtml(text) {
