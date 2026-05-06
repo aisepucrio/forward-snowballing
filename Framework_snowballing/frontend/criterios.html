@@ -14,58 +14,79 @@
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
-        <img src="/images/logo-snowballing.png" alt="Logo" style="height:32px; margin-right:8px;">
-        SnowMap
-      </a> 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+  <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
+  <div class="container-fluid navbar-inner">
 
-      <div class="collapse navbar-collapse justify-content-end espacamento-nav" id="navbarNav">
-        <ul class="navbar-nav gap-2"> <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="criterios.html" id="linkCriterios">Criteria Applications</a>
-          </li>
-        </ul>
-      </div>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+      <img src="/images/logo-snowballing.png" class="logo-nav">
+      <span class="brand-text">SnowBalling</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav gap-2">
+
+        <li class="nav-item">
+          <a class="nav-link" href="triagem.html">Initial Analysis</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="criterios.html">Criteria Applications</a>
+        </li>
+
+      </ul>
     </div>
-  </nav>
+
+  </div>
+</nav>
 
   <main class="mt-5 pt-5">
     <h1 class="mb-4 fw-semibold">Define Inclusion and Exclusion Criteria</h1>
+    <h2 id="sub" class = "mb-4 fs-5">Set the logical boundaries for your systematic review. These criteria will be used to
+automatically screen abstracts and provide decision support.</h2>
 
     <form id="criteriosForm">
-      <div class="mb-3">
-        <label for="inclusao" class="form-label">Inclusion Criteria</label>
-        <div id="inclusaoBox"
-          class="form-control d-flex flex-wrap gap-2"
-          style="min-height: 80px;"
-          data-bs-toggle="tooltip"
-          data-bs-placement="top"
-          data-bs-custom-class="tooltip-custom"
-          title="To add multiple criteria, press ENTER after writing each one.">
 
-          <input id="inclusaoInput" type="text" class="border-0 flex-grow-1" placeholder="Enter inclusion criteria..." style="outline:none;">
-        </div>
+  <div class="criteria-container mb-4">
+
+    <!-- INCLUSION -->
+    <div class="criteria-box">
+      <label for="inclusao" class="form-label">
+        <i class="bi bi-check-circle label-icon inclusion"></i>
+        INCLUSION CRITERIA
+      </label>
+
+      <div id="inclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
+        <input id="inclusaoInput" type="text" class="border-0 flex-grow-1"
+          placeholder="Enter inclusion criteria..." style="outline:none;">
       </div>
+    </div>
 
-      <div class="mb-3">
-        <label for="exclusao" class="form-label">Exclusion Criteria</label>
-        <div id="exclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
-          <input id="exclusaoInput" type="text" class="border-0 flex-grow-1" placeholder="Enter exclusion criteria..." style="outline:none;">
-        </div>
+    <!-- EXCLUSION -->
+    <div class="criteria-box">
+      <label for="exclusao" class="form-label">
+        <i class="bi bi-x-circle label-icon exclusion"></i>
+        EXCLUSION CRITERIA
+      </label>
+
+      <div id="exclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
+        <input id="exclusaoInput" type="text" class="border-0 flex-grow-1"
+          placeholder="Enter exclusion criteria..." style="outline:none;">
       </div>
+    </div>
 
-      <button id="analisarBtn" type="submit" class="btn btn-primary">
-        <span id="btnTexto">Apply Criteria</span>
-        <span id="btnLoading" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-      </button>
-    </form>
+  </div>
+
+  <button type="submit" class="analisarBtn btn btn-success">
+    <i class="bi bi-stars"></i>
+    <span id="btnTexto" class="fw-semibold">Apply Criteria</span>
+    <span id="btnLoading" class="spinner-border spinner-border-sm d-none"></span>
+  </button>
+
+</form>
 
     <div class="mt-4">
       <p id="statusAnalise" class="text-muted mb-2"></p>
@@ -97,13 +118,18 @@
         <table class="table table-hover table-striped align-middle mb-0 w-100">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Abstract</th>
-              <th>Authors</th>
-              <th>Year</th>
-              <th>Venue</th>
-              <th>DOI</th>
-              <th>Cited by</th>
+              <th style="min-width: 260px;">Title</th>
+              <th style="min-width: 240px;">Abstract</th>
+              <th style="min-width: 120px;">Authors</th>
+              <th style="min-width: 90px;">Year</th>
+              <th style="min-width: 180px;">Venue</th>
+              <th style="min-width: 180px;">DOI</th>
+              <th style="min-width: 100px;">Cited by</th>
+              <th style="min-width: 120px;">Open Access</th>
+              <th style="min-width: 180px;">URL</th>
+              <th style="min-width: 180px;">Keywords</th>
+              <th style="min-width: 120px;">Language</th>
+              <th style="min-width: 140px;">Pages</th>
             </tr>
           </thead>
           <tbody id="tabelaArtigosBody"></tbody>
@@ -205,6 +231,25 @@
         tr.appendChild(venueCell);
         tr.appendChild(doiCell);
         tr.appendChild(citedByCell);
+        const openAccessCell = document.createElement('td');
+        openAccessCell.textContent = artigo.open_access || '-';
+
+        const urlCell = document.createElement('td');
+        urlCell.textContent = artigo.url || '-';
+
+        const keywordsCell = document.createElement('td');
+        keywordsCell.textContent = (artigo.keywords || []).join(', ') || '-';
+
+        const languageCell = document.createElement('td');
+        languageCell.textContent = artigo.language || '-';
+
+        const pagesCell = document.createElement('td');
+        pagesCell.textContent = artigo.numpages || '-';
+        tr.appendChild(openAccessCell);
+        tr.appendChild(urlCell);
+        tr.appendChild(keywordsCell);
+        tr.appendChild(languageCell);
+        tr.appendChild(pagesCell);
 
         tbody.appendChild(tr);
         if (artigo.abstractExpanded) {
@@ -212,7 +257,7 @@
           abstractRow.className = 'table-light';
 
           const td = document.createElement('td');
-          td.colSpan = 7;
+          td.colSpan = 12;
 
           td.innerHTML = `
             <div class="p-3">
@@ -666,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   tooltipTriggerList.forEach(el => {
-  new bootstrap.Tooltip(el);
+  new bootstrap.Tooltip(el);//
   });
 });
   </script>
