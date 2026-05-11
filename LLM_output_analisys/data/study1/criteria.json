@@ -1,0 +1,15 @@
+{
+    "Criteria": {
+        "Inclusion": {
+            "IC1": "The paper describes an empirical primary study in software engineering.",
+            "IC2": "The paper is focused on predicting defects in a software system using machine learning techniques.",
+            "IC3": "The paper discusses the use of software defect prediction methods in an industrial setting using an industrial database."
+        },
+        "Exclusion": {
+            "EC1": "The paper was not a peer-reviewed article, conference proceeding, or book chapter.",
+            "EC2": "The paper was written in a language other than English.",
+            "EC3": "The paper was published before 01.01.2015 or appeared in the searched databases after 08.04.2022.",
+            "EC4": "The same results were already published in another paper."
+        }
+    }
+}

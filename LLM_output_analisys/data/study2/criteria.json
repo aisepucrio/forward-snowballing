@@ -1,0 +1,14 @@
+{
+    "Criteria": {
+        "Inclusion": {
+            "IC1": "The paper describes practices related to the development of software MVPs."
+        },
+        "Exclusion": {
+            "EC1": "The paper only mentions MVPs but does not satisfactorily describe the used practices.",
+            "EC2": "The paper does not mainly comprise software development-related MVPs (e.g., mainly hardware or IoT related).",
+            "EC3": "The paper is not written in English.",
+            "EC4": "The paper was not published in a peer-reviewed conference, journal, or workshop.",
+            "EC5": "The paper was published after 2020."
+        }
+    }
+}

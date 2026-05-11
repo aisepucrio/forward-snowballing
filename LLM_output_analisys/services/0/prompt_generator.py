@@ -23,18 +23,17 @@ def gerar_prompt(title, summary, inc, exc):
     {{
       "title": "<repita o titulo do artigo>",
       "results": {{
-        "{'": "Yes|No|Not conclusive", "'.join(inc_ids + exc_ids)}": "Yes|No|Not conclusive"
+        "{'": "Yes|No", "'.join(inc_ids + exc_ids)}": "Yes|No"
       }},
       "Decision": {{
-        "decision": "inclusion|exclusion|not conclusive",
+        "decision": "inclusion|exclusion",
       }}
     }}
 
     Rules:
-    - Use only "Yes", "No" or "Not conclusive" in the result for each criteria.
-    - If any exclusion criterion is marked "Yes", the decision must be "exclusion". STOP and return the results json.
+    - Use only "Yes" or "No" in the result for each criteria.
     - If any inclusion criterion is marked "No", the decision must be "exclusion". STOP and return the results json.
-    - Only if there is any "Not conclusive" in the criteria results, the decision must be "not conclusive".
+    - If any exclusion criterion is marked "Yes", the decision must be "exclusion". STOP and return the results json.
     - Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
     - Do not include any keys other than the requested ones.
     - Return only the JSON, without any markdown or extra text.

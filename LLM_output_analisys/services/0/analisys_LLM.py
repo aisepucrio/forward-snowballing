@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from dotenv import load_dotenv
 from google import genai
-from prompt_generator import gerar_prompt
+from services.prompt_generator import gerar_prompt
 
 BASE_DIR = Path(__file__).resolve().parent
 RESULTADOS_PATH = BASE_DIR / "resultados_gemini.json"

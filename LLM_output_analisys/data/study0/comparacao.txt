@@ -1,0 +1,49 @@
+Analise da comparacao entre gabarito e selecao da LLM
+
+Artigos ignorados por decisao nao contabilizavel: 0
+Total de artigos avaliados: 110
+True Positives (TP): 5
+False Positives (FP): 8
+True Negatives (TN): 89
+False Negatives (FN): 8
+
+Recall: 0.3846
+Precision: 0.3846
+Acuracia: 0.8545
+F1-score: 0.3846
+
+Artigos incluidos pela LLM e nao incluidos no gabarito:
+- Baloo: Measuring and modeling the performance configurations of distributed dbms
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
+- Feature-oriented defect prediction
+- FOCloud: feature model guided performance prediction and explanation for deployment configurable cloud applications
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Regression model trees: Compact energy models for complex IoT devices
+- Unicorn: Reasoning about configurable system performance through the lens of causality
+
+Artigos incluidos no gabarito e nao incluidos pela LLM:
+- A Monte Carlo tree search conceptual framework for feature model analyses
+- Adaptive behavioral model learning for software product lines
+- Configuration optimization with limited functional impact
+- Featracer: Locating features through assisted traceability
+- Feature Modelling
+- On Programming Variability with Large Language Model-based Assistant
+- Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
+- Specialization of run-time configuration space at compile-time: An exploratory study
+
+Distribuicao por criterio:
+LLM > IC1:    Yes 99.09% | No 00.91% | Not conclusive 00.00%
+Source > IC1: Yes 99.08% | No 00.92% | Not conclusive 00.00%
+LLM > IC2:    Yes 86.36% | No 13.64% | Not conclusive 00.00%
+Source > IC2: Yes 63.30% | No 36.70% | Not conclusive 00.00%
+LLM > IC3:    Yes 11.82% | No 88.18% | Not conclusive 00.00%
+Source > IC3: Yes 23.85% | No 76.15% | Not conclusive 00.00%
+LLM > EC1:    Yes 14.55% | No 85.45% | Not conclusive 00.00%
+Source > EC1: Yes 01.83% | No 98.17% | Not conclusive 00.00%
+LLM > EC2:    Yes 09.09% | No 90.91% | Not conclusive 00.00%
+Source > EC2: Yes 09.17% | No 90.83% | Not conclusive 00.00%
+LLM > EC3:    Yes 01.82% | No 98.18% | Not conclusive 00.00%
+Source > EC3: Yes 05.50% | No 94.50% | Not conclusive 00.00%
+LLM > EC4:    Yes 42.73% | No 57.27% | Not conclusive 00.00%
+Source > EC4: Yes 18.35% | No 81.65% | Not conclusive 00.00%

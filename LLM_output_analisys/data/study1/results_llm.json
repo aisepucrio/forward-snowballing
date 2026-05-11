@@ -1,0 +1,1432 @@
+{
+  "results": [
+    {
+      "title": "Segmentation-based deep-learning approach for surface-defect detection",
+      "selected": 0
+    },
+    {
+      "title": "Combining deep learning with information retrieval to localize buggy files for bug reports",
+      "selected": 0
+    },
+    {
+      "title": "Survey on software defect prediction techniques",
+      "selected": 0
+    },
+    {
+      "title": "Multiple kernel ensemble learning for software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Software defect prediction: do different classifiers find the same defects?",
+      "selected": 1
+    },
+    {
+      "title": "Automated bug assignment: Ensemble-based machine learning in large scale industrial contexts",
+      "selected": 0
+    },
+    {
+      "title": "Implementation of cyber-physical production systems for quality prediction and operation control in metal casting",
+      "selected": 0
+    },
+    {
+      "title": "Learning from Mutants: Using Code Mutation to Learn and Monitor Invariants of a Cyber-Physical System",
+      "selected": 0
+    },
+    {
+      "title": "NEUZZ: Efficient fuzzing with neural program smoothing",
+      "selected": 0
+    },
+    {
+      "title": "Iterated feature selection algorithms with layered recurrent neural network for software fault prediction",
+      "selected": 0
+    },
+    {
+      "title": "Latent error prediction and fault localization for microservice applications by learning from system trace logs",
+      "selected": 0
+    },
+    {
+      "title": "Compiler fuzzing through deep learning",
+      "selected": 0
+    },
+    {
+      "title": "Convolutional neural networks over control flow graphs for software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Predictive Mutation Testing",
+      "selected": 0
+    },
+    {
+      "title": "Automatically identifying code features for software defect prediction: Using AST N-grams",
+      "selected": 1
+    },
+    {
+      "title": "Digital Twin-enabled Collaborative Data Management for Metal Additive Manufacturing Systems",
+      "selected": 0
+    },
+    {
+      "title": "A public bug database of GitHub projects and its application in bug prediction",
+      "selected": 0
+    },
+    {
+      "title": "Convolutional neural networks on assembly code for predicting software defects",
+      "selected": 0
+    },
+    {
+      "title": "Software defect prediction using neural networks",
+      "selected": 0
+    },
+    {
+      "title": "Should fixing these failures be delegated to automated program repair?",
+      "selected": 0
+    },
+    {
+      "title": "Incorporating fault-proneness estimations into coverage-based test case prioritization methods",
+      "selected": 1
+    },
+    {
+      "title": "Domain adaptation for test report classification in crowdsourced testing",
+      "selected": 1
+    },
+    {
+      "title": "Balancing the trade-off between accuracy and interpretability in software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "A dynamical quality model to continuously monitor software maintenance",
+      "selected": 1
+    },
+    {
+      "title": "Evolutionary extreme learning machine with sparse cost matrix for imbalanced learning",
+      "selected": 0
+    },
+    {
+      "title": "ISTEP, an integrated self-tuning engine for predictive maintenance in industry 4.0",
+      "selected": 0
+    },
+    {
+      "title": "ConPredictor: Concurrency Defect Prediction in Real-World Applications",
+      "selected": 0
+    },
+    {
+      "title": "The impact of software fault prediction in real-world application: An automated approach for software engineering",
+      "selected": 0
+    },
+    {
+      "title": "LWE: LDA refined word embeddings for duplicate bug report detection",
+      "selected": 0
+    },
+    {
+      "title": "Virtualized-Fault Injection Testing: A Machine Learning Approach",
+      "selected": 0
+    },
+    {
+      "title": "Generation of complex data for AI-based predictive maintenance research with a physical factory model",
+      "selected": 0
+    },
+    {
+      "title": "Learning Semantic Features for Software Defect Prediction by Code Comments Embedding",
+      "selected": 0
+    },
+    {
+      "title": "Spark-based cluster implementation of a bug report assignment recommender system",
+      "selected": 0
+    },
+    {
+      "title": "Analytics for network security: A survey and taxonomy",
+      "selected": 0
+    },
+    {
+      "title": "On deterministic chaos in software reliability growth models",
+      "selected": 0
+    },
+    {
+      "title": "Representing small commercial building faults in EnergyPlus, Part I: Model development",
+      "selected": 0
+    },
+    {
+      "title": "An extensive study on cross-project predictive mutation testing",
+      "selected": 0
+    },
+    {
+      "title": "Intelligent fault analysis in electrical power grids",
+      "selected": 0
+    },
+    {
+      "title": "Software defect prediction: A comparison between artificial neural network and support vector machine",
+      "selected": 0
+    },
+    {
+      "title": "LTRWES: A new framework for security bug report detection",
+      "selected": 1
+    },
+    {
+      "title": "Hierarchical and clustering WSN models: Their requirements for complex applications",
+      "selected": 0
+    },
+    {
+      "title": "Revisiting the Class Imbalance Issue in Software Defect Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Large scale distributed data science from scratch using apache spark 2.0",
+      "selected": 0
+    },
+    {
+      "title": "A Fault Diagnosis Method of Tread Production Line Based on Convolutional Neural Network",
+      "selected": 0
+    },
+    {
+      "title": "Software fault prediction based on one-class SVM",
+      "selected": 1
+    },
+    {
+      "title": "Industry paper: Proactive disruption management system: How not to be surprised by upcoming situations",
+      "selected": 0
+    },
+    {
+      "title": "Prioritizing test inputs for deep neural networks via mutation analysis",
+      "selected": 0
+    },
+    {
+      "title": "Application and development trend of artificial intelligence in petroleum exploration and development [人工智能在石油勘探开发领域的应用现状与发展趋势]",
+      "selected": 0
+    },
+    {
+      "title": "Complaint-driven Training Data Debugging for Query 2.0",
+      "selected": 0
+    },
+    {
+      "title": "ReMot Reputation and Resource-Based Model to Estimate the Reliability of the Host Machines in Volunteer Cloud Environment",
+      "selected": 0
+    },
+    {
+      "title": "Analyzing machine learning techniques for fault prediction using web applications",
+      "selected": 0
+    },
+    {
+      "title": "MTFuzz: Fuzzing with a multi-task neural network",
+      "selected": 0
+    },
+    {
+      "title": "Class Imbalance in Software Fault Prediction Data Set",
+      "selected": 0
+    },
+    {
+      "title": "Representing small commercial building faults in energyplus, Part II: Model validation",
+      "selected": 0
+    },
+    {
+      "title": "Opinion Mining at Scale: A Case Study of the First Self-driving Car Fatality",
+      "selected": 0
+    },
+    {
+      "title": "Improvement in Software Defect Prediction Outcome Using Principal Component Analysis and Ensemble Machine Learning Algorithms",
+      "selected": 0
+    },
+    {
+      "title": "Software engineering approach to bug prediction models using machine learning as a service (MLaaS)",
+      "selected": 0
+    },
+    {
+      "title": "An improvement to test case failure prediction in the context of test case prioritization",
+      "selected": 0
+    },
+    {
+      "title": "Getting defect prediction into industrial practice: The ELFF tool",
+      "selected": 1
+    },
+    {
+      "title": "TFCheck : A TensorFlow Library for Detecting Training Issues in Neural Network Programs",
+      "selected": 0
+    },
+    {
+      "title": "Search-Based Predictive Modelling for Software Engineering: How Far Have We Gone?",
+      "selected": 0
+    },
+    {
+      "title": "A practical guide to support change-proneness prediction",
+      "selected": 0
+    },
+    {
+      "title": "Combining spreadsheet smells for improved fault prediction",
+      "selected": 0
+    },
+    {
+      "title": "Assessment and analysis of software reliability using machine learning techniques",
+      "selected": 0
+    },
+    {
+      "title": "Learning Feature Representations from Change Dependency Graphs for Defect Prediction",
+      "selected": 1
+    },
+    {
+      "title": "Evaluation of machine learning approaches for change-proneness prediction using code smells",
+      "selected": 0
+    },
+    {
+      "title": "Predicting just-in-time software defects to reduce post-release quality costs in the maritime industry",
+      "selected": 1
+    },
+    {
+      "title": "Large-scale intent analysis for identifying large-review-effort code changes",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning and configurable systems: A gentle introduction",
+      "selected": 0
+    },
+    {
+      "title": "Engine Knock Evaluation Using a Machine Learning Approach",
+      "selected": 0
+    },
+    {
+      "title": "Failure of One, Fall of Many: An Exploratory Study of Software Features for Defect Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning and its emergence in the modern world and its contribution to artificial intelligence",
+      "selected": 0
+    },
+    {
+      "title": "A Bibliometric Survey on the Reliable Software Delivery Using Predictive Analysis",
+      "selected": 0
+    },
+    {
+      "title": "COOBA: Cross-project bug localization via adversarial transfer learning",
+      "selected": 0
+    },
+    {
+      "title": "A Deep Introduction to AI Based Software Defect Prediction (SDP) and its Current Challenges",
+      "selected": 0
+    },
+    {
+      "title": "LearnX: A hybrid deterministic-statistical defect diagnosis methodology",
+      "selected": 0
+    },
+    {
+      "title": "Prognostics and health management solution development in LabVIEW: Watchdog agent® toolkit and case study",
+      "selected": 0
+    },
+    {
+      "title": "Automatic calculation of process metrics and their bug prediction capabilities",
+      "selected": 0
+    },
+    {
+      "title": "Using different characteristics of machine learners to identify different defect families",
+      "selected": 0
+    },
+    {
+      "title": "Dilated convolutional neural network based model for bearing faults and broken rotor bar detection in squirrel cage induction motors",
+      "selected": 0
+    },
+    {
+      "title": "Traceability recovery between bug reports and test cases-a Mozilla Firefox case study",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning-based fault detection and diagnosis of faulty power connections of induction machines",
+      "selected": 0
+    },
+    {
+      "title": "Article metaheuristic optimized multi-level classification learning system for engineering management",
+      "selected": 0
+    },
+    {
+      "title": "Deep-Adversarial-Transfer Learning Based Fault Classification of Power Lines in Smart Grid",
+      "selected": 0
+    },
+    {
+      "title": "An Empirical Study on Spectral Clustering-based Software Defect Detection",
+      "selected": 0
+    },
+    {
+      "title": "OntoReq: An Ontology Focused Collective Knowledge Approach for Requirement Traceability Modelling",
+      "selected": 0
+    },
+    {
+      "title": "Predicting Software Defects with Explainable Machine Learning",
+      "selected": 0
+    },
+    {
+      "title": "On the Defect Prediction for Large Scale Software Systems-From Defect Density to Machine Learning",
+      "selected": 1
+    },
+    {
+      "title": "Fast Detection of Duplicate Bug Reports using LDA-based Topic Modeling and Classification",
+      "selected": 0
+    },
+    {
+      "title": "Fault prediction in SOA-based systems using deep learning techniques",
+      "selected": 0
+    },
+    {
+      "title": "OffSide: Learning to Identify Mistakes in Boundary Conditions",
+      "selected": 0
+    },
+    {
+      "title": "Brake fault identification and fault-tolerant directional stability control of heavy road vehicles",
+      "selected": 0
+    },
+    {
+      "title": "A study on software metric selection for software fault prediction",
+      "selected": 1
+    },
+    {
+      "title": "T-REC: Towards accurate bug triage for technical groups",
+      "selected": 0
+    },
+    {
+      "title": "The Prediction of Positioning shift for a Robot Arm Using Machine Learning Techniques",
+      "selected": 0
+    },
+    {
+      "title": "Towards one reusable model for various software defect mining tasks",
+      "selected": 0
+    },
+    {
+      "title": "PReT: A tool for automatic phase-based regression testing",
+      "selected": 0
+    },
+    {
+      "title": "Implications of discretization towards improving classification accuracy for software defect data",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning for embedded devices software analysis via hardware platform emulation",
+      "selected": 0
+    },
+    {
+      "title": "Pragmatic investigation on performance of instance-based learning algorithms",
+      "selected": 0
+    },
+    {
+      "title": "Cognitive estimation of development effort, time, errors, and the defects of software",
+      "selected": 0
+    },
+    {
+      "title": "A spatial–temporal graph neural network framework for automated software bug triaging",
+      "selected": 0
+    },
+    {
+      "title": "Early prediction for merged vs abandoned code changes in modern code reviews",
+      "selected": 0
+    },
+    {
+      "title": "Enhancing software model encoding for feature location approaches based on machine learning techniques",
+      "selected": 0
+    },
+    {
+      "title": "Deriving and evaluating a fault model for testing data science applications",
+      "selected": 0
+    },
+    {
+      "title": "Anomaly Detection in Smart Grid Network Using FC-Based Blockchain Model and Linear SVM",
+      "selected": 0
+    },
+    {
+      "title": "Learning Long-and Short-Term Temporal Patterns for ML-driven Fault Management in Optical Communication Networks",
+      "selected": 0
+    },
+    {
+      "title": "Intelligent framework for automated failure prediction, detection, and classification of mission critical autonomous flights",
+      "selected": 0
+    },
+    {
+      "title": "Software Fault Prediction Using Data Mining Techniques on Software Metrics",
+      "selected": 0
+    },
+    {
+      "title": "Data Collection: Use and Transformation in Predictive Maintenance Models",
+      "selected": 0
+    },
+    {
+      "title": "A Machine Learning Model Comparison and Selection Framework for Software Defect Prediction Using VIKOR",
+      "selected": 0
+    },
+    {
+      "title": "Simplify Your Neural Networks: An Empirical Study on Cross-Project Defect Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Flexible Architecture for Data-Driven Predictive Maintenance with Support for Offline and Online Machine Learning Techniques",
+      "selected": 0
+    },
+    {
+      "title": "2021 4th International Conference on Computer Information Science and Application Technology, CISAT 2021",
+      "selected": 0
+    },
+    {
+      "title": "Research Cloud Bazaar: A software defined cloud workflow cost management tool",
+      "selected": 0
+    },
+    {
+      "title": "Learning off-by-one mistakes: An empirical study",
+      "selected": 1
+    },
+    {
+      "title": "Prioritized test generation guided by software fault prediction",
+      "selected": 0
+    },
+    {
+      "title": "On the prediction of long-lived bugs: An analysis and comparative study using FLOSS projects",
+      "selected": 0
+    },
+    {
+      "title": "Correlation feature and instance weights transfer learning for cross project software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Improving Test Case Generation for REST APIs Through Hierarchical Clustering",
+      "selected": 0
+    },
+    {
+      "title": "Towards the generation of machine learning defect reports",
+      "selected": 0
+    },
+    {
+      "title": "DeepOrder: Deep Learning for Test Case Prioritization in Continuous Integration Testing",
+      "selected": 0
+    },
+    {
+      "title": "A Comparative Analysis of Software Aging in Image Classifiers on Cloud and Edge",
+      "selected": 0
+    },
+    {
+      "title": "Software defect prediction using hybrid model (CBIL) of convolutional neural network (CNN) and bidirectional long short-term memory (Bi-LSTM)",
+      "selected": 0
+    },
+    {
+      "title": "Machine-learning for automated fiber placement for manufacturing efficiency and process optimization",
+      "selected": 0
+    },
+    {
+      "title": "Research on vibration monitoring and fault diagnosis of rotating machinery based on internet of things technology",
+      "selected": 0
+    },
+    {
+      "title": "Genetic algorithm-based oversampling approach to prune the class imbalance issue in software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Feature selection using artificial immune network: An approach for software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Modeling of guided waves for aerospace applications",
+      "selected": 0
+    },
+    {
+      "title": "Fast duplicate bug reports detector training using sampling for dimension reduction: Using instance-based learning for continous query in real-world",
+      "selected": 0
+    },
+    {
+      "title": "Handling Imbalanced Dataset Classification in Machine Learning",
+      "selected": 0
+    },
+    {
+      "title": "A three-stage method for classification of binary imbalanced big data",
+      "selected": 0
+    },
+    {
+      "title": "Singling the odd ones out: A novelty detection approach to find defects in infrastructure-as-code",
+      "selected": 1
+    },
+    {
+      "title": "Software Failures Prediction in Self-Driving Vehicles",
+      "selected": 0
+    },
+    {
+      "title": "7th International Conference on Electrical Engineering Computer Science and Informatics, EECSI 2020",
+      "selected": 0
+    },
+    {
+      "title": "Modelling machine learning components for mapping and scheduling of AUTOSAR runnables",
+      "selected": 0
+    },
+    {
+      "title": "Proceedings of the 6th International Conference on Engineering and MIS 2020, ICEMIS 2020",
+      "selected": 0
+    },
+    {
+      "title": "Evaluation of functional abilities in 0–6 year olds: An analysis with the eearlycare computer application",
+      "selected": 0
+    },
+    {
+      "title": "Software defect prediction: A survey with machine learning approach",
+      "selected": 0
+    },
+    {
+      "title": "A Deterministic-Statistical Multiple-Defect Diagnosis Methodology",
+      "selected": 0
+    },
+    {
+      "title": "A design architecture for an autonomous pre-launch procedure control system",
+      "selected": 0
+    },
+    {
+      "title": "Predictive maintenance as enhancement of fault detection, isolation and recovery strategies of spacecraft",
+      "selected": 0
+    },
+    {
+      "title": "Classification based software defect prediction model for finance software system - An industry study",
+      "selected": 1
+    },
+    {
+      "title": "Evolutionary Computing Assisted Heterogenous Ensemble Model for Web-of-Service Software Reusability Prediction",
+      "selected": 0
+    },
+    {
+      "title": "An evolutionary approach for software defect prediction on high dimensional data using subspace clustering and machine learning",
+      "selected": 0
+    },
+    {
+      "title": "Textout: Detecting Text-Layout Bugs in Mobile Apps via Visualization-Oriented Learning",
+      "selected": 1
+    },
+    {
+      "title": "Software Package for Improving Financial and Technological Performance of Microgrid Networks",
+      "selected": 0
+    },
+    {
+      "title": "Process Monitoring Platform based on Industry 4.0 tools: A waste-to-energy plant case study",
+      "selected": 0
+    },
+    {
+      "title": "ACT Testbot and 4S Quality Metrics in XAAS Framework",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning and sonarqube KPIs to predict increasing bug resolution times",
+      "selected": 0
+    },
+    {
+      "title": "16th International Conference on Mobile Web and Intelligent Information Systems, MobiWIS 2019",
+      "selected": 0
+    },
+    {
+      "title": "39th SGAI International Conference on Innovative Techniques and Applications of Artificial Intelligence, AI 2019",
+      "selected": 0
+    },
+    {
+      "title": "Deep-Learning-Based Computer Vision System for Surface-Defect Detection",
+      "selected": 0
+    },
+    {
+      "title": "Proceedings - 18th IEEE International Working Conference on Source Code Analysis and Manipulation, SCAM 2018",
+      "selected": 0
+    },
+    {
+      "title": "Buffer overflow detection for c programs is hard to learn",
+      "selected": 1
+    },
+    {
+      "title": "Proceedings of the European Test Workshop",
+      "selected": 0
+    },
+    {
+      "title": "2017 6th International Conference on Reliability, Infocom Technologies and Optimization: Trends and Future Directions, ICRITO 2017",
+      "selected": 0
+    },
+    {
+      "title": "A novel probabilistic-ABC based boosting model for software defect detection",
+      "selected": 0
+    },
+    {
+      "title": "Research on defect detection technology of trusted behavior decision tree based on intelligent data semantic analysis of massive data",
+      "selected": 0
+    },
+    {
+      "title": "An approach for improving classification accuracy using discretized software defect data",
+      "selected": 0
+    },
+    {
+      "title": "7th International Workshop on Service Orientation in Holonic and Multi-agent Manufacturing, SOHOMA 2017",
+      "selected": 0
+    },
+    {
+      "title": "Designing ANFIS model to predict the reliability of component-based system",
+      "selected": 0
+    },
+    {
+      "title": "Exploration of Machine Learning Techniques for Defect Classification",
+      "selected": 0
+    },
+    {
+      "title": "21st European Symposium on Research in Computer Security, ESORICS 2016",
+      "selected": 0
+    },
+    {
+      "title": "Estimating a machine learning model for fault detection using test case prioritization technique in open dependency",
+      "selected": 0
+    },
+    {
+      "title": "Application of gene expression programming in predicting software reliability",
+      "selected": 0
+    },
+    {
+      "title": "Proceedings of 2021 International Conference on Autonomous Unmanned Systems (ICAUS 2021)",
+      "selected": 0
+    },
+    {
+      "title": "Trends in Data Engineering Methods for Intelligent Systems",
+      "selected": 0
+    },
+    {
+      "title": "Industrial Internet of Things",
+      "selected": 0
+    },
+    {
+      "title": "Advances in Information, Communication and Cybersecurity",
+      "selected": 0
+    },
+    {
+      "title": "Data Engineering for Smart Systems",
+      "selected": 0
+    },
+    {
+      "title": "Artificial Intelligence for Knowledge Management, Energy, and Sustainability",
+      "selected": 0
+    },
+    {
+      "title": "Robot Operating System (ROS)",
+      "selected": 0
+    },
+    {
+      "title": "Machine Learning for Cyber Agents",
+      "selected": 0
+    },
+    {
+      "title": "Introduction to Python Network Automation",
+      "selected": 0
+    },
+    {
+      "title": "Minimally Invasive Percutaneous Nephrolithotomy",
+      "selected": 0
+    },
+    {
+      "title": "Converging Technologies and Enhancement",
+      "selected": 0
+    },
+    {
+      "title": "Understanding current states of machine learning approaches in medical informatics: a systematic literature review",
+      "selected": 0
+    },
+    {
+      "title": "Parallel Evolving IT-BI Systems",
+      "selected": 0
+    },
+    {
+      "title": "A Study on Reliability of Rotors Using XLrotor",
+      "selected": 0
+    },
+    {
+      "title": "Big Data and Machine Learning for the Smart Factoryâ€”Solutions for Condition Monitoring, Diagnosis and Optimization",
+      "selected": 0
+    },
+    {
+      "title": "Machine Learning Techniques for Intrusion Detection in SDN: A Survey",
+      "selected": 0
+    },
+    {
+      "title": "On the Defect Prediction for Large Scale Software Systems â€“ From Defect Density to Machine Learning",
+      "selected": 1
+    },
+    {
+      "title": "Software Defects Prediction using Machine Learning Algorithms",
+      "selected": 0
+    },
+    {
+      "title": "An approach for software defect prediction by combined soft computing",
+      "selected": 0
+    },
+    {
+      "title": "Getting Defect Prediction Into Industrial Practice: the ELFF Tool",
+      "selected": 1
+    },
+    {
+      "title": "A Study on Software Metric Selection for Software Fault Prediction",
+      "selected": 1
+    },
+    {
+      "title": "Prioritized Test Generation Guided by Software Fault Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Modelling Machine Learning Components for Mapping and Scheduling of AUTOSAR Runnables",
+      "selected": 0
+    },
+    {
+      "title": "A Novel Class-Imbalance Learning Approach for Both Within-Project and Cross-Project Defect Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Poster: LWE: LDA Refined Word Embeddings for Duplicate Bug Report Detection",
+      "selected": 0
+    },
+    {
+      "title": "Comparative Analysis of Software Reliability Prediction Using Machine Learning and Deep Learning",
+      "selected": 0
+    },
+    {
+      "title": "Convolutional Neural Networks over Control Flow Graphs for Software Defect Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Investigating the Performance of Machine Learning Algorithms for Improving Fault Tolerance for Large Scale Workflow Applications in Cloud Computing",
+      "selected": 0
+    },
+    {
+      "title": "Fault Description Based Attribute Transfer for Zero-Sample Industrial Fault Diagnosis",
+      "selected": 0
+    },
+    {
+      "title": "Brake Fault Identification and Fault-Tolerant Directional Stability Control of Heavy Road Vehicles",
+      "selected": 0
+    },
+    {
+      "title": "Combining Spreadsheet Smells for Improved Fault Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Software Change Proneness Prediction Using Machine Learning",
+      "selected": 0
+    },
+    {
+      "title": "Using Supervised Learning to Guide the Selection of Software Inspectors in Industry",
+      "selected": 0
+    },
+    {
+      "title": "T-REC: Towards Accurate Bug Triage for Technical Groups",
+      "selected": 0
+    },
+    {
+      "title": "Efficient Bug Triage For Industrial Environments",
+      "selected": 0
+    },
+    {
+      "title": "Identifying Supplementary Bug-fix Commits",
+      "selected": 0
+    },
+    {
+      "title": "On-line fault diagnosis of rolling bearing based on machine learning algorithm",
+      "selected": 0
+    },
+    {
+      "title": "LearnX: A Hybrid Deterministic-Statistical Defect Diagnosis Methodology",
+      "selected": 0
+    },
+    {
+      "title": "Software defect prediction techniques using metrics based on neural network classifier",
+      "selected": 0
+    },
+    {
+      "title": "Classification with reject option for software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Precise learn-to-rank fault localization using dynamic and static features of target programs",
+      "selected": 0
+    },
+    {
+      "title": "Real-Time Anomaly Detection of NoSQL Systems Based on Resource Usage Monitoring",
+      "selected": 0
+    },
+    {
+      "title": "A novel modified undersampling (MUS) technique for software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Efficient Bug Triage for Industrial Environments",
+      "selected": 0
+    },
+    {
+      "title": "Enhancing PowerFactory Dynamic Models with Python for Rapid Prototyping",
+      "selected": 0
+    },
+    {
+      "title": "A probabilistic approach based on a finite mixture model of multivariate beta distributions",
+      "selected": 0
+    },
+    {
+      "title": "A survey on machine learning techniques used for software quality prediction",
+      "selected": 0
+    },
+    {
+      "title": "ESPY Carting Systems:The Real -Time Tracking Mechanism Architecture",
+      "selected": 0
+    },
+    {
+      "title": "13th International Conference on the Quality of Information and Communications Technology, QUATIC 2020",
+      "selected": 0
+    },
+    {
+      "title": "Using Machine Learning to Build Test Oracles: an Industrial Case Study on Elevators Dispatching Algorithms",
+      "selected": 0
+    },
+    {
+      "title": "Prediction of Sensor Faults and Outliers in IoT Devices",
+      "selected": 0
+    },
+    {
+      "title": "Kernel-based Class-specific Broad Learning System for software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "A Three-stage Method for Classification of Binary Imbalanced Big Data",
+      "selected": 0
+    },
+    {
+      "title": "Bug Localization with Combination of Deep Learning and Information Retrieval",
+      "selected": 0
+    },
+    {
+      "title": "Combining Deep Learning with Information Retrieval to Localize Buggy Files for Bug Reports (N)",
+      "selected": 0
+    },
+    {
+      "title": "Extracting Interaction-Related Failure Indicators for Online Detection and Prediction of Content Failures",
+      "selected": 0
+    },
+    {
+      "title": "Software Package For Improving Financial And Technological Performance Of Microgrid Networks",
+      "selected": 0
+    },
+    {
+      "title": "Error Vulnerabilities and Fault Recovery in Deep-Learning Frameworks for Hardware Accelerators",
+      "selected": 0
+    },
+    {
+      "title": "Automated diagnostic of virtualized service performance degradation",
+      "selected": 0
+    },
+    {
+      "title": "Fault Prediction for Large Scale Projects Using Deep Learning Techniques",
+      "selected": 0
+    },
+    {
+      "title": "Deep Learning-Based Resolution Prediction of Software Enhancement Reports",
+      "selected": 0
+    },
+    {
+      "title": "Domain Adaptation for Test Report Classification in Crowdsourced Testing",
+      "selected": 0
+    },
+    {
+      "title": "Modified Fuzzy-Q-Learning (MFQL)-Based Mechanical Fault Diagnosis for Direct-Drive Wind Turbines Using Electrical Signals",
+      "selected": 0
+    },
+    {
+      "title": "Process Monitoring Platform based on Industry 4.0 tools: a waste-to-energy plant case study",
+      "selected": 0
+    },
+    {
+      "title": "Health Status Assessment and Failure Prediction for Hard Drives with Recurrent Neural Networks",
+      "selected": 0
+    },
+    {
+      "title": "Localizing Multiple Faults in Simulink Models",
+      "selected": 0
+    },
+    {
+      "title": "AudioForesight: A Process Model for Audio Predictive Maintenance in Industrial Environments",
+      "selected": 0
+    },
+    {
+      "title": "Control strategy of a Multiple Hearth Furnace enhanced by machine learning algorithms",
+      "selected": 0
+    },
+    {
+      "title": "An Extensive Study on Cross-Project Predictive Mutation Testing",
+      "selected": 0
+    },
+    {
+      "title": "A Proactive-Restoration Technique for SDNs",
+      "selected": 0
+    },
+    {
+      "title": "Bayesian Optimization-Based Gradient Boosting Method of Fault Detection in Oil-Immersed Transformer and Reactors",
+      "selected": 0
+    },
+    {
+      "title": "iSTEP, an Integrated Self-Tuning Engine for Predictive Maintenance in Industry 4.0",
+      "selected": 0
+    },
+    {
+      "title": "Prognostics and health management solution development in LabVIEW: Watchdog agentÂ® toolkit and case study",
+      "selected": 0
+    },
+    {
+      "title": "A Survey on Spark Ecosystem: Big Data Processing Infrastructure, Machine Learning, and Applications",
+      "selected": 0
+    },
+    {
+      "title": "Time Series Anomaly Detection Based on GAN",
+      "selected": 0
+    },
+    {
+      "title": "PReT: A Tool for Automatic Phase-Based Regression Testing",
+      "selected": 0
+    },
+    {
+      "title": "DeepDroid: Feature Selection approach to detect Android malware using Deep Learning",
+      "selected": 0
+    },
+    {
+      "title": "Prioritizing Test Inputs for Deep Neural Networks via Mutation Analysis",
+      "selected": 0
+    },
+    {
+      "title": "GaDei: On Scale-Up Training as a Service for Deep Learning",
+      "selected": 0
+    },
+    {
+      "title": "IFeedback: exploiting user feedback for real-time issue detection in large-scale online service systems",
+      "selected": 1
+    },
+    {
+      "title": "Leopard: identifying vulnerable code for vulnerability assessment through program metrics",
+      "selected": 0
+    },
+    {
+      "title": "AIOps: real-world challenges and research innovations",
+      "selected": 0
+    },
+    {
+      "title": "Unifying logic and probability",
+      "selected": 0
+    },
+    {
+      "title": "Applications of Machine Learning Algorithms to Predictive Manufacturing: Trends and Application of Tool Wear Compensation Parameter Recommendation",
+      "selected": 0
+    },
+    {
+      "title": "Measuring high and low priority defects on traditional and mobile open source software",
+      "selected": 0
+    },
+    {
+      "title": "Local-based active classification of test report to assist crowdsourced testing",
+      "selected": 1
+    },
+    {
+      "title": "Software Vulnerability Analysis and Discovery Using Machine-Learning and Data-Mining Techniques: A Survey",
+      "selected": 0
+    },
+    {
+      "title": "QTEP: quality-aware test case prioritization",
+      "selected": 0
+    },
+    {
+      "title": "Screening heuristics for project gating systems",
+      "selected": 0
+    },
+    {
+      "title": "Machine-Learning-Guided Typestate Analysis for Static Use-After-Free Detection",
+      "selected": 0
+    },
+    {
+      "title": "Grounding Interactive Machine Learning Tool Design in How Non-Experts Actually Build Models",
+      "selected": 0
+    },
+    {
+      "title": "A Survey of Machine Learning for Big Code and Naturalness",
+      "selected": 0
+    },
+    {
+      "title": "Predicting Node failure in cloud service systems",
+      "selected": 1
+    },
+    {
+      "title": "MODE: automated neural network model debugging via state differential analysis and input selection",
+      "selected": 0
+    },
+    {
+      "title": "Is there a \"golden\" feature set for static warning identification? an experimental evaluation",
+      "selected": 0
+    },
+    {
+      "title": "Automatically assessing vulnerabilities discovered by compositional analysis",
+      "selected": 0
+    },
+    {
+      "title": "How Effectively Is Defective Code Actually Tested? An Analysis of JUnit Tests in Seven Open Source Systems",
+      "selected": 0
+    },
+    {
+      "title": "DeepBugs: a learning approach to name-based bug detection",
+      "selected": 0
+    },
+    {
+      "title": "DeepFL: integrating multiple fault diagnosis dimensions for deep fault localization",
+      "selected": 0
+    },
+    {
+      "title": "How incidental are the incidents? characterizing and prioritizing incidents for large-scale online service systems",
+      "selected": 0
+    },
+    {
+      "title": "PABLO: Helping Novices Debug Python Code Through Data-Driven Fault Localization",
+      "selected": 0
+    },
+    {
+      "title": "The importance of accounting for real-world labelling when predicting software vulnerabilities",
+      "selected": 0
+    },
+    {
+      "title": "A Systematic Review on Imbalanced Data Challenges in Machine Learning: Applications and Solutions",
+      "selected": 0
+    },
+    {
+      "title": "JLLAR: A Logging Recommendation Plug-in Tool for Java",
+      "selected": 0
+    },
+    {
+      "title": "NetFlowTotal: A Cloud Service Integration Platform for Malicious Traffic Analysis and Collaboration",
+      "selected": 0
+    },
+    {
+      "title": "Real-time incident prediction for online service systems",
+      "selected": 1
+    },
+    {
+      "title": "Classification Based Software Defect Prediction Model for Finance Software System - An Industry Study",
+      "selected": 1
+    },
+    {
+      "title": "Understanding the automated parameter optimization on transfer learning for cross-project defect prediction: an empirical study",
+      "selected": 0
+    },
+    {
+      "title": "The Impact of Software Fault Prediction in Real-World Application: An Automated Approach for Software Engineering",
+      "selected": 0
+    },
+    {
+      "title": "Quest for the Golden Approach: An Experimental Evaluation of Duplicate Crowdtesting Reports Detection",
+      "selected": 0
+    },
+    {
+      "title": "Deep Learning for Software Defect Prediction: A Survey",
+      "selected": 0
+    },
+    {
+      "title": "Detecting and understanding real-world differential performance bugs in machine learning libraries",
+      "selected": 0
+    },
+    {
+      "title": "Orchestrating the Development Lifecycle of Machine Learning-based IoT Applications: A Taxonomy and Survey",
+      "selected": 0
+    },
+    {
+      "title": "Genetic Improvement @ ICSE 2020",
+      "selected": 0
+    },
+    {
+      "title": "Bran: Reduce Vulnerability Search Space in Large Open Source Repositories by Learning Bug Symptoms",
+      "selected": 0
+    },
+    {
+      "title": "DeepWukong: Statically Detecting Software Vulnerabilities Using Deep Graph Neural Network",
+      "selected": 0
+    },
+    {
+      "title": "Learning to find naming issues with big code and small supervision",
+      "selected": 0
+    },
+    {
+      "title": "Towards Reliable AI for Source Code Understanding",
+      "selected": 0
+    },
+    {
+      "title": "A Survey of AIOps Methods for Failure Management",
+      "selected": 0
+    },
+    {
+      "title": "A Web Information Extraction Framework with Adaptive and Failure Prediction Feature",
+      "selected": 0
+    },
+    {
+      "title": "Transductive Instance Transfer Learning for Cross-Language Defect Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Using Hadoop MapReduce for Parallel Genetic Algorithms: A Comparison of the Global, Grid and Island Models",
+      "selected": 0
+    },
+    {
+      "title": "Probabilistic demand forecasting at scale",
+      "selected": 0
+    },
+    {
+      "title": "Online detection of anomalous applications on the cloud",
+      "selected": 0
+    },
+    {
+      "title": "A systematic review of machine learning techniques for software fault prediction",
+      "selected": 0
+    },
+    {
+      "title": "Enhancing software defect prediction using supervised-learning based framework",
+      "selected": 0
+    },
+    {
+      "title": "Real-world application of machine-learning-based fault detection trained with experimental data",
+      "selected": 0
+    },
+    {
+      "title": "Learning the Evolution Regularities for BigService-Oriented Online Reliability Prediction",
+      "selected": 0
+    },
+    {
+      "title": "Unintended Behavior in Learning-Enabled Systems: Detecting the Unknown Unknowns",
+      "selected": 0
+    },
+    {
+      "title": "Improving the decision-making process of self-adaptive systems by accounting for tactic volatility",
+      "selected": 0
+    },
+    {
+      "title": "Fast Outage Analysis of Large-scale Production Clouds with Service Correlation Mining",
+      "selected": 0
+    },
+    {
+      "title": "Precise Learn-to-Rank Fault Localization Using Dynamic and Static Features of Target Programs",
+      "selected": 0
+    },
+    {
+      "title": "An online machine learning framework for early detection of product failures in an Industry 4.0 context",
+      "selected": 0
+    },
+    {
+      "title": "Support Vector Machine with k-fold cross validation model for software fault prediction",
+      "selected": 0
+    },
+    {
+      "title": "An empirical study of robustness and stability of machine learning classifiers in software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Software vulnerability analysis and discovery using machine-learning and data-mining techniques: A survey",
+      "selected": 0
+    },
+    {
+      "title": "Performance analysis of IoT-based sensor, big data processing, and machine learning model for real-time monitoring system in automotive manufacturing",
+      "selected": 0
+    },
+    {
+      "title": "Design of machine learning models with domain experts for automated sensor selection for energy fault detection",
+      "selected": 0
+    },
+    {
+      "title": "A machine learning approach for vibration-based multipoint tool insert health prediction on vertical machining centre (VMC)",
+      "selected": 0
+    },
+    {
+      "title": "Tackling class overlap and imbalance problems in software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "A systematic literature review of software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Performance tuning for automotive software fault prediction",
+      "selected": 1
+    },
+    {
+      "title": "Conpredictor: Concurrency defect prediction in real-world applications",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning approach using MLP and SVM algorithms for the fault prediction of a centrifugal pump in the oil and gas industry",
+      "selected": 0
+    },
+    {
+      "title": "Deep learning based software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Progress on approaches to software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Taxonomy of machine learning algorithms in software fault prediction using object oriented metrics",
+      "selected": 0
+    },
+    {
+      "title": "Fault Diagnosis Management Model using Machine Learning",
+      "selected": 0
+    },
+    {
+      "title": "Revisiting the class imbalance issue in software defect prediction",
+      "selected": 0
+    },
+    {
+      "title": "Lessons learned from using a deep tree-based model for software defect prediction in practice",
+      "selected": 1
+    },
+    {
+      "title": "Production fault simulation and forecasting from time series data with machine learning in glove textile industry",
+      "selected": 0
+    },
+    {
+      "title": "Experimental setup for online fault diagnosis of induction machines via promising IoT and machine learning: Towards industry 4.0 empowerment",
+      "selected": 0
+    },
+    {
+      "title": "Fault Prediction with Static Software Metrics in Evolving Software: A Case Study in Apache Ant",
+      "selected": 0
+    },
+    {
+      "title": "Tackling faults in the industry 4.0 era—a survey of machine-learning solutions and key aspects",
+      "selected": 0
+    },
+    {
+      "title": "A comparative analysis of soft computing techniques in software fault prediction model development",
+      "selected": 0
+    },
+    {
+      "title": "A taxonomy of software engineering challenges for machine learning systems: An empirical investigation",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning and reasoning for predictive maintenance in Industry 4.0: Current status and challenges",
+      "selected": 0
+    },
+    {
+      "title": "A literature review study of software defect prediction using machine learning techniques",
+      "selected": 0
+    },
+    {
+      "title": "Bug report severity level prediction in open source software: A survey and research opportunities",
+      "selected": 0
+    },
+    {
+      "title": "A public bug database of github projects and its application in bug prediction",
+      "selected": 0
+    },
+    {
+      "title": "Improved approach for software defect prediction using artificial neural networks",
+      "selected": 1
+    },
+    {
+      "title": "Machine learning in predictive maintenance towards sustainable smart manufacturing in industry 4.0",
+      "selected": 0
+    },
+    {
+      "title": "Studying aging-related bug prediction using cross-project models",
+      "selected": 0
+    },
+    {
+      "title": "Data fusion and machine learning for industrial prognosis: Trends and perspectives towards Industry 4.0",
+      "selected": 0
+    },
+    {
+      "title": "The effectiveness of supervised machine learning algorithms in predicting software refactoring",
+      "selected": 0
+    },
+    {
+      "title": "Large-scale machine learning systems in real-world industrial settings: A review of challenges and solutions",
+      "selected": 0
+    },
+    {
+      "title": "Computational fluid dynamics-based in-situ sensor analytics of direct metal laser solidification process using machine learning",
+      "selected": 0
+    },
+    {
+      "title": "A generic fault prognostics algorithm for manufacturing industries using unsupervised machine learning classifiers",
+      "selected": 0
+    },
+    {
+      "title": "Data Mining and Machine Learning for Condition-based Maintenance",
+      "selected": 0
+    },
+    {
+      "title": "Real-time defect detection in 3D printing using machine learning",
+      "selected": 0
+    },
+    {
+      "title": "Machine Learning Framework for Predictive Maintenance in Milling",
+      "selected": 0
+    },
+    {
+      "title": "Detection of faults in subsea pipelines by flow monitoring with regression supervised machine learning,",
+      "selected": 0
+    },
+    {
+      "title": "Research and application of machine learning for additive manufacturing,",
+      "selected": 0
+    },
+    {
+      "title": "Fault state detection and remaining useful life prediction in AC powered solenoid operated valves based on traditional machine learning and deep neural networks,",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning applications in production lines: A systematic literature review",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning based defect detection in a low automated assembly environment",
+      "selected": 0
+    },
+    {
+      "title": "SituRepair: Incorporating Machine-Learning Fault Class Prediction to Inform Situational Multiple Fault Automatic Program Repair",
+      "selected": 0
+    },
+    {
+      "title": "Data-driven predictive maintenance planning framework for MEP components based on BIM and IoT using machine learning algorithms",
+      "selected": 0
+    },
+    {
+      "title": "Improving high-impact bug report prediction with combination of interactive machine learning and active learning",
+      "selected": 0
+    },
+    {
+      "title": "Chapter 6 - Machine learning-based energy consumption forecasting model for process industryâ€”Hybrid PSO-LSSVM algorithm electricity consumption forecasting model for papermaking process",
+      "selected": 0
+    },
+    {
+      "title": "State-of-the-art on research and applications of machine learning in the building life cycle",
+      "selected": 0
+    },
+    {
+      "title": "Machine learning and multiresolution decomposition for embedded applications to detect short-circuit in induction motors",
+      "selected": 0
+    },
+    {
+      "title": "Ex-situ porosity classification in metallic components by laser metal deposition: A machine learning-based approach",
+      "selected": 0
+    },
+    {
+      "title": "Finite element modeling of direct metal laser solidification process: Sensor data replication and use in defect detection and data reduction via machine learning",
+      "selected": 0
+    },
+    {
+      "title": "Chapter 10 - Error Traceability and Error Prediction using Machine Learning Techniques to Improve the Quality of Vehicle Modeling in Computer-Aided Engineering",
+      "selected": 1
+    },
+    {
+      "title": "An investigation of cross-project learning in online just-in-time sotfware defect prediction",
+      "selected": 1
+    },
+    {
+      "title": "Neural Network Classification for Improving Continuous Regression Testing",
+      "selected": 0
+    },
+    {
+      "title": "Automated defect prioritization based on defects resolved at various project periods",
+      "selected": 1
+    },
+    {
+      "title": "Empirically evaluating readily available information for regression test optimization in continuous integration",
+      "selected": 0
+    },
+    {
+      "title": "Continuous Build Outcome Prediction: A Small-N Experiment in Settings of a Real Software Project",
+      "selected": 0
+    },
+    {
+      "title": "Cost Effectiveness of Software Defect Prediction in an\nIndustrial Project",
+      "selected": 1
+    }
+  ]
+}

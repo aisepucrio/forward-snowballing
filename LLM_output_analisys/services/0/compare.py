@@ -224,4 +224,4 @@ def comparar_jsons(gabarito_path, llm_path, output_txt_path):
 
 
 if __name__ == "__main__":
-    comparar_jsons("resultados_originais.json", "resultados_gemini.json", "comparacao.txt")
+    comparar_jsons("resultados_originais.json", "resultados.json", "comparacao.txt")
