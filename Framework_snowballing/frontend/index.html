@@ -20,7 +20,7 @@
     <div class="container-fluid navbar-inner">
 
       <!-- Logo -->
-      <a class="navbar-brand d-flex align-items-center gap-2" href="/" id="navbarSnowballing">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" id="navbarSnowballing">
         <img src="/images/logo-snowballing.png" class="logo-nav">
         <span class="brand-text">SnowBalling</span>
       </a>
@@ -61,48 +61,31 @@
       <p class="text-muted mb-2">The Academic Curator for deep citation mapping and research discovery</p>
 
       <!-- barras de referencias e citaçoes -->
-
       <div class="d-flex justify-content-center mb-3">
         <div class="btn-group" role="group">
-
           <input type="radio" class="btn-check" name="snowballMode" id="modeForward" value="forward" checked>
           <label class="btn btn-outline-success px-4" for="modeForward">
             <i class="bi bi-arrow-up-right-circle me-1"></i> Citations (Forward)
           </label>
-
           <input type="radio" class="btn-check" name="snowballMode" id="modeBackward" value="backward">
           <label class="btn btn-outline-success px-4" for="modeBackward">
             <i class="bi bi-arrow-down-left-circle me-1"></i> References (Backward)
           </label>
-
         </div>
       </div>
-
       <p class="text-black">Search by <b>DOI</b> or <b>Title</b></p>
     </div>
 
     <form id="searchForm" class="d-flex justify-content-center mb-4" onsubmit="buscarArtigo(); return false;">
-
       <div class="d-flex align-items-center shadow-sm" style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
-
-
         <i class="bi bi-search text-muted me-2"></i>
-
-
         <input type="text" id="searchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)" class="form-control border-0 bg-transparent"
           style="box-shadow:none;">
-
-
         <button type="submit" class="btn btn-success ms-2 px-4">
           Search
         </button>
-
-
       </div>
-
-
     </form>
-
 
     <!-- LOADING SPINNER -->
     <div id="loadingSpinner" class="text-center my-4" style="display:none;">
@@ -169,7 +152,6 @@
 
     </div>
   </footer>
-</body>
 
 <script>
   function escapeHtml(text) {
@@ -246,81 +228,155 @@
     return `http://localhost:3000/api/articles/search?${params.toString()}`;
   }
 
+  function salvarPesquisaAtual(valor) {
+    localStorage.setItem('ultimaPesquisaSnowMap', valor);
+  }
+
+  function carregarPesquisaNavbar() {
+    const valorSalvo = localStorage.getItem('ultimaPesquisaSnowMap');
+
+    if (valorSalvo) {
+      const navbarInput = document.getElementById('navbarSearchInput');
+      const searchInput = document.getElementById('searchInput');
+
+      if (navbarInput) {
+        navbarInput.value = valorSalvo;
+      }
+
+      if (searchInput) {
+        searchInput.value = valorSalvo;
+      }
+    }
+  }
 
   function buscarArtigo() {
-    const input = document.getElementById('searchInput');
-    const inputValue = input.value.trim();
 
+    const input =
+      document.getElementById('searchInput');
+
+    const inputValue =
+      input.value.trim();
+
+    salvarPesquisaAtual(inputValue);
+
+    const navbarInput =
+      document.getElementById('navbarSearchInput');
+
+    if (navbarInput) {
+      navbarInput.value = inputValue;
+    }
 
     input.blur();
-
 
     if (!inputValue) {
       alert('Please enter a DOI or title to search.');
       return;
     }
 
-
     document.getElementById('loadingSpinner').style.display = 'block';
-    document.getElementById('resultado').innerHTML = '';
-    document.getElementById('citationsSection').style.display = 'none';
 
+    document.getElementById('resultado').innerHTML = '';
+
+    document.getElementById('citationsSection').style.display = 'none';
 
     const url = buildSearchURL(inputValue);
 
-
     fetch(url)
+
       .then(res => {
-        if (!res.ok) throw new Error('Article not found or API error');
+
+        if (!res.ok) {
+          throw new Error('Article not found or API error');
+        }
+
         return res.json();
       })
-      .then(data => {
-        document.getElementById('loadingSpinner').style.display = 'none';
-        document.body.classList.add('busca-realizada');
 
+      .then(data => {
+
+        document.getElementById('loadingSpinner').style.display = 'none';
+
+        document.body.classList.add('busca-realizada');
 
         window.seedData = {
           ...data,
           abstractExpanded: false
         };
 
+        const mode =
+          document.querySelector(
+            'input[name="snowballMode"]:checked'
+          ).value;
 
-        const mode = document.querySelector('input[name="snowballMode"]:checked').value;
+        const headerText =
+          mode === 'forward'
+            ? 'Cited By'
+            : 'References';
 
-        const headerText = mode === 'forward' ? 'Cited By' : 'References';
-        document.querySelector('#citationsHeader h3').textContent = headerText;
+        document.querySelector(
+          '#citationsHeader h3'
+        ).textContent = headerText;
 
-        const listToDisplay = mode === 'forward'
-          ? (data.citations || [])
-          : (data.references || []);
+        const listToDisplay =
+          mode === 'forward'
+            ? (data.citations || [])
+            : (data.references || []);
 
-        window.citationsData = listToDisplay.map(c => ({
-          ...c,
-          paperId: c.paperId || c.doi || Math.random().toString(36),
-          selecionado: c.selecionado || null,
-          abstractExpanded: false
-        }));
+        window.citationsData =
+          listToDisplay.map(c => ({
+            ...c,
+            paperId:
+              c.paperId ||
+              c.doi ||
+              Math.random().toString(36),
 
+            selecionado:
+              c.selecionado || null,
+
+            abstractExpanded: false
+          }));
 
         mostrarResultado(window.seedData);
+
         mostrarCitacoes(window.citationsData);
+
         atualizarBotaoIncludeAll();
       })
+
       .catch(err => {
+
         document.getElementById('loadingSpinner').style.display = 'none';
+
         document.getElementById('resultado').innerHTML =
           '<p class="text-danger">Erro: ' + err.message + '</p>';
+
         document.getElementById('citationsSection').style.display = 'none';
-        document.querySelector('#tabela-triagem tbody').innerHTML = '';
+
+        document.querySelector(
+          '#tabela-triagem tbody'
+        ).innerHTML = '';
+
         window.citationsData = [];
+
         window.seedData = null;
       });
   }
 
   function buscarArtigoNavbar() {
+
     const input = document.getElementById('navbarSearchInput');
-    document.getElementById('searchInput').value = input.value;
-    buscarArtigo();
+    const valor = input.value.trim();
+
+    if (!valor) {
+      alert('Please enter a DOI or title.');
+      return;
+    }
+
+    salvarPesquisaAtual(valor);
+
+    localStorage.setItem('executarBuscaSnowMap', 'true');
+
+    window.location.href = `index.html?search=${encodeURIComponent(valor)}`;
   }
 
   function toggleSeedAbstract() {
@@ -328,7 +384,6 @@
     window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
     mostrarResultado(window.seedData);
   }
-
 
   function mostrarResultado(artigo) {
     if (!artigo || !artigo.title) {
@@ -556,7 +611,6 @@
     citSection.style.display = 'block';
   }
 
-
   function marcarArtigoLocal(paperId, acao) {
     const cit = window.citationsData.find(c => c.paperId === paperId);
     if (!cit) {
@@ -569,7 +623,6 @@
     mostrarCitacoes(window.citationsData);
     atualizarBotaoIncludeAll();
   }
-
 
   function atualizarBotaoIncludeAll() {
     const btn = document.getElementById('selectAllBtn');
@@ -727,13 +780,37 @@
   });
 
   document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const inputValue = document.getElementById('searchInput').value.trim();
-    if (inputValue) {
-      buscarArtigo();
-    }
+    radio.addEventListener('change', () => {
+      const inputValue = document.getElementById('searchInput').value.trim();
+      if (inputValue) {
+        buscarArtigo();
+      }
+    });
   });
-});
+
+  document.addEventListener('DOMContentLoaded', () => {
+    carregarPesquisaNavbar();
+
+      const executarBusca =
+        localStorage.getItem('executarBuscaSnowMap');
+
+      const valorSalvo =
+        localStorage.getItem('ultimaPesquisaSnowMap');
+
+      if (executarBusca === 'true' && valorSalvo) {
+
+        const inputPrincipal =
+          document.getElementById('searchInput');
+
+        if (inputPrincipal) {
+          inputPrincipal.value = valorSalvo;
+        }
+
+        localStorage.removeItem('executarBuscaSnowMap');
+
+        buscarArtigo();
+      }
+  });
 </script>
 
 

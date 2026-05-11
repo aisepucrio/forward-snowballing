@@ -421,7 +421,7 @@ body.busca-realizada #navbarSearchForm {
 }
 
 .navbar-search {
-  background: #D1FAE54D;
+  background: #eeeeee;
   border-radius: 999px;
   padding: 8px 14px;
   display: flex;
@@ -434,7 +434,7 @@ body.busca-realizada #navbarSearchForm {
 .navbar-search input {
   border: none;
   outline: none;
-  background: #D1FAE54D ;
+  background: transparent;
   width: 260px;
   font-size: 14px;
 }
@@ -470,9 +470,6 @@ body.busca-realizada #navbarSearchForm {
   display: flex;
   justify-content: center;
   gap: 32px;
-}
-#citedHeader{
-  color: #064E3B;
 }
 
 .footer-custom {
