@@ -48,30 +48,6 @@ def format_criteria(criteria_group: dict[str, str]) -> str:
     )
 
 
-def build_results_schema(criteria: dict[str, dict[str, str]]) -> str:
-    criteria_ids = [
-        *criteria[INCLUSION_KEY].keys(),
-        *criteria[EXCLUSION_KEY].keys(),
-    ]
-
-    lines = [
-        '    "results": {',
-    ]
-
-    for index, criterion_id in enumerate(criteria_ids):
-        comma = "," if index < len(criteria_ids) - 1 else ""
-        lines.append(f'      "{criterion_id}": "Yes|No"{comma}')
-
-    lines.extend([
-        "    },",
-        '    "Decision": {',
-        '      "decision": "inclusion|exclusion"',
-        "    }",
-    ])
-
-    return "\n".join(lines)
-
-
 def generate_prompt(
     title: str,
     abstract: str,
@@ -79,34 +55,60 @@ def generate_prompt(
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
-    results_schema = build_results_schema(criteria)
 
     return f"""You are an expert researcher conducting a Systematic Review.
-Evaluate the article based on the inclusion and exclusion criteria.
+Your task is to decide whether the article should be selected.
 
-INCLUSION CRITERIA (mark Yes/No)
+Think through the criteria carefully before answering, but do not include your reasoning in the output.
+
+The examples below illustrate the decision process only.
+Do not reuse the example criteria when analyzing the real article.
+
+EXAMPLE CRITERIA
+
+INCLUSION CRITERIA
+- IC1: The article is a primary empirical study.
+- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
+
+EXCLUSION CRITERIA
+- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
+- EC2: The article is outside the review topic.
+
+EXAMPLE ARTICLE:
+- title: Empirical evaluation of a method in the target research area
+- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
+
+EXPECTED OUTPUT:
+1
+
+EXAMPLE ARTICLE:
+- title: A review of methods in the target research area
+- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
+
+EXPECTED OUTPUT:
+0
+
+REAL CRITERIA
+
+INCLUSION CRITERIA
 {inclusion_criteria}
 
-EXCLUSION CRITERIA (mark Yes/No)
+EXCLUSION CRITERIA
 {exclusion_criteria}
 
-ARTICLE TO ANALYZE:
+REAL ARTICLE
 - title: {normalize_text(title)}
 - abstract: {normalize_text(abstract)}
 
-EXACT OUTPUT FORMAT (JSON):
-{{
-  "title": "<repeat the article title>",
-{results_schema}
-}}
+DECISION RULES:
+- Return 1 if the article satisfies all inclusion criteria and no exclusion criterion is satisfied.
+- Return 0 if any inclusion criterion is not satisfied.
+- Return 0 if any exclusion criterion is satisfied.
+- Return 1 when the evidence is ambiguous, incomplete, or only weakly implied.
 
-Rules:
-- Use only "Yes" or "No" in the result for each criterion.
-- If any inclusion criterion is marked "No", the decision must be "exclusion". STOP and return the results json.
-- If any exclusion criterion is marked "Yes", the decision must be "exclusion". STOP and return the results json.
-- Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
-- Do not include any keys other than the requested ones.
-- Return only the JSON, without any markdown or extra text.
+OUTPUT:
+- Return only one character: 0 or 1.
+- Do not include explanations, reasoning, criterion labels, confidence, markdown, JSON, or extra text.
 """
 
 

@@ -220,8 +220,8 @@ def convert_source_to_json_files(
 
 if __name__ == "__main__":
     convert_source_to_json_files(
-        csv_path="data/study1/source1.csv",
-        criteria_path="data/study1/criteria.json",
-        results_output_path="data/study1/results.json",
-        database_output_path="data/study1/articles.json",
+        csv_path="data/study2/source2.csv",
+        criteria_path="data/study2/criteria.json",
+        results_output_path="data/study2/results.json",
+        database_output_path="data/study2/articles.json",
     )

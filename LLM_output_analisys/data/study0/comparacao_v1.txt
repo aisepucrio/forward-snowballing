@@ -47,3 +47,32 @@ LLM > EC3:    Yes 01.82% | No 98.18% | Not conclusive 00.00%
 Source > EC3: Yes 05.50% | No 94.50% | Not conclusive 00.00%
 LLM > EC4:    Yes 42.73% | No 57.27% | Not conclusive 00.00%
 Source > EC4: Yes 18.35% | No 81.65% | Not conclusive 00.00%
+
+Prompt--------------------------------------------
+You are an expert researcher conducting a Systematic Review.
+Evaluate the article based on the inclusion and exclusion criteria.
+
+INCLUSION CRITERIA (mark Yes/No)
+{inclusion_criteria}
+
+EXCLUSION CRITERIA (mark Yes/No)
+{exclusion_criteria}
+
+ARTICLE TO ANALYZE:
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+EXACT OUTPUT FORMAT (JSON):
+{{
+  "title": "<repeat the article title>",
+{results_schema}
+}}
+
+Rules:
+- Use only "Yes" or "No" in the result for each criterion.
+- If any inclusion criterion is marked "No", the decision must be "exclusion". STOP and return the results json.
+- If any exclusion criterion is marked "Yes", the decision must be "exclusion". STOP and return the results json.
+- Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
+- Do not include any keys other than the requested ones.
+- Return only the JSON, without any markdown or extra text.
+"""

@@ -199,7 +199,7 @@ def compare_results_json(
 
 if __name__ == "__main__":
     compare_results_json(
-        original_results_path="data/study1/results.json",
-        llm_results_path="data/study1/results_llm.json",
-        output_txt_path="data/study1/comparison.txt",
+        original_results_path="data/study2/results.json",
+        llm_results_path="data/study2/results_llm.json",
+        output_txt_path="data/study2/comparison.txt",
     )

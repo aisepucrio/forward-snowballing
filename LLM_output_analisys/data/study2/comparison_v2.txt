@@ -1,0 +1,97 @@
+Comparacao de resultados
+
+Resumo
+- Total de artigos no original: 33
+- Total de artigos no resultado da LLM: 33
+- Total de artigos comparados: 33
+- Cobertura da LLM: 100.00%
+
+Metricas da LLM considerando o original como gabarito
+- Precision: 1.0000
+- Recall: 0.5152
+- F1-score: 0.6800
+
+Matriz de comparacao
+- True positives: 17
+- False positives: 0
+- False negatives: 16
+- True negatives: 0
+
+Artigos incluidos pela LLM e nao pelo original
+- Nenhum
+
+Artigos incluidos pelo original e nao pela LLM
+- An analysis of the bluetooth terminal development pivots from lean startup perspective: experience and lessons learnt
+- Brazilian Startups and the Current Software Engineering Challenges:The Case of Tecnopuc
+- Building a digital tool for the adoption of the world health organization's antenatal care recommendations: Methodological intersection of evidence, clinical logic, and digital technology
+- Collaborative practices for software requirements gathering in software startups
+- Continuous Improvement and Validation with Customer Touchpoint Model in Software Development
+- Developing high-value technology for first responders
+- How do software startups approach experimentation? Empirical results from a qualitative interview study
+- Hybrid Labels Are the New Measure!
+- Implementing Communications and Information Dissemination Technologies for First Responders
+- Lean Internal Startups for Software Product Innovation in Large Companies: Enablers and Inhibitors
+- Monitoring system for emergency service in a hospital environment
+- Optimization of mobile applications through a feedback-based quality assurance approach
+- Predicting the Vector Impact of Change-An Industrial Case Study at Brightsquid
+- The benefits of interdisciplinary scenario-building for hybrid radio applications
+- Three patterns for user involvement in startups
+- What influences the speed of prototyping? An empirical investigation of twenty software startups
+
+Artigos do original sem resultado da LLM
+- Nenhum
+
+Artigos presentes na LLM e ausentes no original
+- Nenhum
+
+Prompt---------------------------------------------------
+- title: Machine learning based defect prediction using industrial software metrics
+- abstract: This empirical study evaluates machine learning classifiers for predicting defective modules in an industrial software system. The study uses historical defect data and software metrics collected from a real company project, compares prediction performance, and discusses practical implications for software quality assurance.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "Machine learning based defect prediction using industrial software metrics",
+  "selected": 1
+}}
+
+ARTICLE TO ANALYZE:
+- title: A literature review of software defect prediction techniques
+- abstract: This paper reviews and summarizes existing software defect prediction approaches published in the literature. It compares prior studies, organizes machine learning techniques used in defect prediction, and identifies open research challenges.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "A literature review of software defect prediction techniques",
+  "selected": 0
+}}
+
+ARTICLE TO ANALYZE:
+- title: Deep learning for image classification in medical diagnosis
+- abstract: This paper proposes a convolutional neural network for classifying medical images. Experiments are performed on a public image dataset and results show improved diagnostic accuracy compared with previous image classification approaches.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "Deep learning for image classification in medical diagnosis",
+  "selected": 0
+}}
+
+
+ARTICLE TO ANALYZE:
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+EXACT OUTPUT FORMAT (JSON):
+{{
+  "title": "<repeat the article title>",
+  "selected": 0|1
+}}
+
+
+Rules:
+- Use only 0 or 1 in "selected".
+- Use selected 1 only if all inclusion criteria are satisfied and no exclusion criterion is satisfied.
+- Use selected 0 if any inclusion criterion is not satisfied.
+- Use selected 0 if any exclusion criterion is satisfied.
+- Prefer selected 0 when the abstract does not provide enough evidence to satisfy all inclusion criteria.
+- Do not include explanations, criterion labels, confidence, markdown, or extra keys.
+- Return only the JSON object.
+"""

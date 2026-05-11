@@ -26,8 +26,6 @@ RESULTS_KEY = "results"
 TITLE_KEY = "title"
 ABSTRACT_KEY = "abstract"
 SELECTED_KEY = "selected"
-DECISION_KEY = "Decision"
-DECISION_VALUE_KEY = "decision"
 
 
 def load_env_file(env_path: str | Path = ".env") -> None:
@@ -115,7 +113,6 @@ def build_gemini_request(prompt: str) -> dict[str, Any]:
         ],
         "generationConfig": {
             "temperature": 0,
-            "responseMimeType": "application/json",
         },
     }
 
@@ -172,37 +169,16 @@ def strip_json_markdown(text: str) -> str:
     return cleaned
 
 
-def parse_llm_json(text: str) -> dict[str, Any] | None:
-    try:
-        data = json.loads(strip_json_markdown(text))
-    except json.JSONDecodeError:
-        return None
+def parse_llm_selected(text: str) -> int | None:
+    cleaned = strip_json_markdown(text).strip()
 
-    if not isinstance(data, dict):
-        return None
-
-    return data
-
-
-def selected_from_llm_result(llm_result: dict[str, Any]) -> int | None:
-    decision = llm_result.get(DECISION_KEY, {})
-    if not isinstance(decision, dict):
-        return None
-
-    decision_value = str(decision.get(DECISION_VALUE_KEY, "")).strip().lower()
-    if decision_value == "inclusion":
-        return 1
-    if decision_value == "exclusion":
-        return 0
+    if cleaned in {"0", "1"}:
+        return int(cleaned)
 
     return None
 
 
-def build_output_result(article_title: str, llm_result: dict[str, Any]) -> dict[str, Any] | None:
-    selected = selected_from_llm_result(llm_result)
-    if selected is None:
-        return None
-
+def build_output_result(article_title: str, selected: int) -> dict[str, Any]:
     return {
         TITLE_KEY: article_title,
         SELECTED_KEY: selected,
@@ -217,12 +193,12 @@ def analyze_article(
 ) -> dict[str, Any] | None:
     prompt = generate_prompt(title, abstract, criteria)
     response_text = call_gemini(prompt, api_key)
-    llm_result = parse_llm_json(response_text)
+    selected = parse_llm_selected(response_text)
 
-    if llm_result is None:
+    if selected is None:
         return None
 
-    return build_output_result(title, llm_result)
+    return build_output_result(title, selected)
 
 
 def analyze_articles_json(
