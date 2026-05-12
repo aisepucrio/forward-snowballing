@@ -10,6 +10,8 @@ from services.cache import init_db, get_cached, save_to_cache
 from run_backward import get_references_openalex
 
 
+
+
 #em caso de erro com charmap.
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -82,7 +84,7 @@ def main():
             "citationCount": paper.get("citationCount", paper.get("citations_count", 0)),
             "citations_retrieved": len(final_citations),
             "citations": final_citations,
-            "mode": "backward",
+            "mode": "forward",
             "references_count": len(references),
             "references_retrieved": len(references),
             "open_access": paper.get("open_access", None),

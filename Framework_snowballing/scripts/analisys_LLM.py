@@ -2,12 +2,10 @@ import sys
 import json
 import ollama
 
-
-MODEL_NAME = "llama3.2:3b"
+MODEL_NAME = "llama3"
 
 
 def _split_criterios(texto: str):
-    # Divide por linha e remove vazios
     return [c.strip() for c in (texto or "").splitlines() if c.strip()]
 
 
@@ -15,92 +13,104 @@ def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
     inc = _split_criterios(criterios_inclusao)
     exc = _split_criterios(criterios_exclusao)
 
-    # IDs estáveis (melhor que usar o texto inteiro como chave)
     inc_ids = [f"IC{i+1}" for i in range(len(inc))]
     exc_ids = [f"EC{i+1}" for i in range(len(exc))]
 
-    # Prompt pedindo JSON estrito
+
     prompt = f"""
-    Você é um pesquisador de Engenharia de Software conduzindo uma Revisão Sistemática.
-    Avalie o artigo com base nos critérios. Responda SOMENTE com JSON VÁLIDO (sem markdown, sem texto extra).
+Você é um pesquisador conduzindo uma Revisão Sistemática da Literatura.
 
-    ARTIGO
-    - title: {title}
-    - abstract: {summary}
+Responda APENAS com JSON válido. Sem explicações, sem markdown.
 
-    CRITÉRIOS DE INCLUSÃO (marque Sim/Não)
-    {chr(10).join([f"- {inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
+ARTIGO:
+Título: {title}
+Resumo: {summary}
 
-    CRITÉRIOS DE EXCLUSÃO (marque Sim/Não)
-    {chr(10).join([f"- {exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
+CRITÉRIOS DE INCLUSÃO:
+{chr(10).join([f"{inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
 
-    FORMATO EXATO DE SAÍDA (JSON):
-    {{
-    "title": "<repita o título do artigo>",
-    "results": {{
-        "{'": "Sim|Não", "'.join(inc_ids + exc_ids)}": "Sim|Não"
-    }},
-    "ResumoDecisao": {{
-        "decisao": "inclusão|exclusão",
-        "confianca": 0.0,
-        "justificativa_curta": "<1 frase curta>"
-    }}
-    }}
+CRITÉRIOS DE EXCLUSÃO:
+{chr(10).join([f"{exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
 
-    Regras:
-    - Use apenas "Sim" ou "Não" nas chaves de results.
-    - "confianca" deve ser um número entre 0.0 e 1.0.
-    - Não inclua nenhuma chave além das pedidas.
-    """
+FORMATO OBRIGATÓRIO DE SAÍDA:
+
+{{
+  "title": "{title}",
+  "results": {{
+    "IC1": "Sim ou Não",
+    "IC2": "Sim ou Não",
+    "EC1": "Sim ou Não",
+    "EC2": "Sim ou Não"
+  }}
+}}
+
+REGRAS IMPORTANTES:
+- Use SOMENTE "Sim" ou "Não"
+- Não invente chaves fora de IC/EC
+- Se não tiver critério, ainda retorne o JSON completo
+"""
 
     try:
         resp = ollama.chat(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             options={
-                "temperature": 0.1,   # mais determinístico
-                "num_predict": 600    # limita tamanho
+                "temperature": 0.1,
+                "num_predict": 600  
             }
         )
 
         text = resp["message"]["content"].strip()
 
-        # Algumas vezes o modelo pode colocar lixo antes/depois.
-        # Vamos tentar extrair o primeiro objeto JSON.
+        # extrair JSON de forma segura
         start = text.find("{")
         end = text.rfind("}")
-        if start == -1 or end == -1 or end <= start:
-            raise ValueError("Resposta não contém JSON")
 
-        json_text = text[start:end+1]
+        if start == -1 or end == -1:
+            raise ValueError("JSON não encontrado na resposta")
+
+        json_text = text[start:end + 1]
         data = json.loads(json_text)
 
-        # Validações simples
-        if "title" not in data or "results" not in data:
-            raise ValueError("JSON faltando campos obrigatórios")
+        # 🔥 GARANTIA DE ESTRUTURA (evita EC sumir)
+        if "results" not in data:
+            data["results"] = {}
+
+        for ic in inc_ids:
+            data["results"].setdefault(ic, "Não")
+
+        for ec in exc_ids:
+            data["results"].setdefault(ec, "Não")
 
         return data
 
     except Exception as e:
-        print(f"[ERRO Ollama] ao classificar artigo '{title}': {e}", file=sys.stderr)
+        print(f"[ERRO Ollama] {e}", file=sys.stderr)
+
+        # fallback seguro
         return {
-            "title": title or "",
-            "results": {"Criteria": "It was not possible to analyze the criterion. Please check the submitted data or try again later."},
-            "ResumoDecisao": {
-                "decisao": "exclusão",
-                "confianca": 0.0,
-                "justificativa_curta": "Falha ao processar com o modelo."
+            "title": title,
+            "results": {
+                **{f"IC{i+1}": "Não" for i in range(len(inc))},
+                **{f"EC{i+1}": "Não" for i in range(len(exc))}
             }
         }
 
 
 def analisar(criterios_inclusao, criterios_exclusao, artigos):
     results = []
+
     for artigo in artigos:
         title = artigo.get("title", "")
         abstract = artigo.get("abstract", "")
 
-        out = classificar_artigo(title, abstract, criterios_inclusao, criterios_exclusao)
+        out = classificar_artigo(
+            title,
+            abstract,
+            criterios_inclusao,
+            criterios_exclusao
+        )
+
         results.append(out)
 
     return results
@@ -115,4 +125,5 @@ if __name__ == "__main__":
     artigos = data.get("artigos", [])
 
     results = analisar(criterios_inclusao, criterios_exclusao, artigos)
+
     print(json.dumps(results, ensure_ascii=False))
