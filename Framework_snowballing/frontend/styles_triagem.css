@@ -126,3 +126,13 @@ input[type="checkbox"] {
   background-color: #C5C5C5 !important;
   transform: translateY(-1px);
 }
+.quadro-conteudo {
+  position: relative;
+  height: 350px; /* ou 300px, ajuste como quiser */
+  width: 100%;
+}
+
+#topicos-container {
+  max-height: 300px;
+  overflow-y: auto;
+}

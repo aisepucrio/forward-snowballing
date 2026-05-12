@@ -22,7 +22,7 @@
       <!-- Logo -->
       <a class="navbar-brand d-flex align-items-center gap-2" href="/" id="navbarSnowballing">
         <img src="/images/logo-snowballing.png" class="logo-nav">
-        <span class="brand-text">SnowBalling</span>
+        <span class="brand-text">SnowMap</span>
       </a>
 
       <!-- Search -->
@@ -39,7 +39,7 @@
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav gap-2">
           <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="triagem.html">Initial Analysis</a>
+            <a class="nav-link btn-nav-custom" href="analisys.html">Initial Analysis</a>
           </li>
           <li class="nav-item">
             <a class="nav-link btn-nav-custom" href="criterios.html">Criteria Applications</a>
@@ -116,41 +116,66 @@
 
 
     <div id="citationsSection" style="display:none;">
-      <div id="citationsHeader" class="d-flex justify-content-between align-items-center mb-3">
-        <h3 id="citedHeader" class="mb-0 fw-bold">Cited By</h3>
-        <div class="d-flex gap-2">
-          <button id="selectAllBtn" type="button" class="btn btn-outline-primary btn-sm">
-            Include All
-          </button>
-          <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-box-arrow-up"></i> Export
-          </button>
+    
+
+
+      <div id="citationsList" class="table-wrapper">
+
+        <!-- TOP BAR -->
+        <div class="table-topbar">
+          
+          <div class="table-info">
+            <span class="table-title">Cited By</span>
+          </div>
+
+          <div class="table-actions">
+
+  <!--
+  <button class="btn-filter">
+    <i class="bi bi-funnel"></i>
+    Filter
+  </button>
+
+  <button class="btn-filter">
+    <i class="bi bi-sort-down"></i>
+    Sort by Citations
+  </button>
+  -->
+
+            <button id="downloadBtn" class="btn-export">
+              <i class="bi bi-download"></i>
+              Export
+            </button>
+            <button id="includeAllBtn" class="btn-export">
+              <i class="bi bi-check2-square"></i>
+              Include All
+            </button>
+
+          </div>
+
         </div>
-      </div>
 
+        <!-- TABELA -->
+        <table class="custom-table" id="tabela-triagem">
 
-      <div id="citationsList" class="table-responsive shadow-sm rounded">
-        <table class="table table-hover table-striped align-middle mb-0 w-100" id="tabela-triagem">
           <thead>
             <tr>
-              <th style="min-width: 260px;">Title</th>
-              <th style="min-width: 240px;">Abstract</th>
-              <th style="min-width: 120px;">Authors</th>
-              <th style="min-width: 90px;">Year</th>
-              <th style="min-width: 180px;">Venue</th>
-              <th style="min-width: 180px;">DOI</th>
-              <th style="min-width: 100px;">Cited by</th>
-
-              <th style="min-width: 120px;">Open Access</th>
-              <th style="min-width: 180px;">URL</th>
-              <th style="min-width: 180px;">Keywords</th>
-              <th style="min-width: 120px;">Language</th>
-              <th style="min-width: 140px;">Pages</th>
-
-              <th style="min-width: 170px;">Actions</th>
+              <th>Research Identity</th>
+              <th>Abstract</th>
+              <th>Authors</th>
+              <th>Open Access</th>
+              <th>URL</th>
+              <th>Keywords</th>
+              <th>Language</th>
+              <th>Pages</th>
+              <th>Citations</th>
+              <th>Actions</th>
             </tr>
           </thead>
+
+
           <tbody></tbody>
+
         </table>
       </div>
     </div>
@@ -160,7 +185,7 @@
 
       <div class="footer-left">
         <img src="/images/logo-snowballing.png">
-        <span>SnowBalling</span>
+        <span>SnowMap</span>
       </div>
 
       <div class="footer-right">
@@ -169,7 +194,6 @@
 
     </div>
   </footer>
-</body>
 
 <script>
   function escapeHtml(text) {
@@ -180,6 +204,41 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+  function toggleIncludeAll() {
+    if (!window.citationsData || window.citationsData.length === 0) {
+      alert('No citations available.');
+      return;
+    }
+
+    const allIncluded = window.citationsData.every(c => c.selecionado === 'incluir');
+
+    const newState = allIncluded ? 'excluir' : 'incluir';
+
+    window.citationsData = window.citationsData.map(c => ({
+      ...c,
+      selecionado: newState
+    }));
+
+    mostrarCitacoes(window.citationsData);
+  }
+
+  function atualizarBotaoIncludeAll() {
+    const btn = document.getElementById('includeAllBtn');
+    if (!btn) return;
+
+    const allIncluded =
+      window.citationsData &&
+      window.citationsData.length > 0 &&
+      window.citationsData.every(c => c.selecionado === 'incluir');
+
+    if (allIncluded) {
+      btn.innerHTML = `<i class="bi bi-x-square"></i> Exclude All`;
+      btn.className = 'btn btn-danger btn-export';
+    } else {
+      btn.innerHTML = `<i class="bi bi-check2-square"></i> Include All`;
+      btn.className = 'btn btn-outline-success btn-export';
+    }
   }
 
 
@@ -250,6 +309,8 @@
   function buscarArtigo() {
     const input = document.getElementById('searchInput');
     const inputValue = input.value.trim();
+    document.getElementById('navbarSearchInput').value = inputValue;
+
 
 
     input.blur();
@@ -259,6 +320,8 @@
       alert('Please enter a DOI or title to search.');
       return;
     }
+      document.getElementById('navbarSearchInput').value = inputValue;
+
 
 
     document.getElementById('loadingSpinner').style.display = 'block';
@@ -276,23 +339,27 @@
       })
       .then(data => {
         document.getElementById('loadingSpinner').style.display = 'none';
-        document.body.classList.add('busca-realizada');
 
+        document.body.classList.add('busca-realizada');
 
         window.seedData = {
           ...data,
           abstractExpanded: false
         };
 
-
         const mode = document.querySelector('input[name="snowballMode"]:checked').value;
 
-        const headerText = mode === 'forward' ? 'Cited By' : 'References';
-        document.querySelector('#citationsHeader h3').textContent = headerText;
+        const headerText =
+          mode === 'forward'
+            ? 'Cited By'
+            : 'References';
 
-        const listToDisplay = mode === 'forward'
-          ? (data.citations || [])
-          : (data.references || []);
+        document.querySelector('#citationsList .table-title').textContent = headerText;
+
+        const listToDisplay =
+          mode === 'forward'
+            ? (data.citations || [])
+            : (data.references || []);
 
         window.citationsData = listToDisplay.map(c => ({
           ...c,
@@ -304,7 +371,7 @@
 
         mostrarResultado(window.seedData);
         mostrarCitacoes(window.citationsData);
-        atualizarBotaoIncludeAll();
+
       })
       .catch(err => {
         document.getElementById('loadingSpinner').style.display = 'none';
@@ -349,35 +416,161 @@
     const languageToShow = artigo.language || '-';
     const pagesToShow = artigo.pages || '-';
     const numpagesToShow = artigo.numpages || '-';
-
-
-
     const cardHTML = `
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h5 class="card-title fw-bold">${escapeHtml(artigo.title || '-')}</h5>
-          <h6 class="card-subtitle mb-2 text-muted">${escapeHtml(authors)}</h6>
-          <p class="card-text mb-2" style="cursor:pointer;" onclick="toggleSeedAbstract()">
-            ${escapeHtml(abstractPreview)}<br>
-            <small class="text-primary">${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}</small>
-          </p>
-          ${artigo.abstractExpanded
-        ? `<div class="card-text mb-2"><strong>Full Abstract:</strong> <p>${escapeHtml(artigo.abstract || 'Abstract unavailable.')}</p></div>`
-        : ''
-      }
-          <ul class="list-group list-group-flush mt-3">
-            <li class="list-group-item"><strong>Year:</strong> ${escapeHtml(artigo.year || '-')}</li>
-            <li class="list-group-item"><strong>Venue:</strong> ${escapeHtml(artigo.venue || '-')}</li>
-            <li class="list-group-item"><strong>DOI:</strong> ${formatDOILink(doiToShow)}</li>
-            <li class="list-group-item"><strong>Cited by:</strong> ${escapeHtml(citedByToShow)}</li>
-            <li class="list-group-item"><strong>References:</strong> ${escapeHtml(referencesToShow)}</li>
-            </ul>
+    <div class="table-wrapper">
+
+      <div class="table-topbar">
+
+        <div class="table-info">
+          <span class="table-title">Seed Paper Analysis</span>
         </div>
+
       </div>
+
+      <table class="custom-table">
+
+        <thead>
+          <tr>
+            <th>Research Identity</th>
+            <th>Abstract</th>
+            <th>Authors</th>
+            <th>Open Access</th>
+            <th>URL</th>
+            <th>Keywords</th>
+            <th>Language</th>
+            <th>Pages</th>
+            <th>Citations</th>
+          </tr>
+        </thead>
+
+
+        <tbody>
+
+          <tr>
+
+            <td>
+
+              <div class="paper-doi">
+                DOI: ${escapeHtml(doiToShow)}
+              </div>
+
+              <div class="paper-title">
+                ${escapeHtml(artigo.title || '-')}
+              </div>
+
+              <div class="paper-meta">
+
+                <div class="paper-tags">
+
+                  <span class="paper-tag">
+                    ${escapeHtml(artigo.year || '-')}
+                  </span>
+
+                  <span class="paper-tag venue-tag">
+                    ${escapeHtml(artigo.venue || '-')}
+                  </span>
+
+                </div>
+
+              </div>
+
+        
+
+      
+            </td>
+
+            <td>
+
+              <div class="abstract-text ${window.seedData.abstractExpanded ? 'expanded' : ''}">
+                ${
+                  window.seedData.abstractExpanded
+                    ? escapeHtml(artigo.abstract || '-')
+                    : escapeHtml(truncateText(artigo.abstract || '-', 200))
+                }
+              </div>
+
+              ${
+                artigo.abstract && artigo.abstract.length > 200
+                  ? `<span class="read-more" id="seedReadMore">
+                      ${window.seedData.abstractExpanded ? 'READ LESS' : 'READ MORE'}
+                    </span>`
+                  : ''
+              }
+
+            </td>
+
+            <td>
+              ${escapeHtml(authors)}
+            </td>
+
+            <td>
+              ${escapeHtml(String(openAccessToShow))}
+            </td>
+
+            <td>
+              ${
+                urlToShow && urlToShow !== '-'
+                  ? `<a href="${escapeHtml(urlToShow)}" target="_blank">${escapeHtml(urlToShow)}</a>`
+                  : '-'
+              }
+            </td>
+
+            <td>
+              ${escapeHtml(Array.isArray(keywordsToShow) ? keywordsToShow.join(', ') : (keywordsToShow || '-'))}
+            </td>
+
+            <td>
+              ${escapeHtml(languageToShow)}
+            </td>
+
+            <td>
+              ${escapeHtml(pagesToShow || numpagesToShow || '-')}
+            </td>
+
+
+            <td>
+
+              <div class="citation-box">
+
+                <div class="citation-dot"></div>
+
+                <div>
+                  <div class="citation-number">
+                    ${escapeHtml(citedByToShow)}
+                  </div>
+
+                  <div class="citation-label">
+                    Citations
+                  </div>
+                </div>
+
+              </div>
+
+            </td>
+
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
     `;
 
 
+
+
+
+
+
     document.getElementById('resultado').innerHTML = cardHTML;
+    document.getElementById('resultado').onclick = function (e) {
+      if (e.target && e.target.id === 'seedReadMore') {
+        window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
+        mostrarResultado(window.seedData);
+      }
+    };
   }
 
 
@@ -387,7 +580,7 @@
 
 
     if (!citations || citations.length === 0) {
-      tabelaBody.innerHTML = '<tr><td colspan="8">No citations found.</td></tr>';
+      tabelaBody.innerHTML = '<tr><td colspan="10">No citations found.</td></tr>';
       citSection.style.display = 'none';
       return;
     }
@@ -438,114 +631,149 @@
 
 
     function createTableRow(cit) {
-      const fragment = document.createDocumentFragment();
-
 
       const tr = document.createElement('tr');
 
+      tr.innerHTML = `
 
-      const titleCell = document.createElement('td');
-      titleCell.textContent = cit.title || '-';
-
-
-      const abstractCell = document.createElement('td');
-      abstractCell.style.cursor = 'pointer';
-      abstractCell.title = 'Click to show/hide full abstract';
-      abstractCell.innerHTML = `
-        <span>${escapeHtml(truncateText(cit.abstract || '-', 100))}</span><br>
-        <small class="text-primary">${cit.abstractExpanded ? 'Hide abstract' : 'Show abstract'}</small>
-      `;
-      abstractCell.addEventListener('click', () => toggleAbstractRow(cit.paperId));
-
-
-      const authorsCell = document.createElement('td');
-      authorsCell.textContent = formatAuthors(cit.authors);
-
-
-      const yearCell = document.createElement('td');
-      yearCell.textContent = cit.year || '-';
-
-
-      const venueCell = document.createElement('td');
-      venueCell.textContent = cit.venue || '-';
-
-
-      const doiCell = document.createElement('td');
-      doiCell.innerHTML = formatDOILink(cit.doi);
-
-
-      const citedByCell = document.createElement('td');
-      citedByCell.textContent = cit.citations_count || '-';
-
-
-      const tdActions = document.createElement('td');
-      tdActions.classList.add('text-nowrap');
-
-      const openAccessCell = document.createElement('td');
-      openAccessCell.textContent = cit.open_access || '-';
-
-      const urlCell = document.createElement('td');
-      openAccessCell.textContent = cit.url || '-';
-
-      const keywordsCell = document.createElement('td');
-      keywordsCell.textContent = (cit.keywords || []).join(', ') || '-';
-
-      const languageCell = document.createElement('td');
-      languageCell.textContent = cit.language || '-';
-
-      const pagesCell = document.createElement('td');
-      pagesCell.textContent =  cit.numpages || '-';
-
-
-
-
-      tdActions.append(
-        createActionButton('incluir', 'Include', 'check-circle-fill', cit, cit.selecionado),
-        createActionButton('excluir', 'Exclude', 'x-circle-fill', cit, cit.selecionado)
-      );
-
-
-      tr.appendChild(titleCell);
-      tr.appendChild(abstractCell);
-      tr.appendChild(authorsCell);
-      tr.appendChild(yearCell);
-      tr.appendChild(venueCell);
-      tr.appendChild(doiCell);
-      tr.appendChild(citedByCell);
-      tr.appendChild(openAccessCell);
-      tr.appendChild(urlCell);
-      tr.appendChild(keywordsCell);
-      tr.appendChild(languageCell);
-      tr.appendChild(pagesCell);
-      tr.appendChild(tdActions);
-
-
-      fragment.appendChild(tr);
-
-
-      if (cit.abstractExpanded) {
-        const abstractRow = document.createElement('tr');
-        abstractRow.className = 'table-light';
-
-
-        const abstractDetailCell = document.createElement('td');
-        abstractDetailCell.colSpan = 8;
-        abstractDetailCell.innerHTML = `
-          <div class="p-3">
-            <strong>Full Abstract:</strong>
-            <p class="mb-0 mt-2">${escapeHtml(cit.abstract || 'Abstract unavailable.')}</p>
+        <td>
+          <div class="paper-doi">
+            DOI: ${escapeHtml(cit.doi || '-')}
           </div>
-        `;
+
+          <div class="paper-title">
+            ${escapeHtml(cit.title || '-')}
+          </div>
+
+          <div class="paper-meta mt-1">
+
+            <span class="paper-tag">
+              ${escapeHtml(cit.year || '-')}
+            </span>
+
+            <span class="paper-tag venue-tag">
+              ${escapeHtml(cit.venue || '-')}
+            </span>
+
+          </div>
+        </td>
+
+        <td>
+          <div class="abstract-text ${cit.abstractExpanded ? 'expanded' : ''}">
+            ${
+              cit.abstractExpanded
+                ? escapeHtml(cit.abstract || '-')
+                : escapeHtml(truncateText(cit.abstract || '-', 140))
+            }
+          </div>
+
+          ${
+            cit.abstract && cit.abstract.length > 140
+              ? `
+                <span class="read-more">
+                  ${cit.abstractExpanded ? 'READ LESS' : 'READ MORE'}
+                </span>
+              `
+              : ''
+          }
+        </td>
+        <td>
+          ${escapeHtml(formatAuthors(cit.authors))}
+        </td>
+
+        <td>
+          ${escapeHtml(String(cit.open_access ?? '-'))}
+        </td>
+
+        <td>
+          ${
+            cit.url
+              ? `<a href="${escapeHtml(cit.url)}" target="_blank">${escapeHtml(cit.url)}</a>`
+              : '-'
+          }
+        </td>
+
+        <td>
+          ${escapeHtml(Array.isArray(cit.keywords) ? cit.keywords.join(', ') : (cit.keywords || '-'))}
+        </td>
+
+        <td>
+          ${escapeHtml(cit.language || '-')}
+        </td>
+
+        <td>
+          ${escapeHtml(cit.pages || cit.numpages || '-')}
+        </td>
 
 
-        abstractRow.appendChild(abstractDetailCell);
-        fragment.appendChild(abstractRow);
+        <td>
+
+          <div class="citation-box">
+
+            <div class="citation-dot"></div>
+
+            <div>
+              <div class="citation-number">
+                ${escapeHtml(cit.citations_count || '0')}
+              </div>
+
+              <div class="citation-label">
+                Citations
+              </div>
+            </div>
+
+          </div>
+
+        </td>
+
+        <td>
+          <div class="action-buttons">
+
+            <button type="button" class="btn-action include-btn ${cit.selecionado === 'incluir' ? 'active' : ''}">
+              <i class="bi bi-check-lg"></i>
+            </button>
+
+            <button type="button" class="btn-action exclude-btn ${cit.selecionado === 'excluir' ? 'active' : ''}">
+              <i class="bi bi-x-lg"></i>
+            </button>
+
+          </div>
+        </td>
+
+      `;
+
+      // READ MORE
+      const readMore = tr.querySelector('.read-more');
+
+      if (readMore) {
+        readMore.addEventListener('click', () => {
+          cit.abstractExpanded = !cit.abstractExpanded;
+          mostrarCitacoes(window.citationsData);
+        });
       }
 
+      // INCLUDE
+      const includeBtn = tr.querySelector('.include-btn');
 
-      return fragment;
+      includeBtn.addEventListener('click', () => {
+        cit.selecionado =
+          cit.selecionado === 'incluir' ? null : 'incluir';
+
+        mostrarCitacoes(window.citationsData);
+      });
+
+      // EXCLUDE
+      const excludeBtn = tr.querySelector('.exclude-btn');
+
+      excludeBtn.addEventListener('click', () => {
+        cit.selecionado =
+          cit.selecionado === 'excluir' ? null : 'excluir';
+
+        mostrarCitacoes(window.citationsData);
+      });
+
+      return tr;
     }
-
 
     tabelaBody.innerHTML = '';
     citations.forEach(cit => {
@@ -554,6 +782,8 @@
 
 
     citSection.style.display = 'block';
+    atualizarBotaoIncludeAll();
+
   }
 
 
@@ -567,23 +797,6 @@
 
     cit.selecionado = acao;
     mostrarCitacoes(window.citationsData);
-    atualizarBotaoIncludeAll();
-  }
-
-
-  function atualizarBotaoIncludeAll() {
-    const btn = document.getElementById('selectAllBtn');
-    if (!btn || !window.citationsData || window.citationsData.length === 0) return;
-
-
-    const allIncluded = window.citationsData.every(c => c.selecionado === 'incluir');
-
-
-    if (allIncluded) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
   }
 
 
@@ -599,7 +812,7 @@
     }
 
 
-    let csvContent = "Title,Abstract,Authors,Year,Venue,DOI,Cited by,Open Access, URL,Keywords,Language,Numpages,Actions\n";
+    let csvContent = "Title,Abstract,Authors,Year,Venue,DOI,Cited by,Open Access,URL,Keywords,Language,Pages,Actions\n";
 
 
     citations.forEach(cit => {
@@ -614,11 +827,11 @@
       const url = `"${String(cit.url || '-').replace(/"/g, '""')}"`;
       const keywords = `"${(cit.keywords || []).join('; ').replace(/"/g, '""')}"`;
       const language = `"${String(cit.language || '-').replace(/"/g, '""')}"`;
-      const numpages = `"${String(cit.numpages || '-').replace(/"/g, '""')}"`;
+      const pages = `"${String(cit.pages || cit.numpages || '-').replace(/"/g, '""')}"`;
       const action = `"${String(getActionLabel(cit.selecionado)).replace(/"/g, '""')}"`;
 
 
-      csvContent += `${title},${abstract},${authors},${year},${venue},${doi},${citedBy},${openAccess},${url},${keywords},${language},${numpages},${action}\n`;
+      csvContent += `${title},${abstract},${authors},${year},${venue},${doi},${citedBy},${openAccess},${url},${keywords},${language},${pages},${action}\n`;
     });
 
 
@@ -637,24 +850,7 @@
 
 
   document.getElementById('downloadBtn').onclick = baixarCitationsCSV;
-
-
-  document.getElementById('selectAllBtn').addEventListener('click', () => {
-    if (!window.citationsData || window.citationsData.length === 0) return;
-
-
-    const allIncluded = window.citationsData.every(c => c.selecionado === 'incluir');
-
-
-    window.citationsData.forEach(c => {
-      c.selecionado = allIncluded ? 'excluir' : 'incluir';
-    });
-
-
-    mostrarCitacoes(window.citationsData);
-    atualizarBotaoIncludeAll();
-  });
-
+  document.getElementById('includeAllBtn').onclick = toggleIncludeAll;
 
   function irParaTriagem() {
     if (!window.citationsData || window.citationsData.length === 0) {
@@ -662,12 +858,12 @@
       return;
     }
     window.name = JSON.stringify(window.citationsData);
-    window.location.href = 'triagem.html';
+    window.location.href = 'analisys.html';
   }
 
 
   document.addEventListener('DOMContentLoaded', () => {
-    const linkAnalise = document.querySelector('a.nav-link[href="triagem.html"]');
+    const linkAnalise = document.querySelector('a.nav-link[href="analisys.html"]');
     if (linkAnalise) {
       linkAnalise.addEventListener('click', e => {
         e.preventDefault();
@@ -685,7 +881,7 @@
         }
 
         window.name = JSON.stringify(window.citationsData);
-        window.location.href = 'triagem.html';
+        window.location.href = 'analisys.html';
       });
     }
   });
@@ -720,7 +916,7 @@
   });
 
 
-  document.getElementById('searchInput').addEventListener('keydown', (event) => {
+  document.addEventListener('keydown', function (event) {
     if (event.key === 'Enter') {
       buscarArtigo();
     }
@@ -734,6 +930,10 @@
     }
   });
 });
+document.addEventListener('DOMContentLoaded', () => {
+  atualizarBotaoIncludeAll();
+});
+
 </script>
 
 

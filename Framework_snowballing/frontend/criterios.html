@@ -30,7 +30,7 @@
       <ul class="navbar-nav gap-2">
 
         <li class="nav-item">
-          <a class="nav-link" href="triagem.html">Initial Analysis</a>
+          <a class="nav-link" href="analisys.html">Initial Analysis</a>
         </li>
 
         <li class="nav-item">
@@ -44,14 +44,13 @@
 </nav>
 
   <main class="mt-5 pt-5">
-    <h1 class="mb-4 fw-semibold">Define Inclusion and Exclusion Criteria</h1>
-    <h2 id="sub" class = "mb-4 fs-5">Set the logical boundaries for your systematic review. These criteria will be used to
-automatically screen abstracts and provide decision support.</h2>
+    <h2 class="mb-4 fw-semibold">Define Inclusion and Exclusion Criteria</h2>
+    <h3 id="sub" class = "mb-4 fs-5">Set the logical boundaries for your systematic review. These criteria will be used to
+automatically screen abstracts and provide decision support.</h3>
 
     <form id="criteriosForm">
 
-  <div class="criteria-container mb-4">
-
+  <div class="criteria-container">
     <!-- INCLUSION -->
     <div class="criteria-box">
       <label for="inclusao" class="form-label">
@@ -80,7 +79,7 @@ automatically screen abstracts and provide decision support.</h2>
 
   </div>
 
-  <button type="submit" class="analisarBtn btn btn-success">
+  <button id="analisarBtn" type="submit" class="analisarBtn btn btn-success">
     <i class="bi bi-stars"></i>
     <span id="btnTexto" class="fw-semibold">Apply Criteria</span>
     <span id="btnLoading" class="spinner-border spinner-border-sm d-none"></span>
@@ -114,11 +113,12 @@ automatically screen abstracts and provide decision support.</h2>
       </div>
 
       <!-- Tabela -->
-      <div class="table-responsive shadow-sm rounded">
-        <table class="table table-hover table-striped align-middle mb-0 w-100">
+      <div class="table-wrapper">
+        <table class="custom-table" id="tabela-criterios">
+
           <thead>
             <tr>
-              <th style="min-width: 260px;">Title</th>
+              <th style="min-width: 260px;">Research Identity</th>
               <th style="min-width: 240px;">Abstract</th>
               <th style="min-width: 120px;">Authors</th>
               <th style="min-width: 90px;">Year</th>
@@ -140,6 +140,21 @@ automatically screen abstracts and provide decision support.</h2>
     <div id="resultadoAnalise" data-resultados-raw="" style="display:none;"></div>
 
   </main>
+  <footer class="footer-custom">
+    <div class="footer-inner">
+
+      <div class="footer-left">
+        <img src="/images/logo-snowballing.png">
+        <span>SnowMap</span>
+      </div>
+
+      <div class="footer-right">
+        © 2026 AISE Lab (Artificial Intelligence and Software Engineering)
+      </div>
+
+    </div>
+  </footer>
+
 
   <script>
     let artigosIncluidos = [];
@@ -183,7 +198,7 @@ automatically screen abstracts and provide decision support.</h2>
       const tbody = document.getElementById('tabelaArtigosBody');
 
       if (!artigos || artigos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">No articles selected.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12">No articles selected.</td></tr>';
         return;
       }
 
@@ -235,7 +250,10 @@ automatically screen abstracts and provide decision support.</h2>
         openAccessCell.textContent = artigo.open_access || '-';
 
         const urlCell = document.createElement('td');
-        urlCell.textContent = artigo.url || '-';
+        urlCell.innerHTML = artigo.url
+          ? `<a href="${escapeHtml(artigo.url)}" target="_blank">${escapeHtml(artigo.url)}</a>`
+          : '-';
+
 
         const keywordsCell = document.createElement('td');
         keywordsCell.textContent = (artigo.keywords || []).join(', ') || '-';
@@ -244,7 +262,7 @@ automatically screen abstracts and provide decision support.</h2>
         languageCell.textContent = artigo.language || '-';
 
         const pagesCell = document.createElement('td');
-        pagesCell.textContent = artigo.numpages || '-';
+        pagesCell.textContent = artigo.pages || artigo.numpages || '-';
         tr.appendChild(openAccessCell);
         tr.appendChild(urlCell);
         tr.appendChild(keywordsCell);
@@ -308,7 +326,7 @@ automatically screen abstracts and provide decision support.</h2>
 
 
 
-    function dividirEmLotes(array, tamanhoLote = 10) {
+    function dividirEmLotes(array, tamanhoLote = 1) {
       const lotes = [];
       for (let i = 0; i < array.length; i += tamanhoLote) {
         lotes.push(array.slice(i, i + tamanhoLote));
@@ -324,129 +342,182 @@ automatically screen abstracts and provide decision support.</h2>
     }
 
     function mostrarTabelaComResultados(artigos, resultados) {
-      const tbody = document.getElementById('tabelaArtigosBody');
-      const theadRow = document.querySelector('#tabelaArtigosContainer thead tr');
+  console.log("RESULTADOS COMPLETOS:", resultados);
+  console.log("RESULT RESULTADO[0]:", resultados[0]?.results);
 
-      if (!artigos || artigos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">No articles selected.</td></tr>';
-        return;
+  const tbody = document.getElementById('tabelaArtigosBody');
+  const table = document.getElementById('tabela-criterios');
+  const theadRow = table.querySelector('thead tr');
+
+  if (!artigos || artigos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12">No articles selected.</td></tr>';
+    return;
+  }
+
+  // 1. GERAR COLUNAS SEM DUPLICAÇÃO (FORMA CORRETA)
+  const colunas = Array.from(
+    new Set(
+      (resultados || []).flatMap(r => Object.keys(r?.results || {}))
+    )
+  );
+
+  // 2. LIMPAR HEADER DE FORMA SEGURA
+  while (theadRow.firstChild) {
+    theadRow.removeChild(theadRow.firstChild);
+  }
+
+  const fixedHeaders = [
+    "Research Identity",
+    "Abstract",
+    "Authors",
+    "Year",
+    "Venue",
+    "DOI",
+    "Cited by",
+    "Open Access",
+    "URL",
+    "Keywords",
+    "Language",
+    "Pages"
+  ];
+
+  // 3. RECRIAR HEADER FIXO
+  fixedHeaders.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    theadRow.appendChild(th);
+  });
+
+  // 4. RECRIAR HEADER DINÂMICO (EC/IC)
+  colunas.forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    //th.style.backgroundColor = 'black';
+    //th.style.color = 'white';
+    //th.style.textAlign = 'center';
+    th.classList.add('criteria-header');
+    
+    theadRow.appendChild(th);
+  });
+
+  // 5. LIMPAR BODY
+  tbody.innerHTML = '';
+
+  // 6. RENDER LINHAS
+  artigos.forEach((artigo, index) => {
+    const resultado = resultados?.[index] || { results: {} };
+    const tr = document.createElement('tr');
+
+    const titleCell = document.createElement('td');
+    titleCell.textContent = artigo.title || '-';
+
+    const abstractCell = document.createElement('td');
+    abstractCell.style.cursor = 'pointer';
+    abstractCell.innerHTML = `
+      <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span><br>
+      <small class="text-primary">
+        ${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}
+      </small>
+    `;
+
+    abstractCell.addEventListener('click', () => toggleAbstract(index));
+
+    const authorsCell = document.createElement('td');
+    authorsCell.textContent = formatAuthors(artigo.authors);
+
+    const yearCell = document.createElement('td');
+    yearCell.textContent = artigo.year || '-';
+
+    const venueCell = document.createElement('td');
+    venueCell.textContent = artigo.venue || '-';
+
+    const doiCell = document.createElement('td');
+    doiCell.innerHTML = formatDOILink(artigo.doi);
+
+    const citedByCell = document.createElement('td');
+    citedByCell.textContent = artigo.citations_count || '-';
+
+    const openAccessCell = document.createElement('td');
+    openAccessCell.textContent = artigo.open_access || '-';
+
+    const urlCell = document.createElement('td');
+    urlCell.innerHTML = artigo.url
+      ? `<a href="${escapeHtml(artigo.url)}" target="_blank">${escapeHtml(artigo.url)}</a>`
+      : '-';
+
+    const keywordsCell = document.createElement('td');
+    keywordsCell.textContent = Array.isArray(artigo.keywords)
+      ? artigo.keywords.join(', ') || '-'
+      : artigo.keywords || '-';
+
+    const languageCell = document.createElement('td');
+    languageCell.textContent = artigo.language || '-';
+
+    const pagesCell = document.createElement('td');
+    pagesCell.textContent = artigo.pages || artigo.numpages || '-';
+
+    // fixa colunas base
+    tr.appendChild(titleCell);
+    tr.appendChild(abstractCell);
+    tr.appendChild(authorsCell);
+    tr.appendChild(yearCell);
+    tr.appendChild(venueCell);
+    tr.appendChild(doiCell);
+    tr.appendChild(citedByCell);
+    tr.appendChild(openAccessCell);
+    tr.appendChild(urlCell);
+    tr.appendChild(keywordsCell);
+    tr.appendChild(languageCell);
+    tr.appendChild(pagesCell);
+
+    // colunas IC/EC
+    colunas.forEach(col => {
+      const td = document.createElement('td');
+
+      const raw = resultado?.results?.[col];
+
+      const valor = typeof raw === 'string'
+        ? raw.trim().toLowerCase()
+        : '-';
+
+      if (valor === 'sim' || valor === 'Sim' || valor === 'yes' || valor === 'Yes') {
+        td.innerHTML = `<span class="criteria-badge criteria-yes">Yes</span>`;
+      } else if (valor === 'não' || valor === 'nao' || valor === 'no' || valor === 'No' || valor === 'Não') {
+        td.innerHTML = `<span class="criteria-badge criteria-no">No</span>`;
+      }
+    
+      else {
+        td.textContent = raw ?? '-';
       }
 
-      const criteriosSet = new Set();
-      resultados.forEach(r => {
-        if (r.results) {
-          Object.keys(r.results).forEach(c => criteriosSet.add(c));
-        }
+        td.classList.add('text-center');
+        tr.appendChild(td);
       });
 
-      const colunas = Array.from(criteriosSet);
+    tbody.appendChild(tr);
 
-      
-      while (theadRow.children.length > 7) {
-        theadRow.removeChild(theadRow.lastChild);
-      }
+    //  expansão abstract
+    if (artigo.abstractExpanded) {
+      const abstractRow = document.createElement('tr');
+      abstractRow.className = 'table-light';
 
-      colunas.forEach(col => {
-        const th = document.createElement('th');
-        th.textContent = col;
-        th.style.backgroundColor = 'black';
-        th.style.color = 'white';
-        th.style.textAlign = 'center';
-        theadRow.appendChild(th);
+      const td = document.createElement('td');
+      td.colSpan = fixedHeaders.length + colunas.length;
 
+      td.innerHTML = `
+        <div class="p-3">
+          <strong>Full Abstract:</strong>
+          <p class="mb-0 mt-2">
+            ${escapeHtml(artigo.abstract || 'Abstract unavailable.')}
+          </p>
+        </div>
+      `;
 
-      });
-
-
-      tbody.innerHTML = '';
-
-      artigos.forEach((artigo, index) => {
-        const resultado = resultados[index];
-        const tr = document.createElement('tr');
-
-        // mesmas colunas antigas
-        const titleCell = document.createElement('td');
-        titleCell.textContent = artigo.title || '-';
-
-        const abstractCell = document.createElement('td');
-        abstractCell.style.cursor = 'pointer';
-        abstractCell.innerHTML = `
-          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span><br>
-          <small class="text-primary">
-            ${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}
-          </small>
-        `;
-
-abstractCell.addEventListener('click', () => toggleAbstract(index));
-
-        const authorsCell = document.createElement('td');
-        authorsCell.textContent = formatAuthors(artigo.authors);
-
-        const yearCell = document.createElement('td');
-        yearCell.textContent = artigo.year || '-';
-
-        const venueCell = document.createElement('td');
-        venueCell.textContent = artigo.venue || '-';
-
-        const doiCell = document.createElement('td');
-        doiCell.innerHTML = formatDOILink(artigo.doi);
-
-        const citedByCell = document.createElement('td');
-        citedByCell.textContent = artigo.citations_count || '-';
-
-        tr.appendChild(titleCell);
-        tr.appendChild(abstractCell);
-        tr.appendChild(authorsCell);
-        tr.appendChild(yearCell);
-        tr.appendChild(venueCell);
-        tr.appendChild(doiCell);
-        tr.appendChild(citedByCell);
-
-        colunas.forEach(col => {
-          const td = document.createElement('td');
-
-          const valorBruto = resultado?.results?.[col] || '-';
-          const valor = String(valorBruto).toLowerCase();
-
-          if (valor === 'sim') {
-            td.innerHTML = `<span class="badge bg-success">Yes</span>`;
-          } else if (valor === 'não' || valor === 'nao') {
-            td.innerHTML = `<span class="badge bg-danger">No</span>`;
-          } else if (valor === 'erro') {
-            td.innerHTML = `<span class="badge bg-warning text-dark">Error</span>`;
-          } else {
-            td.textContent = valorBruto;
-          }
-
-          td.classList.add('text-center');
-          tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-        if (artigo.abstractExpanded) {
-          const abstractRow = document.createElement('tr');
-          abstractRow.className = 'table-light';
-
-          const td = document.createElement('td');
-          td.colSpan = 7 + colunas.length;
-
-          td.innerHTML = `
-            <div class="p-3">
-              <strong>Full Abstract:</strong>
-              <p class="mb-0 mt-2">
-                ${escapeHtml(artigo.abstract || 'Abstract unavailable.')}
-              </p>
-            </div>
-          `;
-
-          abstractRow.appendChild(td);
-          tbody.appendChild(abstractRow);
-        }
-
-      });
+      abstractRow.appendChild(td);
+      tbody.appendChild(abstractRow);
     }
-
-
+  });
+}
     function jsonParaCSV(resultados) {
       if (!resultados || resultados.length === 0) return '';
 
@@ -660,8 +731,6 @@ abstractCell.addEventListener('click', () => toggleAbstract(index));
 
       const tag = document.createElement('span');
       tag.className = `badge d-flex align-items-center ${container.id === 'inclusaoBox' ? 'ic-tag' : 'ec-tag'}`;
-      tag.style.padding = '8px 10px';
-      tag.style.fontSize = '0.9rem';
 
       tag.innerHTML = `
         ${prefixo}: ${texto}

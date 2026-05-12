@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 import json
 import sys
+
 # caminho FIXO do banco
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 CACHE_DIR = BASE_DIR / "cache"
@@ -31,13 +32,46 @@ def save_to_cache(doi, title, data):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    title_normalized = title.lower() if title else None
+
+    # verifica DOI primeiro
+    if doi:
+        cursor.execute(
+            "SELECT id FROM articles WHERE doi = ?",
+            (doi,)
+        )
+
+        if cursor.fetchone():
+            print("[CACHE SKIP - DOI JÁ EXISTE]", file=sys.stderr)
+            conn.close()
+            return
+
+    # verifica título depois
+    if title_normalized:
+        cursor.execute(
+            "SELECT id FROM articles WHERE title = ?",
+            (title_normalized,)
+        )
+
+        if cursor.fetchone():
+            print("[CACHE SKIP - TITLE JÁ EXISTE]", file=sys.stderr)
+            conn.close()
+            return
+
+    # alva apenas se não existir
     cursor.execute("""
         INSERT INTO articles (doi, title, data)
         VALUES (?, ?, ?)
-    """, (doi, title.lower() if title else None, json.dumps(data)))
+    """, (
+        doi,
+        title_normalized,
+        json.dumps(data)
+    ))
 
     conn.commit()
     conn.close()
+
+    print("[CACHE SAVE]", file=sys.stderr)
 
 
 def get_cached(doi=None, title=None):
@@ -46,21 +80,35 @@ def get_cached(doi=None, title=None):
 
     # busca por DOI primeiro
     if doi:
-        cursor.execute("SELECT data FROM articles WHERE doi = ?", (doi,))
+        cursor.execute(
+            "SELECT data FROM articles WHERE doi = ?",
+            (doi,)
+        )
+
         row = cursor.fetchone()
+
         if row:
             conn.close()
             print("[CACHE HIT - DOI]", file=sys.stderr)
             return json.loads(row[0])
 
-    # depois por título
+    # depois busca por título
     if title:
-        cursor.execute("SELECT data FROM articles WHERE title = ?", (title.lower(),))
+        title_normalized = title.lower()
+
+        cursor.execute(
+            "SELECT data FROM articles WHERE title = ?",
+            (title_normalized,)
+        )
+
         row = cursor.fetchone()
+
         if row:
             conn.close()
             print("[CACHE HIT - TITLE]", file=sys.stderr)
             return json.loads(row[0])
 
     conn.close()
+
+    print("[CACHE MISS]", file=sys.stderr)
     return None
