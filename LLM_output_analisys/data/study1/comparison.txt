@@ -1,0 +1,118 @@
+Comparacao de resultados
+
+Resumo
+- Total de artigos no original: 363
+- Total de artigos no resultado da LLM: 363
+- Total de artigos comparados: 363
+- Cobertura da LLM: 100.00%
+
+Metricas da LLM considerando o original como gabarito
+- Precision: 0.3333
+- Recall: 0.5556
+- F1-score: 0.4167
+
+Matriz de comparacao
+- True positives: 15
+- False positives: 30
+- False negatives: 12
+- True negatives: 306
+
+Artigos incluidos pela LLM e nao pelo original
+- A Study on Software Metric Selection for Software Fault Prediction
+- A dynamical quality model to continuously monitor software maintenance
+- An investigation of cross-project learning in online just-in-time sotfware defect prediction
+- Automated defect prioritization based on defects resolved at various project periods
+- Automatically identifying code features for software defect prediction: Using AST N-grams
+- Buffer overflow detection for c programs is hard to learn
+- Classification based software defect prediction model for finance software system - An industry study
+- Continuous Build Outcome Prediction: A Small-N Experiment in Settings of a Real Software Project
+- Cost Effectiveness of Software Defect Prediction in an
+Industrial Project
+- Demo: Automatically retrainable self improving model for the automated classification of software incidents into multiple classes
+- Domain adaptation for test report classification in crowdsourced testing
+- Efficient Bug Triage For Industrial Environments
+- Efficient Bug Triage for Industrial Environments
+- Evolutionary extreme learning machine with sparse cost matrix for imbalanced learning
+- Exploration of Machine Learning Techniques for Defect Classification
+- Fault Prediction for Large Scale Projects Using Deep Learning Techniques
+- Getting Defect Prediction Into Industrial Practice: the ELFF Tool
+- Improved approach for software defect prediction using artificial neural networks
+- Incorporating fault-proneness estimations into coverage-based test case prioritization methods
+- LTRWES: A new framework for security bug report detection
+- Large-scale intent analysis for identifying large-review-effort code changes
+- Learning Feature Representations from Change Dependency Graphs for Defect Prediction
+- Learning the Evolution Regularities for BigService-Oriented Online Reliability Prediction
+- On the Defect Prediction for Large Scale Software Systems â€“ From Defect Density to Machine Learning
+- Predicting Node failure in cloud service systems
+- Research on defect detection technology of trusted behavior decision tree based on intelligent data semantic analysis of massive data
+- Singling the odd ones out: A novelty detection approach to find defects in infrastructure-as-code
+- Software Change Proneness Prediction Using Machine Learning
+- Software engineering approach to bug prediction models using machine learning as a service (MLaaS)
+- Software fault prediction based on one-class SVM
+
+Artigos incluidos pelo original e nao pela LLM
+- Analyzing machine learning techniques for fault prediction using web applications
+- Conpredictor: Concurrency defect prediction in real-world applications
+- Convolutional Neural Networks over Control Flow Graphs for Software Defect Prediction
+- DeepBugs: a learning approach to name-based bug detection
+- DeepWukong: Statically Detecting Software Vulnerabilities Using Deep Graph Neural Network
+- Leopard: identifying vulnerable code for vulnerability assessment through program metrics
+- MTFuzz: Fuzzing with a multi-task neural network
+- OffSide: Learning to Identify Mistakes in Boundary Conditions
+- On the prediction of long-lived bugs: An analysis and comparative study using FLOSS projects
+- Precise learn-to-rank fault localization using dynamic and static features of target programs
+- The importance of accounting for real-world labelling when predicting software vulnerabilities
+- Transductive Instance Transfer Learning for Cross-Language Defect Prediction
+
+Artigos do original sem resultado da LLM
+- Nenhum
+
+Artigos presentes na LLM e ausentes no original
+- Nenhum
+
+Avisos
+Titulos duplicados no original:
+- A Deep Introduction to AI Based Software Defect Prediction (SDP) and its Current Challenges
+- A Deterministic-Statistical Multiple-Defect Diagnosis Methodology
+- A Fault Diagnosis Method of Tread Production Line Based on Convolutional Neural Network
+- A machine learning approach for vibration-based multipoint tool insert health prediction on vertical machining centre (VMC)
+- A novel probabilistic-ABC based boosting model for software defect detection
+- ACT Testbot and 4S Quality Metrics in XAAS Framework
+- An Empirical Study on Spectral Clustering-based Software Defect Detection
+- Automated bug assignment: Ensemble-based machine learning in large scale industrial contexts
+- Automatically identifying code features for software defect prediction: Using AST N-grams
+- Balancing the trade-off between accuracy and interpretability in software defect prediction
+- Classification with reject option for software defect prediction
+- Combining spreadsheet smells for improved fault prediction
+- ConPredictor: Concurrency Defect Prediction in Real-World Applications
+- Convolutional neural networks on assembly code for predicting software defects
+- Convolutional neural networks over control flow graphs for software defect prediction
+- DeepOrder: Deep Learning for Test Case Prioritization in Continuous Integration Testing
+- Domain adaptation for test report classification in crowdsourced testing
+- Enhancing PowerFactory Dynamic Models with Python for Rapid Prototyping
+- Failure of One, Fall of Many: An Exploratory Study of Software Features for Defect Prediction
+- Fast Detection of Duplicate Bug Reports using LDA-based Topic Modeling and Classification
+- Flexible Architecture for Data-Driven Predictive Maintenance with Support for Offline and Online Machine Learning Techniques
+- Handling Imbalanced Dataset Classification in Machine Learning
+- Improving Test Case Generation for REST APIs Through Hierarchical Clustering
+- Iterated feature selection algorithms with layered recurrent neural network for software fault prediction
+- Learning Feature Representations from Change Dependency Graphs for Defect Prediction
+- Learning Long-and Short-Term Temporal Patterns for ML-driven Fault Management in Optical Communication Networks
+- Learning Semantic Features for Software Defect Prediction by Code Comments Embedding
+- Multiple kernel ensemble learning for software defect prediction
+- Opinion Mining at Scale: A Case Study of the First Self-driving Car Fatality
+- Predictive Mutation Testing
+- Real-world application of machine-learning-based fault detection trained with experimental data
+- Revisiting the Class Imbalance Issue in Software Defect Prediction
+- Should fixing these failures be delegated to automated program repair?
+- Software Change Proneness Prediction Using Machine Learning
+- Software defect prediction techniques using metrics based on neural network classifier
+- Software fault prediction based on one-class SVM
+- Survey on software defect prediction techniques
+- TFCheck : A TensorFlow Library for Detecting Training Issues in Neural Network Programs
+- Textout: Detecting Text-Layout Bugs in Mobile Apps via Visualization-Oriented Learning
+- The Prediction of Positioning shift for a Robot Arm Using Machine Learning Techniques
+- Towards the generation of machine learning defect reports
+
+Titulos duplicados no resultado da LLM:
+- Nenhum
