@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from dotenv import load_dotenv
 from google import genai
-from services.prompt_generator import gerar_prompt
+from prompt_generator import gerar_prompt
 
 BASE_DIR = Path(__file__).resolve().parent
 RESULTADOS_PATH = BASE_DIR / "resultados_gemini.json"
@@ -158,4 +158,4 @@ def gerar_analise(json_path):
     analisar(criterios_inclusao, criterios_exclusao, artigos)
 
 if __name__ == "__main__":
-    gerar_analise("articles.json")
+    gerar_analise("study2\\articles.json")

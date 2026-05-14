@@ -109,6 +109,7 @@ DECISION RULES:
 OUTPUT:
 - Return only one character: 0 or 1.
 - Do not include explanations, reasoning, criterion labels, confidence, markdown, JSON, or extra text.
+- Next caracter is 1 or 0 ONLY, without any other text or formatting.
 """
 
 

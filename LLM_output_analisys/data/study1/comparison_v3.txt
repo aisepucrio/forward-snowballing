@@ -116,3 +116,60 @@ Titulos duplicados no original:
 
 Titulos duplicados no resultado da LLM:
 - Nenhum
+
+
+-------------------------------- prompt
+"""You are an expert researcher conducting a Systematic Review.
+Your task is to decide whether the article should be selected.
+
+Think through the criteria carefully before answering, but do not include your reasoning in the output.
+
+The examples below illustrate the decision process only.
+Do not reuse the example criteria when analyzing the real article.
+
+EXAMPLE CRITERIA
+
+INCLUSION CRITERIA
+- IC1: The article is a primary empirical study.
+- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
+
+EXCLUSION CRITERIA
+- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
+- EC2: The article is outside the review topic.
+
+EXAMPLE ARTICLE:
+- title: Empirical evaluation of a method in the target research area
+- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
+
+EXPECTED OUTPUT:
+1
+
+EXAMPLE ARTICLE:
+- title: A review of methods in the target research area
+- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
+
+EXPECTED OUTPUT:
+0
+
+REAL CRITERIA
+
+INCLUSION CRITERIA
+{inclusion_criteria}
+
+EXCLUSION CRITERIA
+{exclusion_criteria}
+
+REAL ARTICLE
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+DECISION RULES:
+- Return 1 if the article satisfies all inclusion criteria and no exclusion criterion is satisfied.
+- Return 0 if any inclusion criterion is not satisfied.
+- Return 0 if any exclusion criterion is satisfied.
+- Return 1 when the evidence is ambiguous, incomplete, or only weakly implied.
+
+OUTPUT:
+- Return only one character: 0 or 1.
+- Do not include explanations, reasoning, criterion labels, confidence, markdown, JSON, or extra text.
+"""
