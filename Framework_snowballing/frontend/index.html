@@ -221,23 +221,36 @@
     }));
 
     mostrarCitacoes(window.citationsData);
+
+    const citationsWrapper = document.querySelector('#citationsList.table-wrapper');
+
+    if (citationsWrapper) {
+      citationsWrapper.scrollTo({
+        left: citationsWrapper.scrollWidth,
+        behavior: 'smooth'
+      });
+}
+
   }
 
   function atualizarBotaoIncludeAll() {
     const btn = document.getElementById('includeAllBtn');
     if (!btn) return;
 
-    const allIncluded =
+    const hasIncluded =
       window.citationsData &&
-      window.citationsData.length > 0 &&
-      window.citationsData.every(c => c.selecionado === 'incluir');
+      window.citationsData.some(c => c.selecionado === 'incluir');
 
-    if (allIncluded) {
+    if (hasIncluded) {
+
       btn.innerHTML = `<i class="bi bi-x-square"></i> Exclude All`;
       btn.className = 'btn btn-danger btn-export';
+
     } else {
+
       btn.innerHTML = `<i class="bi bi-check2-square"></i> Include All`;
       btn.className = 'btn btn-outline-success btn-export';
+
     }
   }
 
