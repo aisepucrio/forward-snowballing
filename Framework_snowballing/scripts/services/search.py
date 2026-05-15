@@ -73,6 +73,37 @@ def extract_npages(pages):
             return None
     return None
 
+def crossref_item_to_result(item):
+    title_list = item.get("title", [])
+    abstract = item.get("abstract", "-")
+
+    year = "-"
+    issued = item.get("issued", {}).get("date-parts", [])
+    if issued and issued[0]:
+        year = issued[0][0]
+
+    venue_list = item.get("container-title", [])
+
+    authors = []
+    for a in item.get("author", []):
+        full_name = f"{a.get('given', '')} {a.get('family', '')}".strip()
+        authors.append({"name": full_name or "-"})
+
+    return {
+        "title": title_list[0] if title_list else "-",
+        "year": year,
+        "venue": venue_list[0] if venue_list else "-",
+        "abstract": abstract if abstract else "-",
+        "doi": normalize_doi(item.get("DOI")) or "-",
+        "authors": authors,
+        "citations_count": 0,
+        "api": "crossref",
+        "language": item.get("language"),
+        "url": item.get("URL"),
+        "pages": item.get("page"),
+        "numpages": extract_npages(item.get("page")),
+    }
+
 
 def reconstruct_abstract_from_inverted_index(inverted_index):
     if not inverted_index or not isinstance(inverted_index, dict):
@@ -537,37 +568,8 @@ def fallback_crossref(doi=None, title=None):
         return None
 
 
-    title_list = item.get("title", [])
-    abstract = item.get("abstract", "-")
+    result = crossref_item_to_result(item)
 
-
-    year = "-"
-    issued = item.get("issued", {}).get("date-parts", [])
-    if issued and issued[0]:
-        year = issued[0][0]
-
-
-    venue_list = item.get("container-title", [])
-    authors = []
-    for a in item.get("author", []):
-        full_name = f"{a.get('given', '')} {a.get('family', '')}".strip()
-        authors.append({"name": full_name or "-"})
-
-
-    result = {
-        "title": title_list[0] if title_list else "-",
-        "year": year,
-        "venue": venue_list[0] if venue_list else "-",
-        "abstract": abstract if abstract else "-",
-        "doi": normalize_doi(item.get("DOI")) or "-",
-        "authors": authors,
-        "citations_count": 0,
-        "api": "crossref",
-        "language": item.get("language"),
-        "url": item.get("URL"),
-        "pages": item.get("page"),
-        "numpages": extract_npages(item.get("page")),
-    }
 
 
     if doi:
@@ -577,6 +579,70 @@ def fallback_crossref(doi=None, title=None):
 
 
     return result
+
+def fallback_crossref_batch_by_doi(dois, batch_size=20):
+    normalized_dois = []
+
+    for doi in dois:
+        normalized_doi = normalize_doi(doi)
+        if normalized_doi and normalized_doi not in normalized_dois:
+            normalized_dois.append(normalized_doi)
+
+    results_by_doi = {}
+
+    missing_dois = [
+        doi for doi in normalized_dois
+        if f"doi:{doi}" not in CROSSREF_CACHE
+    ]
+
+    for doi in normalized_dois:
+        cache_key = f"doi:{doi}"
+        if cache_key in CROSSREF_CACHE and CROSSREF_CACHE[cache_key]:
+            results_by_doi[doi] = CROSSREF_CACHE[cache_key]
+
+    for i in range(0, len(missing_dois), batch_size):
+        batch = missing_dois[i:i + batch_size]
+
+        filter_value = ",".join([f"doi:{doi}" for doi in batch])
+
+        params = {
+            "filter": filter_value,
+            "rows": len(batch),
+        }
+
+        request = requests.Request(
+            "GET",
+            "https://api.crossref.org/works",
+            params=params,
+        ).prepare()
+
+        data = safe_get(request.url)
+
+        if not data:
+            for doi in batch:
+                CROSSREF_CACHE[f"doi:{doi}"] = None
+            continue
+
+        items = data.get("message", {}).get("items", [])
+
+        found = set()
+
+        for item in items:
+            result = crossref_item_to_result(item)
+            result_doi = normalize_doi(result.get("doi"))
+
+            if result_doi:
+                CROSSREF_CACHE[f"doi:{result_doi}"] = result
+                results_by_doi[result_doi] = result
+                found.add(result_doi)
+
+        for doi in batch:
+            if doi not in found:
+                CROSSREF_CACHE[f"doi:{doi}"] = None
+
+    return results_by_doi
+
+
 
 def get_citation_doi(citation):
     doi = normalize_doi(citation.get("doi"))
@@ -623,7 +689,7 @@ def deduplicate_citations(citations):
             existing["doi"] = normalize_doi(existing.get("doi"))
     return list(unique.values())
 
-    
+
 
 def search_combined(doi=None, title=None):
     cleaned_doi = normalize_doi(doi) if doi else None
@@ -867,18 +933,51 @@ def enrich_citation(citation):
     return enriched
 
 def enrich_incomplete_citations(citations):
-    enriched_citations = []
+    enriched_citations = [dict(citation) for citation in citations]
 
-    for citation in citations:
+    dois_to_fetch = []
+
+    for citation in enriched_citations:
         if needs_enrichment(citation):
-            citation = enrich_citation(citation)
+            doi = get_citation_doi(citation)
+            if doi:
+                citation["doi"] = doi
+                dois_to_fetch.append(doi)
 
-        if not citation.get("url") and citation.get("doi") not in [None, "-", ""]:
+    crossref_by_doi = fallback_crossref_batch_by_doi(dois_to_fetch)
+
+    for index, citation in enumerate(enriched_citations):
+        if needs_enrichment(citation):
+            doi = get_citation_doi(citation)
+            title = citation.get("title")
+
+            if doi:
+                cr = crossref_by_doi.get(doi)
+
+                if not cr:
+                    cr = fallback_crossref(doi=doi)
+
+                if cr:
+                    citation = merge_prefer_filled(citation, cr)
+
+            elif title and normalize_title(title):
+                cr = fallback_crossref(title=title)
+                if cr:
+                    citation = merge_prefer_filled(citation, cr)
+
+        citation["paperId"] = generate_paper_id(citation.get("title", "-"))
+        citation["doi"] = normalize_doi(citation.get("doi")) or "-"
+
+        if (
+            not citation.get("url")
+            and citation.get("doi") not in [None, "-", ""]
+        ):
             citation["url"] = f"https://doi.org/{citation['doi']}"
 
-        enriched_citations.append(citation)
+        enriched_citations[index] = citation
 
     return enriched_citations
+
 
 
 
@@ -886,3 +985,4 @@ def clear_caches():
     OPENALEX_CACHE.clear()
     CROSSREF_CACHE.clear()
     SEMANTIC_CACHE.clear()
+    REQUEST_CACHE.clear()
