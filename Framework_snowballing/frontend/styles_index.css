@@ -414,7 +414,7 @@ body.busca-realizada #navbarSearchForm {
   background: #f9fafb;
 }
 
-/* Larguras para tabelas bibliograficas completas */
+/* Largura tabela */
 
 .custom-table th:nth-child(1),
 .custom-table td:nth-child(1) {
@@ -568,6 +568,16 @@ body.busca-realizada #navbarSearchForm {
   margin-top: 8px;
   display: inline-block;
 }
+/* =========================================
+   AUTHORS
+========================================= */
+.custom-table td:nth-child(3) {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
 
 /* =========================================
    CITATIONS
@@ -635,10 +645,18 @@ body.busca-realizada #navbarSearchForm {
   transition: all 0.2s ease;
 }
 
-.btn-action:hover {
+/* HOVER INCLUDE */
+.include-btn:hover {
   transform: translateY(-1px);
   background: #d1fae5;
-  color: #0b6b43;
+  color: #047857;
+}
+
+/* HOVER EXCLUDE */
+.exclude-btn:hover {
+  transform: translateY(-1px);
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .btn-action.active {
@@ -655,6 +673,7 @@ body.busca-realizada #navbarSearchForm {
   background: #fee2e2;
   color: #dc2626;
 }
+
 
 /* =========================================
    TRIAGEM BUTTONS
@@ -846,8 +865,6 @@ body.busca-realizada #citationsSection {
 }
 body:not(.busca-realizada) {
   background:
-    radial-gradient(circle at 14% 48%, rgba(16, 185, 129, 0.16) 0, rgba(16, 185, 129, 0.08) 18%, transparent 36%),
-    radial-gradient(circle at 86% 82%, rgba(16, 185, 129, 0.12) 0, rgba(16, 185, 129, 0.06) 20%, transparent 42%),
     #ffffff;
 }
 

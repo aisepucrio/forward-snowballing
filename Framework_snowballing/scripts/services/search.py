@@ -25,6 +25,8 @@ USER_AGENT = "forward-snowballing-app/1.0"
 OPENALEX_CACHE = {}
 CROSSREF_CACHE = {}
 SEMANTIC_CACHE = {}
+SEARCH_CACHE = {}
+
 
 
 REQUEST_CACHE = {}
