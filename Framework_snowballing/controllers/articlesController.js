@@ -1,26 +1,16 @@
 const path = require('path');
-const fs = require('fs');
-const { exec } = require('child_process');
-
-const outputPath = path.join(__dirname, '../output.json');
+const { exec, execSync } = require('child_process');
+const { readOutput, writeOutput } = require('../services/sessionState');
 
 
-
-function lerOutput() {
-  if (!fs.existsSync(outputPath)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(outputPath, 'utf-8'));
-  } catch {
-    return null;
-  }
+function lerOutput(req) {
+  return readOutput(req.sessionId);
 }
 
 function escapeShellArg(value) {
   if (value === undefined || value === null) return '-';
   return String(value).replace(/"/g, '\\"');
 }
-
-const { execSync } = require('child_process');
 
 function tryCommand(command) {
   try {
@@ -38,11 +28,11 @@ function findPythonExecutable() {
   return tryCommand('which python3') || tryCommand('which python');
 }
 
-// Retorna as citações do output.json
+// Retorna as citações do output.json da sessão atual
 exports.getMockPapers = (req, res) => {
-  const data = lerOutput();
+  const data = lerOutput(req);
   if (!data || !Array.isArray(data.citations)) {
-    return res.status(404).json({ error: 'Citações não encontradas no output.json' });
+    return res.status(404).json({ error: 'Citações não encontradas para esta sessão.' });
   }
 
   res.json(data.citations);
@@ -53,8 +43,8 @@ exports.searchByDOI = (req, res) => {
   const doi = req.query.doi || '-';
   const title = req.query.title || '-';
   const type = req.query.type || 'forward';
-  const scriptName = type === 'backward' ? 'run_backward.py' : 'run_forward.py'; 
-  const pathToPythonScript = path.join(__dirname, '..', 'scripts', scriptName); 
+  const scriptName = type === 'backward' ? 'run_backward.py' : 'run_forward.py';
+  const pathToPythonScript = path.join(__dirname, '..', 'scripts', scriptName);
 
   if ((!doi || doi === '-') && (!title || title === '-')) {
     return res.status(400).json({ error: 'DOI ou título devem ser informados' });
@@ -63,7 +53,7 @@ exports.searchByDOI = (req, res) => {
   const safeDoi = escapeShellArg(doi);
   const safeTitle = escapeShellArg(title);
 
-  const pythonPath = findPythonExecutable()
+  const pythonPath = findPythonExecutable();
   const command = `"${pythonPath}" -X utf8 "${pathToPythonScript}" "${safeDoi}" "${safeTitle}"`;
 
   console.log('Executando comando:', command);
@@ -80,7 +70,7 @@ exports.searchByDOI = (req, res) => {
 
     try {
       const data = JSON.parse(stdout);
-      fs.writeFileSync(outputPath, JSON.stringify(data, null, 2), 'utf-8');
+      writeOutput(req.sessionId, data);
       res.json(data);
     } catch (e) {
       console.error('Erro ao processar JSON do script Python:', e);
@@ -99,12 +89,12 @@ exports.marcarArtigo = (req, res) => {
     return res.status(400).json({ error: 'paperId e status são obrigatórios' });
   }
 
-  const data = lerOutput();
+  const data = lerOutput(req);
   if (!data || !Array.isArray(data.citations)) {
     return res.status(500).json({ error: 'Erro ao carregar as citações' });
   }
 
-  const artigo = data.citations.find(a => a.paperId === paperId);
+  const artigo = data.citations.find((a) => a.paperId === paperId);
   if (!artigo) {
     return res.status(404).json({ error: 'Artigo não encontrado' });
   }
@@ -112,7 +102,7 @@ exports.marcarArtigo = (req, res) => {
   artigo.selecionado = status;
 
   try {
-    fs.writeFileSync(outputPath, JSON.stringify(data, null, 2), 'utf-8');
+    writeOutput(req.sessionId, data);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar o status' });
@@ -121,11 +111,11 @@ exports.marcarArtigo = (req, res) => {
 
 // Retorna os artigos marcados como "incluir"
 exports.getArtigosIncluidos = (req, res) => {
-  const data = lerOutput();
+  const data = lerOutput(req);
   if (!data || !Array.isArray(data.citations)) {
     return res.status(500).json({ error: 'Erro ao carregar as citações' });
   }
 
-  const incluidos = data.citations.filter(a => a.selecionado === 'incluir');
+  const incluidos = data.citations.filter((a) => a.selecionado === 'incluir');
   res.json(incluidos);
 };
