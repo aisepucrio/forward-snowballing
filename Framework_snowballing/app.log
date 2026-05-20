@@ -1,0 +1,65 @@
+nohup: ignoring input
+✅ Server running at: http://localhost:3000
+Entrou no llmsController.analisar
+Entrou no llmsController.analisar
+Entrou no llmsController.analisar
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "-" "Novel Affinity Support Prepared by Crosslinking Purified Insulin Receptors to Agarose"
+DOI recebido: -
+TITLE recebido: Novel Affinity Support Prepared by Crosslinking Purified Insulin Receptors to Agarose
+Entrou no llmsController.analisar
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "-" "Updating a Systematic Literature Review on Knowledge Management Diagnostics in Software Development Organizations"
+DOI recebido: -
+TITLE recebido: Updating a Systematic Literature Review on Knowledge Management Diagnostics in Software Development Organizations
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "-" "Updating a Systematic Literature Review on Knowledge Management Diagnostics in Software Development Organizations"
+DOI recebido: -
+TITLE recebido: Updating a Systematic Literature Review on Knowledge Management Diagnostics in Software Development Organizations
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.infsof.2016.07.006" "-"
+DOI recebido: 10.1016/j.infsof.2016.07.006
+TITLE recebido: -
+Entrou no llmsController.analisar
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1145/3275245.3275260" "-"
+DOI recebido: 10.1145/3275245.3275260
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1145/3275245.3275260" "-"
+DOI recebido: 10.1145/3275245.3275260
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1145/3275245.3275260" "-"
+DOI recebido: 10.1145/3275245.3275260
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.jss.2021.111044" "-"
+DOI recebido: 10.1016/j.jss.2021.111044
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.infsof.2014.05.016" "-"
+DOI recebido: 10.1016/j.infsof.2014.05.016
+TITLE recebido: -
+Entrou no llmsController.analisar
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.infsof.2014.05.016" "-"
+DOI recebido: 10.1016/j.infsof.2014.05.016
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.infsof.2014.05.016" "-"
+DOI recebido: 10.1016/j.infsof.2014.05.016
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.5277/e-Inf180103" "-"
+DOI recebido: 10.5277/e-Inf180103
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1007/s10664-005-3862-1" "-"
+DOI recebido: 10.1007/s10664-005-3862-1
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.infsof.2014.05.016" "-"
+DOI recebido: 10.1016/j.infsof.2014.05.016
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1016/j.infsof.2014.05.016" "-"
+DOI recebido: 10.1016/j.infsof.2014.05.016
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1109/csie.2009.360" "-"
+DOI recebido: 10.1109/csie.2009.360
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1109/csie.2009.360" "-"
+DOI recebido: 10.1109/csie.2009.360
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1109/csie.2009.360" "-"
+DOI recebido: 10.1109/csie.2009.360
+TITLE recebido: -
+Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1109/csie.2009.360" "-"
+DOI recebido: 10.1109/csie.2009.360
+TITLE recebido: -
