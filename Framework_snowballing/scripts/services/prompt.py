@@ -100,14 +100,14 @@ EXAMPLE ARTICLE:
 - abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
 
 EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Sim","IC2":"Sim","EC1":"Nao","EC2":"Nao"}}}}
+{{"criteria":{{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}}}
 
 EXAMPLE ARTICLE:
 - title: A review of methods in the target research area
 - abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
 
 EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Nao","IC2":"Sim","EC1":"Sim","EC2":"Nao"}}}}
+{{"criteria":{{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"No"}}}}
 
 REAL CRITERIA
 
@@ -122,14 +122,14 @@ REAL ARTICLE
 - abstract: {normalize_text(abstract)}
 
 CLASSIFICATION RULES:
-- For each inclusion criterion, return "Sim" if the article satisfies it; otherwise return "Nao".
-- For each exclusion criterion, return "Sim" if the article satisfies it; otherwise return "Nao".
-- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Sim" for ambiguous inclusion criteria and "Nao" for ambiguous exclusion criteria.
+- For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Yes" for ambiguous inclusion criteria and "No" for ambiguous exclusion criteria.
 
 OUTPUT:
 - Return only valid compact JSON.
 - The JSON must contain exactly one top-level key: "criteria".
-- The "criteria" object must contain exactly these criterion keys and values "Sim" or "Nao":
+- The "criteria" object must contain exactly these criterion keys and values "Yes" or "No":
 {criteria_schema}
 - Do not include explanations, reasoning, confidence, markdown, or extra text.
 """
@@ -193,4 +193,4 @@ def _format_criteria_schema(criteria: dict[str, dict[str, str]]) -> str:
     if not ids:
         return "{}"
 
-    return json.dumps({criterion_id: "Sim ou Nao" for criterion_id in ids})
+    return json.dumps({criterion_id: "Yes or No" for criterion_id in ids})
