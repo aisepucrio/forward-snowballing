@@ -75,10 +75,10 @@ def _normalize_criterion_answer(value):
     if normalized in {"sim", "yes"}:
         return "Yes"
 
-    if normalized in {"nao", "não", "nÃ£o", "no", "nÃƒÂ£o"}:
+    if normalized in {"nao", "não", "nÃ£o", "nÃƒÂ£o", "no", "nÃƒÆ’Ã‚Â£o"}:
         return "No"
 
-    return "No"
+    return "error"
 
 
 def _fallback_result(title, criteria):
@@ -91,16 +91,19 @@ def _fallback_result(title, criteria):
     }
 
 
-def classificar_artigo(title, summary, criteria):
+def classificar_artigo(article, criteria):
+    title = article.get("title", "")
     prompt = generate_prompt(
-        title=title,
-        abstract=summary,
+        article=article,
         criteria=criteria,
     )
 
     try:
         data = _extract_json_object(_call_ollama(prompt))
         raw_criteria = data.get("criteria") if isinstance(data.get("criteria"), dict) else {}
+
+        if not raw_criteria:
+            raise ValueError("Resposta da LLM sem objeto 'criteria' valido")
 
         return {
             "title": title,
@@ -120,10 +123,7 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos):
     results = []
 
     for artigo in artigos:
-        title = artigo.get("title", "")
-        abstract = artigo.get("abstract", "")
-
-        results.append(classificar_artigo(title, abstract, criteria))
+        results.append(classificar_artigo(artigo, criteria))
 
     return results
 

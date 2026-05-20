@@ -9,6 +9,9 @@ INCLUSION_KEY = "Inclusion"
 EXCLUSION_KEY = "Exclusion"
 
 
+NOT_AVAILABLE = "not available"
+
+
 def normalize_text(value: Any) -> str:
     if value is None:
         return ""
@@ -68,14 +71,65 @@ def format_criteria(criteria_group: dict[str, str]) -> str:
     )
 
 
+def _stringify_metadata_value(value: Any) -> str:
+    if value is None:
+        return NOT_AVAILABLE
+
+    if isinstance(value, str):
+        cleaned = value.strip()
+        return cleaned if cleaned else NOT_AVAILABLE
+
+    if isinstance(value, bool):
+        return "true" if value else "false"
+
+    if isinstance(value, (int, float)):
+        return str(value)
+
+    if isinstance(value, list):
+        normalized_items = []
+        for item in value:
+            if isinstance(item, dict):
+                name = normalize_text(item.get("name"))
+                normalized_items.append(name or json.dumps(item, ensure_ascii=False))
+            else:
+                normalized_items.append(normalize_text(item))
+
+        normalized_items = [item for item in normalized_items if item]
+        return ", ".join(normalized_items) if normalized_items else NOT_AVAILABLE
+
+    return normalize_text(value) or NOT_AVAILABLE
+
+
+def _format_article_metadata(article: dict[str, Any]) -> str:
+    metadata_fields = [
+        ("paperId", article.get("paperId")),
+        ("title", article.get("title")),
+        ("abstract", article.get("abstract")),
+        ("authors", article.get("authors")),
+        ("year", article.get("year")),
+        ("venue", article.get("venue")),
+        ("citationCount", article.get("citationCount", article.get("citations_count"))),
+        ("language", article.get("language")),
+        ("pages", article.get("pages")),
+        ("numpages", article.get("numpages")),
+        ("open_access", article.get("open_access")),
+        ("keywords", article.get("keywords")),
+    ]
+
+    return "\n".join(
+        f"- {field_name}: {_stringify_metadata_value(field_value)}"
+        for field_name, field_value in metadata_fields
+    )
+
+
 def generate_prompt(
-    title: str,
-    abstract: str,
+    article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
     criteria_schema = _format_criteria_schema(criteria)
+    article_metadata = _format_article_metadata(article)
 
     return f"""You are an expert researcher conducting a Systematic Review.
 Your task is to classify the article against each inclusion and exclusion criterion.
@@ -118,8 +172,7 @@ EXCLUSION CRITERIA
 {exclusion_criteria}
 
 REAL ARTICLE
-- title: {normalize_text(title)}
-- abstract: {normalize_text(abstract)}
+{article_metadata}
 
 CLASSIFICATION RULES:
 - For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
@@ -136,13 +189,12 @@ OUTPUT:
 
 
 def build_prompt_for_article(
-    title: str,
-    abstract: str,
+    article: dict[str, Any],
     articles_json_path: str | Path,
 ) -> str:
     data = load_articles_json(articles_json_path)
     criteria = extract_criteria(data)
-    return generate_prompt(title, abstract, criteria)
+    return generate_prompt(article, criteria)
 
 
 def build_prompts_from_articles_json(articles_json_path: str | Path) -> list[str]:
@@ -155,8 +207,7 @@ def build_prompts_from_articles_json(articles_json_path: str | Path) -> list[str
 
     return [
         generate_prompt(
-            title=article.get("title", ""),
-            abstract=article.get("abstract", ""),
+            article=article,
             criteria=criteria,
         )
         for article in articles
