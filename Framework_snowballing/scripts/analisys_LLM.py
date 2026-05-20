@@ -73,19 +73,19 @@ def _normalize_criterion_answer(value):
     normalized = str(value or "").strip().lower()
 
     if normalized in {"sim", "yes"}:
-        return "Sim"
+        return "Yes"
 
-    if normalized in {"nao", "não", "no", "nÃ£o"}:
-        return "Não"
+    if normalized in {"nao", "não", "nÃ£o", "no", "nÃƒÂ£o"}:
+        return "No"
 
-    return "Não"
+    return "No"
 
 
 def _fallback_result(title, criteria):
     return {
         "title": title,
         "results": {
-            criterion_id: "Não"
+            criterion_id: "No"
             for criterion_id in expected_criteria_ids(criteria)
         }
     }
