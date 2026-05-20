@@ -61,11 +61,15 @@ main button {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 28px;
+
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
+  width: 100%;
+
   gap: 10px;
+  background: #eaf7ef;
 }
 
 .logo-nav {
