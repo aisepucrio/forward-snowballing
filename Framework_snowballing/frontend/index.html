@@ -302,7 +302,7 @@
     const mode = document.querySelector('input[name="snowballMode"]:checked').value;
     params.set('type', mode);
 
-    return `http://localhost:3000/api/articles/search?${params.toString()}`;
+    return `/api/articles/search?${params.toString()}`;
   }
 
 

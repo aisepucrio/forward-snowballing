@@ -2,7 +2,8 @@ import sys
 import json
 import ollama
 
-MODEL_NAME = "llama3"
+OLLAMA_URL = "http://11.0.0.35:11434/api/chat"
+MODEL_NAME = "gemma4:31b"
 
 
 def _split_criterios(texto: str):
@@ -48,19 +49,28 @@ REGRAS IMPORTANTES:
 - Use SOMENTE "Sim" ou "Não"
 - Não invente chaves fora de IC/EC
 - Se não tiver critério, ainda retorne o JSON completo
+- responda SOMENTE com JSON válido. Sem explicações, sem texto fora do JSON.
 """
 
-    try:
-        resp = ollama.chat(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
-            options={
-                "temperature": 0.1,
-                "num_predict": 600  
-            }
-        )
 
-        text = resp["message"]["content"].strip()
+    try:
+        payload = {
+            "model": MODEL_NAME,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "options": {
+            "temperature":0.1,
+            "num_predict":600
+            },
+            "stream": False,
+            "think": False
+        }
+
+        resp = requests.post(OLLAMA_URL,json=payload)
+        resp.raise_for_status()
+
+        text = resp.json()["message"]["content"].strip()
 
         # extrair JSON de forma segura
         start = text.find("{")
