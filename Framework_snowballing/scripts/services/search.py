@@ -25,40 +25,42 @@ USER_AGENT = "forward-snowballing-app/1.0"
 OPENALEX_CACHE = {}
 CROSSREF_CACHE = {}
 SEMANTIC_CACHE = {}
+SEARCH_CACHE = {}
 
 
 
+REQUEST_CACHE = {}
 
 def safe_get(url, headers=None):
+
+    if url in REQUEST_CACHE:
+        return REQUEST_CACHE[url]
+
     headers = headers or {}
     headers.update({"User-Agent": USER_AGENT})
-
 
     for attempt in range(3):
         try:
             response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
+
             print(f"[DEBUG] GET {url} -> {response.status_code}", file=sys.stderr)
 
-
             if response.status_code == 200:
-                return response.json()
+                data = response.json()
 
+                REQUEST_CACHE[url] = data
+
+                return data
 
             if response.status_code == 429:
                 wait_time = 3 * (attempt + 1)
-                print(f"[DEBUG] 429 recebido. Esperando {wait_time}s...", file=sys.stderr)
                 time.sleep(wait_time)
                 continue
 
-
-            print(f"[DEBUG] BODY: {response.text[:500]}", file=sys.stderr)
             return None
 
-
-        except Exception as e:
-            print(f"[DEBUG] EXCEPTION GET {url}: {e}", file=sys.stderr)
+        except Exception:
             return None
-
 
     return None
 
@@ -72,6 +74,37 @@ def extract_npages(pages):
         except:
             return None
     return None
+
+def crossref_item_to_result(item):
+    title_list = item.get("title", [])
+    abstract = item.get("abstract", "-")
+
+    year = "-"
+    issued = item.get("issued", {}).get("date-parts", [])
+    if issued and issued[0]:
+        year = issued[0][0]
+
+    venue_list = item.get("container-title", [])
+
+    authors = []
+    for a in item.get("author", []):
+        full_name = f"{a.get('given', '')} {a.get('family', '')}".strip()
+        authors.append({"name": full_name or "-"})
+
+    return {
+        "title": title_list[0] if title_list else "-",
+        "year": year,
+        "venue": venue_list[0] if venue_list else "-",
+        "abstract": abstract if abstract else "-",
+        "doi": normalize_doi(item.get("DOI")) or "-",
+        "authors": authors,
+        "citations_count": 0,
+        "api": "crossref",
+        "language": item.get("language"),
+        "url": item.get("URL"),
+        "pages": item.get("page"),
+        "numpages": extract_npages(item.get("page")),
+    }
 
 
 def reconstruct_abstract_from_inverted_index(inverted_index):
@@ -97,11 +130,36 @@ def reconstruct_abstract_from_inverted_index(inverted_index):
 
 
 def semantic_fields():
-    return (
-        "title,year,venue,abstract,authors,externalIds,citationCount,"
-        "citations.title,citations.authors,citations.year,citations.venue,"
-        "citations.externalIds,citations.abstract,citations.citationCount"
-    )
+    return ",".join([
+        "paperId",
+        "externalIds",
+        "url",
+        "title",
+        "abstract",
+        "venue",
+        "year",
+        "referenceCount",
+        "citationCount",
+        "influentialCitationCount",
+        "isOpenAccess",
+        "openAccessPdf",
+        "fieldsOfStudy",
+        "s2FieldsOfStudy",
+        "publicationTypes",
+        "publicationDate",
+        "journal",
+        "authors",
+        "citations",
+        "citations.title",
+        "citations.authors",
+        "citations.year",
+        "citations.venue",
+        "citations.externalIds",
+        "citations.abstract",
+        "citations.citationCount",
+        "citations.referenceCount"
+    ])
+
 
 
 
@@ -164,7 +222,7 @@ def fallback_semantic_by_title(title):
 
     search_url = (
         "https://api.semanticscholar.org/graph/v1/paper/search"
-        f"?query={query}&limit=10&fields=paperId,title,externalIds"
+        f"?query={query}&limit=10&fields=paperId,title,externalIds,year,venue,abstract,authors,citationCount"
     )
     search_data = safe_get(search_url)
     if not search_data:
@@ -427,14 +485,14 @@ def fallback_openalex_by_title(title):
         "citations_count": best.get("cited_by_count", 0),
         "api": "openalex",
         "openalex_id": best.get("id"),
-        "open_access": data.get("open_access", {}).get("is_oa"),
+        "open_access": best.get("open_access", {}).get("is_oa"),
         "url": primary_location.get("landing_page_url"),
         "keywords": [
             c.get("display_name")
-            for c in data.get("concepts", [])
+            for c in best.get("concepts", [])
             if c.get("display_name")
         ][:10],
-        "language": data.get("language"),
+        "language": best.get("language"),
 
 
     }
@@ -512,37 +570,8 @@ def fallback_crossref(doi=None, title=None):
         return None
 
 
-    title_list = item.get("title", [])
-    abstract = item.get("abstract", "-")
+    result = crossref_item_to_result(item)
 
-
-    year = "-"
-    issued = item.get("issued", {}).get("date-parts", [])
-    if issued and issued[0]:
-        year = issued[0][0]
-
-
-    venue_list = item.get("container-title", [])
-    authors = []
-    for a in item.get("author", []):
-        full_name = f"{a.get('given', '')} {a.get('family', '')}".strip()
-        authors.append({"name": full_name or "-"})
-
-
-    result = {
-        "title": title_list[0] if title_list else "-",
-        "year": year,
-        "venue": venue_list[0] if venue_list else "-",
-        "abstract": abstract if abstract else "-",
-        "doi": normalize_doi(item.get("DOI")) or "-",
-        "authors": authors,
-        "citations_count": 0,
-        "api": "crossref",
-        "language": item.get("language"),
-        "url": item.get("URL"),
-        "pages": item.get("page"),
-        "numpages": extract_npages(item.get("page")),
-    }
 
 
     if doi:
@@ -553,49 +582,115 @@ def fallback_crossref(doi=None, title=None):
 
     return result
 
+def fallback_crossref_batch_by_doi(dois, batch_size=20):
+    normalized_dois = []
+
+    for doi in dois:
+        normalized_doi = normalize_doi(doi)
+        if normalized_doi and normalized_doi not in normalized_dois:
+            normalized_dois.append(normalized_doi)
+
+    results_by_doi = {}
+
+    missing_dois = [
+        doi for doi in normalized_dois
+        if f"doi:{doi}" not in CROSSREF_CACHE
+    ]
+
+    for doi in normalized_dois:
+        cache_key = f"doi:{doi}"
+        if cache_key in CROSSREF_CACHE and CROSSREF_CACHE[cache_key]:
+            results_by_doi[doi] = CROSSREF_CACHE[cache_key]
+
+    for i in range(0, len(missing_dois), batch_size):
+        batch = missing_dois[i:i + batch_size]
+
+        filter_value = ",".join([f"doi:{doi}" for doi in batch])
+
+        params = {
+            "filter": filter_value,
+            "rows": len(batch),
+        }
+
+        request = requests.Request(
+            "GET",
+            "https://api.crossref.org/works",
+            params=params,
+        ).prepare()
+
+        data = safe_get(request.url)
+
+        if not data:
+            for doi in batch:
+                CROSSREF_CACHE[f"doi:{doi}"] = None
+            continue
+
+        items = data.get("message", {}).get("items", [])
+
+        found = set()
+
+        for item in items:
+            result = crossref_item_to_result(item)
+            result_doi = normalize_doi(result.get("doi"))
+
+            if result_doi:
+                CROSSREF_CACHE[f"doi:{result_doi}"] = result
+                results_by_doi[result_doi] = result
+                found.add(result_doi)
+
+        for doi in batch:
+            if doi not in found:
+                CROSSREF_CACHE[f"doi:{doi}"] = None
+
+    return results_by_doi
+
+
+
+def get_citation_doi(citation):
+    doi = normalize_doi(citation.get("doi"))
+    if doi:
+        return doi
+
+    external_ids = citation.get("externalIds")
+    if isinstance(external_ids, dict):
+        return normalize_doi(external_ids.get("DOI"))
+
+    return None
+
+
+def field_missing(value):
+    return value in [None, "", "-", []]
+
 
 def deduplicate_citations(citations):
     unique = {}
 
-
     for c in citations:
-        doi = normalize_doi(c.get("doi"))
+        doi = get_citation_doi(c)
         title = normalize_title(c.get("title"))
-
-
-        key = None
-
 
         if doi:
             key = f"doi:{doi}"
+            c["doi"] = doi
         elif title:
             key = f"title:{title}"
         else:
             continue
 
-
-
-
         if key not in unique:
-            unique[key] = c
+            unique[key] = dict(c)
+            continue
 
+        existing = unique[key]
 
-        else:
-            existing = unique[key]
+        for field, value in c.items():
+            if field_missing(existing.get(field)) and not field_missing(value):
+                existing[field] = value
 
-
-            # preenche campos faltantes
-            for field in ["year", "doi", "venue"]:
-                if not existing.get(field) and c.get(field):
-                    existing[field] = c.get(field)
-
-
-            # merge de autores
-            if not existing.get("authors") and c.get("authors"):
-                existing["authors"] = c.get("authors")
-
-
+        if existing.get("doi"):
+            existing["doi"] = normalize_doi(existing.get("doi"))
     return list(unique.values())
+
 
 
 def search_combined(doi=None, title=None):
@@ -609,23 +704,64 @@ def search_combined(doi=None, title=None):
 
 
     if cleaned_doi:
-        openalex_data = fallback_openalex_by_doi(cleaned_doi)
         paper_data = fallback_via_requests(cleaned_doi)
-        crossref_data = fallback_crossref(doi=cleaned_doi)
+
+        if paper_data:
+            semantic_doi = None
+            if isinstance(paper_data.get("externalIds"), dict):
+                semantic_doi = normalize_doi(paper_data["externalIds"].get("DOI"))
+
+            paper_data["doi"] = semantic_doi or cleaned_doi
+
+            semantic_citations = paper_data.get("citations", []) or []
+
+            openalex_data = fallback_openalex_by_doi(cleaned_doi)
+
+            openalex_citations = []
+            if openalex_data and openalex_data.get("openalex_id"):
+                openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
+
+            all_citations = semantic_citations + openalex_citations
+            deduped_citations = deduplicate_citations(all_citations)
+
+            merged = openalex_data.copy() if openalex_data else {}
+            merged = merge_prefer_filled(merged, paper_data)
+
+            merged["doi"] = semantic_doi or cleaned_doi
+            merged["citations"] = deduped_citations
+            merged["citationCount"] = len(deduped_citations)
+            merged["api"] = "semantic+openalex"
+
+            return merged
 
 
-    if cleaned_title:
-        if not paper_data:
-            paper_data = fallback_semantic_by_title(title)
 
+    if cleaned_title and not openalex_data and not paper_data and not crossref_data:
+        paper_data = fallback_semantic_by_title(title)
 
-        if not openalex_data:
-            openalex_data = fallback_openalex_by_title(title)
+        if paper_data:
+            semantic_doi = None
+            if isinstance(paper_data.get("externalIds"), dict):
+                semantic_doi = normalize_doi(paper_data["externalIds"].get("DOI"))
 
+            resolved_doi = semantic_doi or normalize_doi(paper_data.get("doi"))
 
-        if not crossref_data:
-            crossref_data = fallback_crossref(title=title)
+            if resolved_doi:
+                return search_combined(doi=resolved_doi, title=None)
 
+            paper_data["citations"] = deduplicate_citations(paper_data.get("citations", []))
+            paper_data["citationCount"] = len(paper_data["citations"])
+            return paper_data
+
+        openalex_data = fallback_openalex_by_title(title)
+
+        if openalex_data and openalex_data.get("doi"):
+            return search_combined(doi=openalex_data.get("doi"), title=None)
+
+        crossref_data = fallback_crossref(title=title)
+
+        if crossref_data and crossref_data.get("doi"):
+            return search_combined(doi=crossref_data.get("doi"), title=None)
 
         if not paper_data:
             resolved_doi = None
@@ -762,7 +898,6 @@ def search_combined(doi=None, title=None):
 
 def needs_enrichment(citation):
     return (
-        is_missing(citation.get("abstract")) or
         is_missing(citation.get("doi")) or
         is_missing(citation.get("year")) or
         is_missing(citation.get("venue")) or
@@ -774,57 +909,74 @@ def needs_enrichment(citation):
 
 def enrich_citation(citation):
     enriched = dict(citation)
-    doi = normalize_doi(enriched.get("doi"))
+    doi = get_citation_doi(enriched)
     title = enriched.get("title")
 
-
     if doi:
-        oa = fallback_openalex_by_doi(doi)
-        if oa:
-            enriched = merge_prefer_filled(enriched, oa)
-
+        enriched["doi"] = doi
 
         if needs_enrichment(enriched):
             cr = fallback_crossref(doi=doi)
             if cr:
                 enriched = merge_prefer_filled(enriched, cr)
-    else:
-        if title and normalize_title(title):
-            oa = fallback_openalex_by_title(title)
-            if oa:
-                enriched = merge_prefer_filled(enriched, oa)
 
-
-        if needs_enrichment(enriched) and title and normalize_title(title):
+    elif title and normalize_title(title):
+        if needs_enrichment(enriched):
             cr = fallback_crossref(title=title)
             if cr:
                 enriched = merge_prefer_filled(enriched, cr)
-
 
     enriched["paperId"] = generate_paper_id(enriched.get("title", "-"))
     enriched["doi"] = normalize_doi(enriched.get("doi")) or "-"
 
     if (not enriched.get("url") or enriched.get("url") in ["", "-"]) and enriched.get("doi") not in ["", "-"]:
         enriched["url"] = f"https://doi.org/{enriched['doi']}"
-    
-    print("[DEBUG enriched keys]", enriched.keys(), file=sys.stderr)
 
     return enriched
 
-
-
-
 def enrich_incomplete_citations(citations):
-    enriched_citations = []
+    enriched_citations = [dict(citation) for citation in citations]
 
+    dois_to_fetch = []
 
-    for citation in citations:
+    for citation in enriched_citations:
         if needs_enrichment(citation):
-            citation = enrich_citation(citation)
-        if not citation.get("url") and citation.get("doi") not in [None, "-", ""]:
-            citation["url"] = f"https://doi.org/{citation['doi']}"
-        enriched_citations.append(citation)
+            doi = get_citation_doi(citation)
+            if doi:
+                citation["doi"] = doi
+                dois_to_fetch.append(doi)
 
+    crossref_by_doi = fallback_crossref_batch_by_doi(dois_to_fetch)
+
+    for index, citation in enumerate(enriched_citations):
+        if needs_enrichment(citation):
+            doi = get_citation_doi(citation)
+            title = citation.get("title")
+
+            if doi:
+                cr = crossref_by_doi.get(doi)
+
+                if not cr:
+                    cr = fallback_crossref(doi=doi)
+
+                if cr:
+                    citation = merge_prefer_filled(citation, cr)
+
+            elif title and normalize_title(title):
+                cr = fallback_crossref(title=title)
+                if cr:
+                    citation = merge_prefer_filled(citation, cr)
+
+        citation["paperId"] = generate_paper_id(citation.get("title", "-"))
+        citation["doi"] = normalize_doi(citation.get("doi")) or "-"
+
+        if (
+            not citation.get("url")
+            and citation.get("doi") not in [None, "-", ""]
+        ):
+            citation["url"] = f"https://doi.org/{citation['doi']}"
+
+        enriched_citations[index] = citation
 
     return enriched_citations
 
@@ -835,3 +987,4 @@ def clear_caches():
     OPENALEX_CACHE.clear()
     CROSSREF_CACHE.clear()
     SEMANTIC_CACHE.clear()
+    REQUEST_CACHE.clear()
