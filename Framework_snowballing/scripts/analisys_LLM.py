@@ -85,7 +85,7 @@ def _fallback_result(title, criteria):
     return {
         "title": title,
         "results": {
-            criterion_id: "No"
+            criterion_id: "error"
             for criterion_id in expected_criteria_ids(criteria)
         }
     }
