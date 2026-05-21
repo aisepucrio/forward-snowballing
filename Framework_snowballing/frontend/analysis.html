@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Triagem de Artigos</title>
+  <title>SnowMap - Data Analysis</title>
   <link rel="icon" href="../images/favicon-32x32.png" type="image/x-icon">
 
   <!-- Bootstrap CSS -->
@@ -18,20 +18,30 @@ rel="stylesheet">
 <body>
   <!-- Navbar -->
  <!-- Menu navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand fs-4 fw-bold main-brand" href="index.html">
-        <img src="/images/logo-snowballing.png" alt="Logo" style="height:32px; margin-right:8px;">
-        SnowMap
+  <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
+    <div class="container-fluid navbar-inner">
+
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" id="navbarSnowballing">
+        <img src="/images/logo-snowballing.png" class="logo-nav">
+        <span class="brand-text">SnowMap</span>
       </a>
+
+      <form id="navbarSearchForm" class="navbar-search" onsubmit="buscarArtigoNavbar(); return false;">
+        <i class="bi bi-search"></i>
+        <input type="text" id="navbarSearchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)">
+        <button type="submit">
+          Search
+        </button>
+      </form>
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse justify-content-end espacamento-nav" id="navbarNav">
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav gap-2">
           <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="analisys.html">Initial Analysis</a>
+            <a class="nav-link btn-nav-custom" href="analysis.html">Data Analysis</a>
           </li>
           <li class="nav-item">
             <a class="nav-link btn-nav-custom" href="criterios.html" id="linkCriterios">Criteria Applications</a>
@@ -45,22 +55,40 @@ rel="stylesheet">
     <section class="mb-4">
       <h4 id="titulo-principal">Selected Articles</h4>
     </section>
-
     <section class="mb-5">
       <h3 class="mb-4 titulo">Summary</h3>
-      <div class="row g-4">
-        <div class="col-md-4">
+      <div class="row g-4 cards-resumo-row">
+
+        <div class="col-md-6">
           <div class="card-resumo">
             <h5>Total Articles</h5>
             <p id="total-artigos">0</p>
           </div>
         </div>
-        <div class="col-md-4">
+
+        <div class="col-md-6">
           <div class="card-resumo">
             <h5>Total Venues</h5>
             <p id="total-venue">0</p>
           </div>
         </div>
+
+        <div class="col-md-6">
+          <div class="card-resumo">
+            <h5>Total of Open Access Articles</h5>
+            <p id="total-open-access">N/A</p>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card-resumo">
+            <h5>Most Cited Articles</h5>
+            <div id="most-cited" class="mt-2 text-start" style="font-size: 0.95rem; line-height: 1.4; font-weight: 400;">
+              N/A
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -69,23 +97,50 @@ rel="stylesheet">
       <div class="row gutter">
         <div class="quadro col-md-6">
           <div class="quadro-conteudo">
+            <h4 class="mb-3">Yearly Distribution</h4>
             <div class="alinhamento-checkbox">
               <label for="checkbox">Select All</label>
               <input type="checkbox" id="checkbox">
             </div>
-            <canvas id="graficoAno"></canvas>
+            <canvas id="graficoAno" height="300"></canvas>
           </div>
         </div>
         <div class="quadro col-md-6">
           <div class="quadro-conteudo">
-            <canvas id="graficoVenue" ></canvas>
+            <h4 class="mb-3">Venue Distribution</h4>
+            <canvas id="graficoVenue" height="300"></canvas>
           </div>
         </div>
       </div>
     </section>
   </main>
 
+  <footer class="footer-custom">
+    <div class="footer-inner">
+
+      <div class="footer-left">
+        <img src="/images/logo-snowballing.png">
+        <span>SnowBalling</span>
+      </div>
+
+      <div class="footer-right">
+        © 2026 AISE Lab (Artificial Intelligence and Software Engineering)
+      </div>
+
+    </div>
+  </footer>
+
   <script>
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '-';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     const totalArtigosEl = document.getElementById('total-artigos');
     const totalVenueEl = document.getElementById('total-venue');
 
@@ -96,7 +151,9 @@ rel="stylesheet">
         abstract: item.abstract || "No abstract available",
         year: item.year || "N/A",
         venue: item.venue || (item.publicationVenue && item.publicationVenue.name) || "N/A",
-        selecionado: item.selecionado || null
+        selecionado: item.selecionado || null,
+        open_access: item.open_access !== undefined ? item.open_access : null,
+        citations_count: parseInt(item.citations_count || 0, 10)
       }));
     }
 
@@ -119,9 +176,46 @@ rel="stylesheet">
     function atualizarResumoEgraficos(artigos) {
       const porAno = countBy(artigos, 'year');
       const porVenueTotal = countBy(artigos, 'venue');
-      
+
+      const totalOpenAccessEl = document.getElementById('total-open-access');
+      const mostCitedEl = document.getElementById('most-cited');
+
+      const totalOpenAccess = artigos.filter(artigo => 
+        artigo.open_access === true || 
+        artigo.open_access === 'true' || 
+        artigo.open_access === 1 ||
+        artigo.open_access === 'yes'
+      ).length;
+
+      if (mostCitedEl) {
+        if (artigos.length === 0) {
+          mostCitedEl.innerHTML = "<p class='m-0 text-white-50'>No articles selected.</p>";
+        } else {
+          // Ordena decrescente pelo número de citações e pega os 3 primeiros
+          const topCitados = [...artigos]
+            .sort((a, b) => b.citations_count - a.citations_count)
+            .slice(0, 3);
+          
+          // Cria a estrutura HTML interna para listar os títulos e suas respectivas citações
+          let listaHTML = '<ol class="ps-3 m-0" style="color: #000;">';
+          topCitados.forEach(artigo => {
+            listaHTML += `
+              <li class="mb-2">
+                ${escapeHtml(artigo.title)}
+                <strong style="color: #000;">(${artigo.citations_count} citations)</strong> 
+              </li>`;
+          });
+          listaHTML += '</ol>';
+          
+          mostCitedEl.innerHTML = listaHTML;
+        }
+      }
+
       totalArtigosEl.textContent = artigos.length;
       totalVenueEl.textContent = Object.keys(porVenueTotal).length;
+      if (totalOpenAccessEl) {
+        totalOpenAccessEl.textContent = totalOpenAccess;
+      }
 
       if (window.chartAno) window.chartAno.destroy();
       if (window.chartVenue) window.chartVenue.destroy();
@@ -160,8 +254,6 @@ rel="stylesheet">
             }]
           },
           options: { 
-            responsive: true,
-            maintainAspectRatio: false,
             plugins: { legend: { position: 'right' } },
             onClick: (event, elements) => {
               if (elements && elements.length > 0) {
@@ -219,8 +311,6 @@ rel="stylesheet">
           }]
         },
         options: { 
-          responsive: true,
-          maintainAspectRatio: false,
           plugins: { legend: { display: false } }, 
           scales: { y: { beginAtZero: true } },
           onClick: (event, elements) => {
@@ -294,6 +384,45 @@ rel="stylesheet">
         alert('Error loading screening data:  ' + e.message);
       }
     }
+
+    function salvarPesquisaAtual(valor) {
+      localStorage.setItem('ultimaPesquisaSnowMap', valor);
+    }
+
+    function buscarArtigoNavbar() {
+
+      const input = document.getElementById('navbarSearchInput');
+
+      const valor = input.value.trim();
+
+      if (!valor) {
+        alert('Please enter a DOI or title.');
+        return;
+      }
+
+      salvarPesquisaAtual(valor);
+
+      localStorage.setItem(
+        'executarBuscaSnowMap',
+        'true'
+      );
+
+      window.location.href =
+        `index.html?search=${encodeURIComponent(valor)}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      const valorSalvo =
+        localStorage.getItem('ultimaPesquisaSnowMap');
+
+      const navbarInput =
+        document.getElementById('navbarSearchInput');
+
+      if (valorSalvo && navbarInput) {
+        navbarInput.value = valorSalvo;
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', carregarArtigosLocal);
 

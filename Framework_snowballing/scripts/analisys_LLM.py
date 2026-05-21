@@ -1,117 +1,129 @@
-import sys
 import json
-import ollama
+import os
+import sys
 
-MODEL_NAME = "llama3"
+import requests
 
-
-def _split_criterios(texto: str):
-    return [c.strip() for c in (texto or "").splitlines() if c.strip()]
-
-
-def classificar_artigo(title, summary, criterios_inclusao, criterios_exclusao):
-    inc = _split_criterios(criterios_inclusao)
-    exc = _split_criterios(criterios_exclusao)
-
-    inc_ids = [f"IC{i+1}" for i in range(len(inc))]
-    exc_ids = [f"EC{i+1}" for i in range(len(exc))]
+from services.prompt import (
+    criteria_from_text,
+    expected_criteria_ids,
+    generate_prompt,
+)
 
 
-    prompt = f"""
-Você é um pesquisador conduzindo uma Revisão Sistemática da Literatura.
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://11.0.0.35:11434/api/chat")
+MODEL_NAME = os.getenv("OLLAMA_MODEL", "gemma4:31b")
+MODEL_FALLBACKS = ["llama3.2:3b", "mistral:latest"]
+FAILED_MODELS = set()
 
-Responda APENAS com JSON válido. Sem explicações, sem markdown.
 
-ARTIGO:
-Título: {title}
-Resumo: {summary}
+def _model_candidates():
+    candidates = [MODEL_NAME, *MODEL_FALLBACKS]
+    seen = set()
+    return [
+        model
+        for model in candidates
+        if model and model not in seen and not seen.add(model)
+    ]
 
-CRITÉRIOS DE INCLUSÃO:
-{chr(10).join([f"{inc_ids[i]}: {inc[i]}" for i in range(len(inc))])}
 
-CRITÉRIOS DE EXCLUSÃO:
-{chr(10).join([f"{exc_ids[i]}: {exc[i]}" for i in range(len(exc))])}
+def _call_ollama(prompt):
+    last_error = None
 
-FORMATO OBRIGATÓRIO DE SAÍDA:
+    for model_name in _model_candidates():
+        if model_name in FAILED_MODELS:
+            continue
 
-{{
-  "title": "{title}",
-  "results": {{
-    "IC1": "Sim ou Não",
-    "IC2": "Sim ou Não",
-    "EC1": "Sim ou Não",
-    "EC2": "Sim ou Não"
-  }}
-}}
+        payload = {
+            "model": model_name,
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "options": {
+                "temperature": 0.1,
+                "num_predict": 600
+            },
+            "stream": False,
+            "think": False
+        }
 
-REGRAS IMPORTANTES:
-- Use SOMENTE "Sim" ou "Não"
-- Não invente chaves fora de IC/EC
-- Se não tiver critério, ainda retorne o JSON completo
-"""
+        try:
+            resp = requests.post(OLLAMA_URL, json=payload, timeout=120)
+            resp.raise_for_status()
+            return resp.json()["message"]["content"].strip()
+        except Exception as model_error:
+            FAILED_MODELS.add(model_name)
+            last_error = model_error
+            print(f"[ERRO Ollama model={model_name}] {model_error}", file=sys.stderr)
+
+    raise RuntimeError(f"Nenhum modelo Ollama respondeu. Ultimo erro: {last_error}")
+
+
+def _extract_json_object(text):
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end == -1:
+        raise ValueError("JSON nao encontrado na resposta")
+
+    return json.loads(text[start:end + 1])
+
+
+def _normalize_criterion_answer(value):
+    normalized = str(value or "").strip().lower()
+
+    if normalized in {"sim", "yes"}:
+        return "Sim"
+
+    if normalized in {"nao", "não", "no", "nÃ£o"}:
+        return "Não"
+
+    return "Não"
+
+
+def _fallback_result(title, criteria):
+    return {
+        "title": title,
+        "results": {
+            criterion_id: "Não"
+            for criterion_id in expected_criteria_ids(criteria)
+        }
+    }
+
+
+def classificar_artigo(title, summary, criteria):
+    prompt = generate_prompt(
+        title=title,
+        abstract=summary,
+        criteria=criteria,
+    )
 
     try:
-        resp = ollama.chat(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
-            options={
-                "temperature": 0.1,
-                "num_predict": 600  
-            }
-        )
+        data = _extract_json_object(_call_ollama(prompt))
+        raw_criteria = data.get("criteria") if isinstance(data.get("criteria"), dict) else {}
 
-        text = resp["message"]["content"].strip()
-
-        # extrair JSON de forma segura
-        start = text.find("{")
-        end = text.rfind("}")
-
-        if start == -1 or end == -1:
-            raise ValueError("JSON não encontrado na resposta")
-
-        json_text = text[start:end + 1]
-        data = json.loads(json_text)
-
-        # 🔥 GARANTIA DE ESTRUTURA (evita EC sumir)
-        if "results" not in data:
-            data["results"] = {}
-
-        for ic in inc_ids:
-            data["results"].setdefault(ic, "Não")
-
-        for ec in exc_ids:
-            data["results"].setdefault(ec, "Não")
-
-        return data
-
-    except Exception as e:
-        print(f"[ERRO Ollama] {e}", file=sys.stderr)
-
-        # fallback seguro
         return {
             "title": title,
             "results": {
-                **{f"IC{i+1}": "Não" for i in range(len(inc))},
-                **{f"EC{i+1}": "Não" for i in range(len(exc))}
+                criterion_id: _normalize_criterion_answer(raw_criteria.get(criterion_id))
+                for criterion_id in expected_criteria_ids(criteria)
             }
         }
 
+    except Exception as e:
+        print(f"[ERRO Ollama] {e}", file=sys.stderr)
+        return _fallback_result(title, criteria)
+
 
 def analisar(criterios_inclusao, criterios_exclusao, artigos):
+    criteria = criteria_from_text(criterios_inclusao, criterios_exclusao)
     results = []
 
     for artigo in artigos:
         title = artigo.get("title", "")
         abstract = artigo.get("abstract", "")
 
-        out = classificar_artigo(
-            title,
-            abstract,
-            criterios_inclusao,
-            criterios_exclusao
-        )
-
-        results.append(out)
+        results.append(classificar_artigo(title, abstract, criteria))
 
     return results
 
