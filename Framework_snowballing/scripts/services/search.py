@@ -3,6 +3,7 @@ import sys
 import time
 import json
 import requests
+from pathlib import Path
 
 
 from services.normalize import (
@@ -31,12 +32,42 @@ SEARCH_CACHE = {}
 
 REQUEST_CACHE = {}
 
+def load_project_env():
+    if os.getenv("SEMANTIC_API_KEY"):
+        return
+
+    env_path = Path(__file__).resolve().parents[2] / ".env"
+    if not env_path.exists():
+        return
+
+    try:
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            if key != "SEMANTIC_API_KEY" or os.getenv(key):
+                continue
+
+            os.environ[key] = value.strip().strip('"').strip("'")
+    except Exception:
+        return
+
+
+def semantic_headers():
+    load_project_env()
+    api_key = os.getenv("SEMANTIC_API_KEY")
+    return {"x-api-key": api_key} if api_key else None
+
+
 def safe_get(url, headers=None):
 
     if url in REQUEST_CACHE:
         return REQUEST_CACHE[url]
 
-    headers = headers or {}
+    headers = dict(headers or {})
     headers.update({"User-Agent": USER_AGENT})
 
     for attempt in range(3):
@@ -181,11 +212,7 @@ def fallback_via_requests(doi):
     url = f"https://api.semanticscholar.org/graph/v1/paper/DOI:{encoded_doi}?fields={fields}"
 
 
-    API_KEY = os.getenv("SEMANTIC_API_KEY")
-    headers = {"x-api-key": API_KEY} if API_KEY else None
-
-
-    data = safe_get(url, headers=headers)
+    data = safe_get(url, headers=semantic_headers())
     if not data:
         return None
 
@@ -226,7 +253,7 @@ def fallback_semantic_by_title(title):
         "https://api.semanticscholar.org/graph/v1/paper/search"
         f"?query={query}&limit=10&fields=paperId,title,externalIds,year,venue,abstract,authors,citationCount"
     )
-    search_data = safe_get(search_url)
+    search_data = safe_get(search_url, headers=semantic_headers())
     if not search_data:
         return None
 
@@ -291,7 +318,7 @@ def fallback_semantic_by_title(title):
         f"https://api.semanticscholar.org/graph/v1/paper/{paper_id}"
         f"?fields={semantic_fields()}"
     )
-    data = safe_get(paper_url)
+    data = safe_get(paper_url, headers=semantic_headers())
     if not data:
         return None
 
@@ -370,6 +397,25 @@ def fallback_openalex_by_doi(doi):
 
     OPENALEX_CACHE[cache_key] = result
     return result
+
+
+def attach_openalex_citations(paper):
+    merged = dict(paper)
+
+    if merged.get("openalex_id"):
+        citations = get_openalex_citations(merged["openalex_id"])
+        merged["citations"] = deduplicate_citations(citations)
+        merged["citationCount"] = len(merged["citations"])
+    else:
+        merged.setdefault("citations", [])
+        merged.setdefault(
+            "citationCount",
+            merged.get("citationCount", merged.get("citations_count", 0)),
+        )
+
+    return merged
+
+
 def get_openalex_citations(openalex_id):
     if not openalex_id:
         return []
@@ -707,6 +753,7 @@ def search_combined(doi=None, title=None):
 
     if cleaned_doi:
         paper_data = fallback_via_requests(cleaned_doi)
+        openalex_data = fallback_openalex_by_doi(cleaned_doi)
 
         if paper_data:
             semantic_doi = None
@@ -716,8 +763,6 @@ def search_combined(doi=None, title=None):
             paper_data["doi"] = semantic_doi or cleaned_doi
 
             semantic_citations = paper_data.get("citations", []) or []
-
-            openalex_data = fallback_openalex_by_doi(cleaned_doi)
 
             openalex_citations = []
             if openalex_data and openalex_data.get("openalex_id"):
@@ -736,9 +781,12 @@ def search_combined(doi=None, title=None):
 
             return merged
 
-        # Semantic Scholar indisponível — tenta OpenAlex e Crossref pelo DOI
-        openalex_data = fallback_openalex_by_doi(cleaned_doi)
+        if openalex_data:
+            return attach_openalex_citations(openalex_data)
+
         crossref_data = fallback_crossref(doi=cleaned_doi)
+        if crossref_data:
+            return crossref_data
 
 
 
@@ -761,8 +809,12 @@ def search_combined(doi=None, title=None):
 
         openalex_data = fallback_openalex_by_title(title)
 
-        if openalex_data and openalex_data.get("doi"):
-            return search_combined(doi=openalex_data.get("doi"), title=None)
+        openalex_doi = normalize_doi(openalex_data.get("doi")) if openalex_data else None
+        if openalex_doi:
+            return search_combined(doi=openalex_doi, title=None)
+
+        if openalex_data:
+            return attach_openalex_citations(openalex_data)
 
         crossref_data = fallback_crossref(title=title)
 

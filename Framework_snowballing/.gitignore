@@ -7,6 +7,7 @@ cache/
 
 # Arquivos gerados
 output.json
+app.log
 
 # Python
 __pycache__/

@@ -20,7 +20,7 @@
     <div class="container-fluid navbar-inner">
 
       <!-- Logo -->
-      <a class="navbar-brand d-flex align-items-center gap-2" href="/" id="navbarSnowballing">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" id="navbarSnowballing">
         <img src="/images/logo-snowballing.png" class="logo-nav">
         <span class="brand-text">SnowMap</span>
       </a>
@@ -29,13 +29,16 @@
       <form id="navbarSearchForm" class="navbar-search d-none" onsubmit="buscarArtigoNavbar(); return false;">
         <i class="bi bi-search"></i>
         <input type="text" id="navbarSearchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)">
-        <button type="submit">Search</button>
+        <button type="submit">
+          Search
+        </button>
       </form>
 
       <!-- Menu -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <!-- Mode toggle (visível só nos resultados) -->
         <div id="navbarModeToggle" class="d-none me-3">
@@ -52,7 +55,7 @@
         </div>
         <ul class="navbar-nav gap-2">
           <li class="nav-item">
-            <a class="nav-link btn-nav-custom" href="analisys.html">Initial Analysis</a>
+            <a class="nav-link btn-nav-custom" href="analysis.html">Data Analysis</a>
           </li>
           <li class="nav-item">
             <a class="nav-link btn-nav-custom" href="criterios.html">Criteria Applications</a>
@@ -324,7 +327,7 @@
     }
 
     params.set('type', type);
-    return `http://localhost:3000/api/articles/search?${params.toString()}`;
+    return `/api/articles/search?${params.toString()}`;
   }
 
   function trocarModo() {
