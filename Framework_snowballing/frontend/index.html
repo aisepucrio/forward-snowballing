@@ -20,7 +20,7 @@
     <div class="container-fluid navbar-inner">
 
       <!-- Logo -->
-      <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" id="navbarSnowballing">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/" id="navbarSnowballing">
         <img src="/images/logo-snowballing.png" class="logo-nav">
         <span class="brand-text">SnowMap</span>
       </a>
@@ -352,6 +352,10 @@
   function buscarArtigo() {
     const input = document.getElementById('searchInput');
     const inputValue = input.value.trim();
+
+    if (inputValue) {
+      localStorage.setItem('ultimaPesquisaSnowMap', inputValue);
+    }
 
     input.blur();
 
@@ -870,12 +874,12 @@
       return;
     }
     window.name = JSON.stringify(window.citationsData);
-    window.location.href = 'analisys.html';
+    window.location.href = 'analysis.html';
   }
 
 
   document.addEventListener('DOMContentLoaded', () => {
-    const linkAnalise = document.querySelector('a.nav-link[href="analisys.html"]');
+    const linkAnalise = document.querySelector('a.nav-link[href="analysis.html"]');
     if (linkAnalise) {
       linkAnalise.addEventListener('click', e => {
         e.preventDefault();
@@ -893,7 +897,7 @@
         }
 
         window.name = JSON.stringify(window.citationsData);
-        window.location.href = 'analisys.html';
+        window.location.href = 'analysis.html';
       });
     }
   });

@@ -191,12 +191,10 @@ rel="stylesheet">
         if (artigos.length === 0) {
           mostCitedEl.innerHTML = "<p class='m-0 text-white-50'>No articles selected.</p>";
         } else {
-          // Ordena decrescente pelo número de citações e pega os 3 primeiros
           const topCitados = [...artigos]
             .sort((a, b) => b.citations_count - a.citations_count)
             .slice(0, 3);
           
-          // Cria a estrutura HTML interna para listar os títulos e suas respectivas citações
           let listaHTML = '<ol class="ps-3 m-0" style="color: #000;">';
           topCitados.forEach(artigo => {
             listaHTML += `
@@ -413,11 +411,9 @@ rel="stylesheet">
 
     document.addEventListener('DOMContentLoaded', () => {
 
-      const valorSalvo =
-        localStorage.getItem('ultimaPesquisaSnowMap');
+      const valorSalvo = localStorage.getItem('ultimaPesquisaSnowMap');
 
-      const navbarInput =
-        document.getElementById('navbarSearchInput');
+      const navbarInput = document.getElementById('navbarSearchInput');
 
       if (valorSalvo && navbarInput) {
         navbarInput.value = valorSalvo;
