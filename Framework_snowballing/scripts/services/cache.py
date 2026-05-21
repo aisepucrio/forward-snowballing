@@ -33,12 +33,13 @@ def save_to_cache(doi, title, data):
     cursor = conn.cursor()
 
     title_normalized = title.lower() if title else None
+    mode = data.get("mode") if isinstance(data, dict) else None
 
-    # verifica DOI primeiro
+    # verifica DOI + modo primeiro
     if doi:
         cursor.execute(
-            "SELECT id FROM articles WHERE doi = ?",
-            (doi,)
+            "SELECT id FROM articles WHERE doi = ? AND json_extract(data, '$.mode') = ?",
+            (doi, mode)
         )
 
         if cursor.fetchone():
@@ -46,11 +47,11 @@ def save_to_cache(doi, title, data):
             conn.close()
             return
 
-    # verifica título depois
+    # verifica título + modo depois
     if title_normalized:
         cursor.execute(
-            "SELECT id FROM articles WHERE title = ?",
-            (title_normalized,)
+            "SELECT id FROM articles WHERE title = ? AND json_extract(data, '$.mode') = ?",
+            (title_normalized, mode)
         )
 
         if cursor.fetchone():
@@ -58,7 +59,7 @@ def save_to_cache(doi, title, data):
             conn.close()
             return
 
-    # alva apenas se não existir
+    # salva apenas se não existir
     cursor.execute("""
         INSERT INTO articles (doi, title, data)
         VALUES (?, ?, ?)
@@ -74,16 +75,22 @@ def save_to_cache(doi, title, data):
     print("[CACHE SAVE]", file=sys.stderr)
 
 
-def get_cached(doi=None, title=None):
+def get_cached(doi=None, title=None, mode=None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     # busca por DOI primeiro
     if doi:
-        cursor.execute(
-            "SELECT data FROM articles WHERE doi = ?",
-            (doi,)
-        )
+        if mode:
+            cursor.execute(
+                "SELECT data FROM articles WHERE doi = ? AND json_extract(data, '$.mode') = ?",
+                (doi, mode)
+            )
+        else:
+            cursor.execute(
+                "SELECT data FROM articles WHERE doi = ?",
+                (doi,)
+            )
 
         row = cursor.fetchone()
 
@@ -96,10 +103,16 @@ def get_cached(doi=None, title=None):
     if title:
         title_normalized = title.lower()
 
-        cursor.execute(
-            "SELECT data FROM articles WHERE title = ?",
-            (title_normalized,)
-        )
+        if mode:
+            cursor.execute(
+                "SELECT data FROM articles WHERE title = ? AND json_extract(data, '$.mode') = ?",
+                (title_normalized, mode)
+            )
+        else:
+            cursor.execute(
+                "SELECT data FROM articles WHERE title = ?",
+                (title_normalized,)
+            )
 
         row = cursor.fetchone()
 

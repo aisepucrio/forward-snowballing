@@ -53,7 +53,9 @@ def safe_get(url, headers=None):
                 return data
 
             if response.status_code == 429:
-                wait_time = 3 * (attempt + 1)
+                retry_after = response.headers.get("Retry-After")
+                wait_time = int(retry_after) if retry_after else 15 * (attempt + 1)
+                print(f"[RATE LIMIT] aguardando {wait_time}s (tentativa {attempt + 1}/3)", file=sys.stderr)
                 time.sleep(wait_time)
                 continue
 
@@ -734,6 +736,10 @@ def search_combined(doi=None, title=None):
 
             return merged
 
+        # Semantic Scholar indisponível — tenta OpenAlex e Crossref pelo DOI
+        openalex_data = fallback_openalex_by_doi(cleaned_doi)
+        crossref_data = fallback_crossref(doi=cleaned_doi)
+
 
 
     if cleaned_title and not openalex_data and not paper_data and not crossref_data:
@@ -855,6 +861,10 @@ def search_combined(doi=None, title=None):
 
     if openalex_data:
         merged = dict(openalex_data)
+        openalex_citations = []
+        if openalex_data.get("openalex_id"):
+            openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
+        merged["citations"] = openalex_citations
         if crossref_data:
             merged = merge_prefer_filled(merged, crossref_data)
             merged["api"] = "openalex+crossref"
