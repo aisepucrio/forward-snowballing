@@ -227,6 +227,11 @@ body.busca-realizada #navbarSearchForm {
   border: 1px solid #e6e6e6;
 }
 
+body.busca-realizada #navbarModeToggle {
+  display: flex !important;
+  align-items: center;
+}
+
 #navbarNav {
   flex: 0 0 auto;
 }

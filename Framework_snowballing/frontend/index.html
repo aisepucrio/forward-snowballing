@@ -37,6 +37,19 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <!-- Mode toggle (visível só nos resultados) -->
+        <div id="navbarModeToggle" class="d-none me-3">
+          <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="navbarSnowballMode" id="navbarModeForward" value="forward" checked>
+            <label class="btn btn-outline-success btn-sm px-3" for="navbarModeForward">
+              <i class="bi bi-arrow-up-right-circle me-1"></i> Citations
+            </label>
+            <input type="radio" class="btn-check" name="navbarSnowballMode" id="navbarModeBackward" value="backward">
+            <label class="btn btn-outline-success btn-sm px-3" for="navbarModeBackward">
+              <i class="bi bi-arrow-down-left-circle me-1"></i> References
+            </label>
+          </div>
+        </div>
         <ul class="navbar-nav gap-2">
           <li class="nav-item">
             <a class="nav-link btn-nav-custom" href="analisys.html">Initial Analysis</a>
@@ -298,10 +311,9 @@
   }
 
 
-  function buildSearchURL(inputValue) {
+  function buildSearchURL(inputValue, type) {
     const value = inputValue.trim();
     const params = new URLSearchParams();
-
 
     if (looksLikeDOI(value)) {
       params.set('doi', value);
@@ -311,80 +323,64 @@
       params.set('title', value);
     }
 
-
-    const mode = document.querySelector('input[name="snowballMode"]:checked').value;
-    params.set('type', mode);
-
+    params.set('type', type);
     return `http://localhost:3000/api/articles/search?${params.toString()}`;
   }
 
+  function trocarModo() {
+    const mode = document.querySelector('input[name="snowballMode"]:checked').value;
+    const list = mode === 'forward'
+      ? (window.forwardData || [])
+      : (window.backwardData || []);
+
+    document.querySelector('#citationsList .table-title').textContent =
+      mode === 'forward' ? 'Cited By' : 'References';
+
+    window.citationsData = list.map(c => ({
+      ...c,
+      paperId: c.paperId || c.doi || Math.random().toString(36),
+      selecionado: c.selecionado || null,
+      abstractExpanded: false
+    }));
+
+    mostrarCitacoes(window.citationsData);
+  }
 
   function buscarArtigo() {
     const input = document.getElementById('searchInput');
     const inputValue = input.value.trim();
-    document.getElementById('navbarSearchInput').value = inputValue;
-
-
 
     input.blur();
-
 
     if (!inputValue) {
       alert('Please enter a DOI or title to search.');
       return;
     }
-      document.getElementById('navbarSearchInput').value = inputValue;
 
-
-
+    document.getElementById('navbarSearchInput').value = inputValue;
     document.getElementById('loadingSpinner').style.display = 'block';
     document.getElementById('resultado').innerHTML = '';
     document.getElementById('citationsSection').style.display = 'none';
+    window.forwardData = null;
+    window.backwardData = null;
 
+    const fetchForward  = fetch(buildSearchURL(inputValue, 'forward'))
+      .then(r => { if (!r.ok) throw new Error('Article not found or API error'); return r.json(); });
+    const fetchBackward = fetch(buildSearchURL(inputValue, 'backward'))
+      .then(r => { if (!r.ok) throw new Error('Article not found or API error'); return r.json(); });
 
-    const url = buildSearchURL(inputValue);
-
-
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Article not found or API error');
-        return res.json();
-      })
-      .then(data => {
+    Promise.all([fetchForward, fetchBackward])
+      .then(([fwd, bwd]) => {
         document.getElementById('loadingSpinner').style.display = 'none';
-
         document.body.classList.add('busca-realizada');
 
-        window.seedData = {
-          ...data,
-          abstractExpanded: false
-        };
+        window.forwardData  = fwd.citations  || [];
+        window.backwardData = bwd.references || [];
 
-        const mode = document.querySelector('input[name="snowballMode"]:checked').value;
-
-        const headerText =
-          mode === 'forward'
-            ? 'Cited By'
-            : 'References';
-
-        document.querySelector('#citationsList .table-title').textContent = headerText;
-
-        const listToDisplay =
-          mode === 'forward'
-            ? (data.citations || [])
-            : (data.references || []);
-
-        window.citationsData = listToDisplay.map(c => ({
-          ...c,
-          paperId: c.paperId || c.doi || Math.random().toString(36),
-          selecionado: c.selecionado || null,
-          abstractExpanded: false
-        }));
-
+        window.seedData = { ...fwd, abstractExpanded: false };
 
         mostrarResultado(window.seedData);
-        mostrarCitacoes(window.citationsData);
-
+        trocarModo();
       })
       .catch(err => {
         document.getElementById('loadingSpinner').style.display = 'none';
@@ -936,13 +932,20 @@
   });
 
   document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const inputValue = document.getElementById('searchInput').value.trim();
-    if (inputValue) {
-      buscarArtigo();
-    }
+    radio.addEventListener('change', () => {
+      const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
+      if (navRadio) navRadio.checked = true;
+      if (window.forwardData !== null || window.backwardData !== null) trocarModo();
+    });
   });
-});
+
+  document.querySelectorAll('input[name="navbarSnowballMode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const mainRadio = document.getElementById(radio.value === 'forward' ? 'modeForward' : 'modeBackward');
+      if (mainRadio) mainRadio.checked = true;
+      if (window.forwardData !== null || window.backwardData !== null) trocarModo();
+    });
+  });
 document.addEventListener('DOMContentLoaded', () => {
   atualizarBotaoIncludeAll();
 });
