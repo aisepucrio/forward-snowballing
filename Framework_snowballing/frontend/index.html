@@ -329,7 +329,7 @@
     params.set('type', type);
     return `/api/articles/search?${params.toString()}`;
   }
-
+  
   function trocarModo() {
     const mode = document.querySelector('input[name="snowballMode"]:checked').value;
     const list = mode === 'forward'
@@ -350,55 +350,94 @@
   }
 
   function buscarArtigo() {
-    const input = document.getElementById('searchInput');
-    const inputValue = input.value.trim();
+  const input = document.getElementById('searchInput');
+  const inputValue = input.value.trim();
 
-    if (inputValue) {
-      localStorage.setItem('ultimaPesquisaSnowMap', inputValue);
-    }
-
-    input.blur();
-
-    if (!inputValue) {
-      alert('Please enter a DOI or title to search.');
-      return;
-    }
-
-    document.getElementById('navbarSearchInput').value = inputValue;
-    document.getElementById('loadingSpinner').style.display = 'block';
-    document.getElementById('resultado').innerHTML = '';
-    document.getElementById('citationsSection').style.display = 'none';
-    window.forwardData = null;
-    window.backwardData = null;
-
-    const fetchForward  = fetch(buildSearchURL(inputValue, 'forward'))
-      .then(r => { if (!r.ok) throw new Error('Article not found or API error'); return r.json(); });
-    const fetchBackward = fetch(buildSearchURL(inputValue, 'backward'))
-      .then(r => { if (!r.ok) throw new Error('Article not found or API error'); return r.json(); });
-
-    Promise.all([fetchForward, fetchBackward])
-      .then(([fwd, bwd]) => {
-        document.getElementById('loadingSpinner').style.display = 'none';
-        document.body.classList.add('busca-realizada');
-
-        window.forwardData  = fwd.citations  || [];
-        window.backwardData = bwd.references || [];
-
-        window.seedData = { ...fwd, abstractExpanded: false };
-
-        mostrarResultado(window.seedData);
-        trocarModo();
-      })
-      .catch(err => {
-        document.getElementById('loadingSpinner').style.display = 'none';
-        document.getElementById('resultado').innerHTML =
-          '<p class="text-danger">Erro: ' + err.message + '</p>';
-        document.getElementById('citationsSection').style.display = 'none';
-        document.querySelector('#tabela-triagem tbody').innerHTML = '';
-        window.citationsData = [];
-        window.seedData = null;
-      });
+  if (inputValue) {
+    localStorage.setItem('ultimaPesquisaSnowMap', inputValue);
   }
+
+  input.blur();
+
+  if (!inputValue) {
+    alert('Please enter a DOI or title to search.');
+    return;
+  }
+
+  document.getElementById('navbarSearchInput').value = inputValue;
+  document.getElementById('loadingSpinner').style.display = 'block';
+  document.getElementById('resultado').innerHTML = '';
+
+  window.forwardData = null;
+  window.backwardData = null;
+  window.citationsData = [];
+  window.seedData = null;
+
+  const forwardPromise = fetch(buildSearchURL(inputValue, 'forward'))
+    .then(r => {
+      if (!r.ok) throw new Error('Forward search failed');
+      return r.json();
+    });
+
+  const backwardPromise = fetch(buildSearchURL(inputValue, 'backward'))
+    .then(r => {
+      if (!r.ok) throw new Error('Backward search failed');
+      return r.json();
+    });
+
+  forwardPromise
+    .then(fwd => {
+      window.forwardData = fwd.citations || [];
+      window.seedData = { ...fwd, abstractExpanded: false };
+
+      mostrarResultado(window.seedData);
+
+      const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
+      if (currentMode === 'forward') {
+        trocarModo();
+      }
+
+      document.body.classList.add('busca-realizada');
+    })
+    .catch(err => {
+      console.error(err);
+      window.forwardData = [];
+
+      document.getElementById('resultado').innerHTML =
+        '<p class="text-danger">Erro: ' + err.message + '</p>';
+    })
+    .finally(() => {
+      if (window.forwardData !== null && window.backwardData !== null) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+      }
+    });
+
+  backwardPromise
+    .then(bwd => {
+      window.backwardData = bwd.references || [];
+
+      if (!window.seedData) {
+        window.seedData = { ...bwd, abstractExpanded: false };
+        mostrarResultado(window.seedData);
+      }
+
+      const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
+      if (currentMode === 'backward') {
+        trocarModo();
+      }
+
+      document.body.classList.add('busca-realizada');
+    })
+    .catch(err => {
+      console.error(err);
+      window.backwardData = [];
+    })
+    .finally(() => {
+      if (window.forwardData !== null && window.backwardData !== null) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+      }
+    });
+}
 
   function buscarArtigoNavbar() {
     const input = document.getElementById('navbarSearchInput');
@@ -730,7 +769,7 @@
 
             <div>
               <div class="citation-number">
-                ${escapeHtml(cit.citations_count || '0')}
+                  ${escapeHtml(cit.citations_count ?? cit.citationCount ?? cit.cited_by_count ?? '0')}
               </div>
 
               <div class="citation-label">
@@ -838,8 +877,7 @@
       const year = `"${String(cit.year || '-').replace(/"/g, '""')}"`;
       const venue = `"${String(cit.venue || '-').replace(/"/g, '""')}"`;
       const doi = `"${String(cit.doi || '-').replace(/"/g, '""')}"`;
-      const citedBy = `"${String(cit.citations_count || '-').replace(/"/g, '""')}"`;
-      const openAccess = `"${String(cit.open_access ?? '-').replace(/"/g, '""')}"`;
+      const citedBy = `"${String(cit.citations_count ?? cit.citationCount ?? cit.cited_by_count ?? '-').replace(/"/g, '""')}"`;      const openAccess = `"${String(cit.open_access ?? '-').replace(/"/g, '""')}"`;
       const url = `"${String(cit.url || '-').replace(/"/g, '""')}"`;
       const keywords = `"${(cit.keywords || []).join('; ').replace(/"/g, '""')}"`;
       const language = `"${String(cit.language || '-').replace(/"/g, '""')}"`;

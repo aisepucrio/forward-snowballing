@@ -19,10 +19,16 @@ def parse_single_citation(c):
     abstract = c.get("abstract", "-")
     authors = c.get("authors", [])
     autores = [{"name": a.get("name", "-")} for a in authors]
-    total_citations_received = c.get("citationCount", 0)
+    total_citations_received = (
+        c.get("citationCount")
+        if c.get("citationCount") is not None
+        else c.get("citations_count")
+        if c.get("citations_count") is not None
+        else c.get("cited_by_count", 0)
+    )
 
     return {
-        "paperId": generate_paper_id(title),
+        "paperId": c.get("paperId") or generate_paper_id(title),
         "title": title,
         "authors": autores,
         "year": year,
@@ -30,6 +36,14 @@ def parse_single_citation(c):
         "doi": doi,
         "abstract": abstract,
         "citations_count": total_citations_received,
+        "citationCount": total_citations_received,
+        "url": c.get("url"),
+        "keywords": c.get("keywords", []),
+        "language": c.get("language"),
+        "open_access": c.get("open_access"),
+        "pages": c.get("pages"),
+        "numpages": c.get("numpages"),
+        "source": c.get("source"),
     }
 
 

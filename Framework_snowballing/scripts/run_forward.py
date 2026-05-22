@@ -5,7 +5,6 @@ import traceback
 
 from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
-from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
 from run_backward import get_references_openalex
 
@@ -15,6 +14,29 @@ from run_backward import get_references_openalex
 #em caso de erro com charmap.
 sys.stdout.reconfigure(encoding='utf-8')
 
+def normalize_citation_counts(citations):
+    normalized = []
+
+    for citation in citations:
+        item = dict(citation)
+
+        count = (
+            item.get("citations_count")
+            if item.get("citations_count") is not None
+            else item.get("citationCount")
+            if item.get("citationCount") is not None
+            else item.get("cited_by_count")
+        )
+
+        if count is None:
+            count = 0
+
+        item["citations_count"] = count
+        item["citationCount"] = count
+
+        normalized.append(item)
+
+    return normalized
 
 def main():
     try:
@@ -40,11 +62,10 @@ def main():
 
 
         # CHECA CACHE ANTES DE TUDO
-        cached = get_cached(doi=doi, title=title, mode="forward")
-        if (cached and cached.get("citations") and len(cached.get("citations")) > 0):
-            print("[CACHE HIT]", file=sys.stderr)
-            print(json.dumps(cached, ensure_ascii=False, indent=2))
-            return
+     #   cached = get_cached(doi=doi, title=title, mode="forward")
+      #  if (cached and cached.get("citations") and len(cached.get("citations")) > 0):
+       ##    print(json.dumps(cached, ensure_ascii=False, indent=2))
+         #   return
 
 
         # limpa cache das APIs
@@ -61,13 +82,9 @@ def main():
         raw_citations = paper.get("citations", [])
 
 
-        # 1. deduplica primeiro
-        deduped = deduplicate_citations(raw_citations)
-
-
-        # 2. depois enriquece
-        final_citations = enrich_incomplete_citations(deduped)
-
+        # search_combined ja soma Semantic + OpenAlex e deduplica
+        final_citations = enrich_incomplete_citations(raw_citations)
+        final_citations = normalize_citation_counts(final_citations)
 
 
         result = {

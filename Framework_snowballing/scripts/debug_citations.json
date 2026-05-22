@@ -1,0 +1,42 @@
+{
+  "semantic_reported_citationCount": 58,
+  "semantic_retrieved_citations": 57,
+  "semantic_unique_keys": 57,
+  "openalex_reported_cited_by_count": 56,
+  "openalex_retrieved_citations": 56,
+  "openalex_unique_keys": 56,
+  "in_both": 44,
+  "only_semantic": 13,
+  "only_openalex": 12,
+  "union_unique": 69,
+  "after_deduplication": 69,
+  "only_semantic_items": [
+    "doi:10.1016/j.infsof.2021.106609",
+    "doi:10.1016/j.jss.2018.12.018",
+    "doi:10.14419/ijet.v7i4.35.23101",
+    "doi:10.24979/ambiente.vi.1685",
+    "doi:10.30534/ijatcse/2020/183922020",
+    "doi:10.31933/dijdbm.v1i4.363",
+    "doi:10.5277/e-inf180103",
+    "doi:10.61467/2007.1558.2022.v13i4.321",
+    "title:gui testing of android applications a systematic mapping submitted by muzaffer aydin",
+    "title:individual organizational technological and industry factors effects on innovation capability of dairy smes in pakistan knowledge sharing as mediated",
+    "title:key issues in software testing in quality assurance and recommendations for improvement",
+    "title:modelo de gestión de conocimiento aplicado a las pruebas de software",
+    "title:pauliceia 2 0 a spatiotemporal platform for digital humanities view project"
+  ],
+  "only_openalex_items": [
+    "doi:10.1007/978-981-16-7618-5_42",
+    "doi:10.1007/978-981-19-2828-4_2",
+    "doi:10.1016/j.cmpb.2025.109150",
+    "doi:10.1109/iscon52037.2021.9702377",
+    "doi:10.1139/cjce-2022-0185",
+    "doi:10.11606/d.55.2017.tde-06032017-142147",
+    "doi:10.11606/d.55.2018.tde-08022018-161730",
+    "doi:10.3390/books978-3-03921-400-6",
+    "doi:10.55905/revconv.17n.8-414",
+    "doi:10.5753/sbqs_estendido.2022.227660",
+    "title:an empirical study on the knowledge management practice in software testing",
+    "title:the impact of knowledge management on organizational sustainability mediating role of organizational learning culture"
+  ]
+}

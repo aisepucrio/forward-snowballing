@@ -131,7 +131,8 @@ def crossref_item_to_result(item):
         "abstract": abstract if abstract else "-",
         "doi": normalize_doi(item.get("DOI")) or "-",
         "authors": authors,
-        "citations_count": 0,
+        "citations_count": item.get("is-referenced-by-count"),
+        "citationCount": item.get("is-referenced-by-count"),
         "api": "crossref",
         "language": item.get("language"),
         "url": item.get("URL"),
@@ -441,6 +442,8 @@ def get_openalex_citations(openalex_id):
             "url": item.get("primary_location", {}).get("landing_page_url"),
 
             "open_access": item.get("open_access", {}).get("is_oa"),
+            "citations_count": item.get("cited_by_count", 0),
+            "citationCount": item.get("cited_by_count", 0),
 
             "keywords": [
                 c.get("display_name") for c in item.get("concepts", [])
@@ -709,11 +712,25 @@ def get_citation_doi(citation):
 def field_missing(value):
     return value in [None, "", "-", []]
 
+def get_citation_count_value(citation):
+    if citation.get("citations_count") not in [None, "", "-"]:
+        return citation.get("citations_count")
+
+    if citation.get("citationCount") not in [None, "", "-"]:
+        return citation.get("citationCount")
+
+    if citation.get("cited_by_count") not in [None, "", "-"]:
+        return citation.get("cited_by_count")
+
+    return None
+
 
 def deduplicate_citations(citations):
     unique = {}
 
-    for c in citations:
+    for citation in citations:
+        c = dict(citation)
+
         doi = get_citation_doi(c)
         title = normalize_title(c.get("title"))
 
@@ -725,8 +742,13 @@ def deduplicate_citations(citations):
         else:
             continue
 
+        count = get_citation_count_value(c)
+        if count is not None:
+            c["citations_count"] = count
+            c["citationCount"] = count
+
         if key not in unique:
-            unique[key] = dict(c)
+            unique[key] = c
             continue
 
         existing = unique[key]
@@ -735,10 +757,30 @@ def deduplicate_citations(citations):
             if field_missing(existing.get(field)) and not field_missing(value):
                 existing[field] = value
 
+        existing_count = get_citation_count_value(existing)
+        incoming_count = get_citation_count_value(c)
+
+        if existing_count in [None, "", "-", 0, "0"] and incoming_count not in [None, "", "-"]:
+            existing["citations_count"] = incoming_count
+            existing["citationCount"] = incoming_count
+        elif existing_count not in [None, "", "-"]:
+            existing["citations_count"] = existing_count
+            existing["citationCount"] = existing_count
+
+        sources = set()
+
+        if existing.get("source"):
+            sources.add(existing.get("source"))
+        if c.get("source"):
+            sources.add(c.get("source"))
+
+        if sources:
+            existing["sources"] = sorted(sources)
+
         if existing.get("doi"):
             existing["doi"] = normalize_doi(existing.get("doi"))
-    return list(unique.values())
 
+    return list(unique.values())
 
 
 def search_combined(doi=None, title=None):
@@ -770,6 +812,7 @@ def search_combined(doi=None, title=None):
 
             all_citations = semantic_citations + openalex_citations
             deduped_citations = deduplicate_citations(all_citations)
+            
 
             merged = openalex_data.copy() if openalex_data else {}
             merged = merge_prefer_filled(merged, paper_data)
@@ -963,7 +1006,9 @@ def needs_enrichment(citation):
         is_missing(citation.get("doi")) or
         is_missing(citation.get("year")) or
         is_missing(citation.get("venue")) or
-        not citation.get("authors")
+        not citation.get("authors") or
+        is_missing(citation.get("citationCount")) or
+        is_missing(citation.get("citations_count"))
     )
 
 
