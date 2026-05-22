@@ -40,8 +40,8 @@ def main():
 
 
         # CHECA CACHE ANTES DE TUDO
-        cached = get_cached(doi=doi, title=title)
-        if (cached and cached.get("mode") == "forward" and cached.get("citations") and len(cached.get("citations")) > 0):
+        cached = get_cached(doi=doi, title=title, mode="forward")
+        if (cached and cached.get("citations") and len(cached.get("citations")) > 0):
             print("[CACHE HIT]", file=sys.stderr)
             print(json.dumps(cached, ensure_ascii=False, indent=2))
             return

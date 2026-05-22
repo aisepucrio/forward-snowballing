@@ -98,8 +98,8 @@ def main():
        init_db()
 
 
-       cached = get_cached(doi=doi, title=title)
-       if (cached and cached.get("mode") == "backward" and cached.get("references") and len(cached.get("references")) > 0):         
+       cached = get_cached(doi=doi, title=title, mode="backward")
+       if (cached and cached.get("references") and len(cached.get("references")) > 0):         
         print("[CACHE HIT - BACKWARD]", file=sys.stderr)
         print(json.dumps(cached, ensure_ascii=False, indent=2))
         return
@@ -143,7 +143,7 @@ def main():
            "references_retrieved": len(references),
            "references": references,
            "citations": [],
-           "mode": "forward",
+           "mode": "backward",
        }
 
 
