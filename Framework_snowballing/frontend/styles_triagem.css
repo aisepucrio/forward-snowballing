@@ -234,22 +234,6 @@ input[type="checkbox"] {
   white-space: nowrap;
 }
 
-.navbar-search {
-  background: #fff;
-  border-radius: 999px;
-  padding: 8px 14px;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  width: 100%;
-  max-width: 500px;
-
-  margin-left: auto;
-  margin-right: auto;
-}
-
 .navbar-brand {
     z-index: 2;
 }
@@ -257,35 +241,6 @@ input[type="checkbox"] {
 .navbar-collapse {
     margin-left: auto;
     z-index: 2;
-}
-
-.navbar-search input {
-    border: none;
-    outline: none;
-    background: #fff;
-    width: 260px;
-    font-size: 14px;
-}
-
-.navbar-search button {
-  background: #1f7a4d;
-  color: white;
-  border: none;
-
-  padding: 6px 18px;
-  border-radius: 999px;
-
-  font-size: 14px;
-  font-weight: 500;
-
-  transition: all 0.2s ease;
-
-  margin-left: auto;
-}
-
-.navbar-search button:hover {
-    background: #17633f;
-    transform: translateY(-1px);
 }
 
 #citedHeader {
@@ -310,16 +265,6 @@ input[type="checkbox"] {
     .card-resumo p {
         font-size: 4rem;
     }
-    
-    .navbar-search {
-        position: static;
-
-        transform: none;
-
-        max-width: 100%;
-
-        margin-top: 12px;
-    }
 
     .navbar-inner {
         flex-wrap: wrap;
@@ -331,12 +276,6 @@ input[type="checkbox"] {
     main.container {
         padding-left: 18px;
         padding-right: 18px;
-    }
-
-    .navbar-search {
-        order: 3;
-        width: 100%;
-        max-width: 100%;
     }
 
     .quadro-conteudo {
@@ -384,4 +323,155 @@ input[type="checkbox"] {
 #most-cited::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.3);
     border-radius: 2px;
+}
+
+#resultado .table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible;
+  margin-top: 15px;
+  margin-bottom: 25px;
+}
+
+#resultado .custom-table {
+  min-width: 100% !important; 
+  width: 100% !important;
+  table-layout: unset !important;
+}
+
+#resultado .custom-table th:nth-child(1),
+#resultado .custom-table td:nth-child(1) {
+  width: 65% !important;
+}
+
+#resultado .custom-table th:nth-child(2),
+#resultado .custom-table td:nth-child(2) {
+  width: 35% !important;
+  text-align: left;
+  vertical-align: top;
+}
+
+#resultado .paper-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+#resultado .paper-tags {
+  margin-top: 0;
+}
+
+#resultado .table-wrapper {
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-top: 20px;
+  margin-bottom: 25px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible;
+}
+
+#resultado .table-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background: #fff;
+}
+
+#resultado .table-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+#resultado .custom-table {
+  width: 100% !important;
+  min-width: 100% !important;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+#resultado .custom-table thead tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#resultado .custom-table th {
+  font-family: 'Poppins', sans-serif;
+  text-align: left;
+  padding: 16px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+#resultado .custom-table td {
+  padding: 22px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+#resultado .custom-table th:nth-child(1),
+#resultado .custom-table td:nth-child(1) {
+  width: 65% !important;
+}
+
+#resultado .custom-table th:nth-child(2),
+#resultado .custom-table td:nth-child(2) {
+  width: 35% !important;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+#resultado .paper-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+#resultado .paper-doi {
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+#resultado .paper-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+#resultado .paper-tag {
+  font-family: 'Poppins', sans-serif;
+  background: #ecfdf5;
+  color: #047857;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+#resultado .venue-tag {
+  background: #f3f4f6;
+  color: #4b5563;
 }

@@ -26,14 +26,6 @@ rel="stylesheet">
         <span class="brand-text">SnowMap</span>
       </a>
 
-      <form id="navbarSearchForm" class="navbar-search" onsubmit="buscarArtigoNavbar(); return false;">
-        <i class="bi bi-search"></i>
-        <input type="text" id="navbarSearchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)">
-        <button type="submit">
-          Search
-        </button>
-      </form>
-
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -53,8 +45,9 @@ rel="stylesheet">
 
   <main class="container">
     <section class="mb-4">
-      <h4 id="titulo-principal">Selected Articles</h4>
+      <div id="resultado"></div>
     </section>
+
     <section class="mb-5">
       <h3 class="mb-4 titulo">Summary</h3>
       <div class="row g-4 cards-resumo-row">
@@ -139,6 +132,73 @@ rel="stylesheet">
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function formatAuthors(authors) {
+      if (!authors) return '-';
+      if (Array.isArray(authors)) {
+        if (authors.length === 0) return '-';
+        return authors.map(a => a?.name || a).join('; ');
+      }
+      if (typeof authors === 'string') return authors;
+      return '-';
+    }
+
+    function mostrarResultado(artigo) {
+      const resultadoEl = document.getElementById('resultado');
+      if (!resultadoEl) return;
+
+      if (!artigo || !artigo.title) {
+        resultadoEl.innerHTML = '<p class="text-muted">Seed article data not found.</p>';
+        return;
+      }
+
+      const authors = formatAuthors(artigo.authors);
+      const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
+
+      resultadoEl.innerHTML = `
+      <div class="table-wrapper mb-4">
+        <div class="table-topbar">
+          <div class="table-info">
+            <span class="table-title">Seed Paper Analysis</span>
+          </div>
+        </div>
+
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Research Identity</th>
+              <th>Authors</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="paper-doi">
+                  DOI: ${escapeHtml(doiToShow)}
+                </div>
+                <div class="paper-title">
+                  ${escapeHtml(artigo.title || '-')}
+                </div>
+                <div class="paper-meta">
+                  <div class="paper-tags">
+                    <span class="paper-tag">
+                      ${escapeHtml(artigo.year || '-')}
+                    </span>
+                    <span class="paper-tag venue-tag">
+                      ${escapeHtml(artigo.venue || '-')}
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                ${escapeHtml(authors)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      `;
     }
 
     const totalArtigosEl = document.getElementById('total-artigos');
@@ -370,16 +430,41 @@ rel="stylesheet">
     }
 
     function carregarArtigosLocal() {
+      const seedDataStorage = localStorage.getItem('seedPaperData');
+      
+      if (seedDataStorage) {
+        try {
+          const artigoSemente = JSON.parse(seedDataStorage);
+          mostrarResultado(artigoSemente); // Renderiza o card com as infos certas!
+        } catch (e) {
+          console.error("Error parsing Seed Paper data:", e);
+          document.getElementById('resultado').innerHTML = '<p class="text-muted">Error loading seed article data.</p>';
+        }
+      } else {
+        if (window.name) {
+          try {
+            const dados = JSON.parse(window.name);
+            if (dados && dados.length > 0) {
+              const seedRef = dados.find(a => a.isSeed || a.seed === true) || dados[0];
+              mostrarResultado(seedRef);
+            }
+          } catch(e) {
+            document.getElementById('resultado').innerHTML = '<p class="text-muted">Seed article data not found.</p>';
+          }
+        }
+      }
+
       if (!window.name) {
         alert('No articles found for screening. Please return to the home page and try a new search.');
         return;
       }
+      
       try {
         const dados = JSON.parse(window.name);
         const artigos = normalizeArticles(dados.filter(a => a.selecionado === 'incluir'));
         atualizarResumoEgraficos(artigos);
       } catch (e) {
-        alert('Error loading screening data:  ' + e.message);
+        alert('Error loading screening data: ' + e.message);
       }
     }
 
