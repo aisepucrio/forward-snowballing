@@ -435,7 +435,7 @@ rel="stylesheet">
       if (seedDataStorage) {
         try {
           const artigoSemente = JSON.parse(seedDataStorage);
-          mostrarResultado(artigoSemente); // Renderiza o card com as infos certas!
+          mostrarResultado(artigoSemente);
         } catch (e) {
           console.error("Error parsing Seed Paper data:", e);
           document.getElementById('resultado').innerHTML = '<p class="text-muted">Error loading seed article data.</p>';
