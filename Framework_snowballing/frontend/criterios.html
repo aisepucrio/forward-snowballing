@@ -556,6 +556,12 @@ automatically screen abstracts and provide decision support.</h3>
 
       const statusEl = document.getElementById('statusAnalise');
       const progressoEl = document.getElementById('progressoAnalise');
+      const progressContainer = document.querySelector('.progress');
+
+      if (progressContainer) {
+        progressContainer.style.display = '';
+      }
+      statusEl.style.display = '';
 
       statusEl.textContent = `Starting analysis... 0/${artigosLimpos.length}`;
       progressoEl.style.width = '0%';
@@ -595,7 +601,9 @@ automatically screen abstracts and provide decision support.</h3>
       progressoEl.style.width = '100%';
       progressoEl.textContent = '100%';
       setTimeout(() => {
-        document.querySelector('.progress').style.display = 'none';
+        if (progressContainer) {
+          progressContainer.style.display = 'none';
+        }
         statusEl.style.display = 'none';
       }, 800);
 

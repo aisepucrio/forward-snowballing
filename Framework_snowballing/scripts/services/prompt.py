@@ -9,6 +9,9 @@ INCLUSION_KEY = "Inclusion"
 EXCLUSION_KEY = "Exclusion"
 
 
+NOT_AVAILABLE = "not available"
+
+
 def normalize_text(value: Any) -> str:
     if value is None:
         return ""
@@ -68,14 +71,65 @@ def format_criteria(criteria_group: dict[str, str]) -> str:
     )
 
 
+def _stringify_metadata_value(value: Any) -> str:
+    if value is None:
+        return NOT_AVAILABLE
+
+    if isinstance(value, str):
+        cleaned = value.strip()
+        return cleaned if cleaned else NOT_AVAILABLE
+
+    if isinstance(value, bool):
+        return "true" if value else "false"
+
+    if isinstance(value, (int, float)):
+        return str(value)
+
+    if isinstance(value, list):
+        normalized_items = []
+        for item in value:
+            if isinstance(item, dict):
+                name = normalize_text(item.get("name"))
+                normalized_items.append(name or json.dumps(item, ensure_ascii=False))
+            else:
+                normalized_items.append(normalize_text(item))
+
+        normalized_items = [item for item in normalized_items if item]
+        return ", ".join(normalized_items) if normalized_items else NOT_AVAILABLE
+
+    return normalize_text(value) or NOT_AVAILABLE
+
+
+def _format_article_metadata(article: dict[str, Any]) -> str:
+    metadata_fields = [
+        ("paperId", article.get("paperId")),
+        ("title", article.get("title")),
+        ("abstract", article.get("abstract")),
+        ("authors", article.get("authors")),
+        ("year", article.get("year")),
+        ("venue", article.get("venue")),
+        ("citationCount", article.get("citationCount", article.get("citations_count"))),
+        ("language", article.get("language")),
+        ("pages", article.get("pages")),
+        ("numpages", article.get("numpages")),
+        ("open_access", article.get("open_access")),
+        ("keywords", article.get("keywords")),
+    ]
+
+    return "\n".join(
+        f"- {field_name}: {_stringify_metadata_value(field_value)}"
+        for field_name, field_value in metadata_fields
+    )
+
+
 def generate_prompt(
-    title: str,
-    abstract: str,
+    article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
     criteria_schema = _format_criteria_schema(criteria)
+    article_metadata = _format_article_metadata(article)
 
     return f"""You are an expert researcher conducting a Systematic Review.
 Your task is to classify the article against each inclusion and exclusion criterion.
@@ -100,14 +154,14 @@ EXAMPLE ARTICLE:
 - abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
 
 EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Sim","IC2":"Sim","EC1":"Nao","EC2":"Nao"}}}}
+{{"criteria":{{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}}}
 
 EXAMPLE ARTICLE:
 - title: A review of methods in the target research area
 - abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
 
 EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Nao","IC2":"Sim","EC1":"Sim","EC2":"Nao"}}}}
+{{"criteria":{{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"No"}}}}
 
 REAL CRITERIA
 
@@ -118,31 +172,29 @@ EXCLUSION CRITERIA
 {exclusion_criteria}
 
 REAL ARTICLE
-- title: {normalize_text(title)}
-- abstract: {normalize_text(abstract)}
+{article_metadata}
 
 CLASSIFICATION RULES:
-- For each inclusion criterion, return "Sim" if the article satisfies it; otherwise return "Nao".
-- For each exclusion criterion, return "Sim" if the article satisfies it; otherwise return "Nao".
-- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Sim" for ambiguous inclusion criteria and "Nao" for ambiguous exclusion criteria.
+- For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Yes" for ambiguous inclusion criteria and "No" for ambiguous exclusion criteria.
 
 OUTPUT:
 - Return only valid compact JSON.
 - The JSON must contain exactly one top-level key: "criteria".
-- The "criteria" object must contain exactly these criterion keys and values "Sim" or "Nao":
+- The "criteria" object must contain exactly these criterion keys and values "Yes" or "No":
 {criteria_schema}
 - Do not include explanations, reasoning, confidence, markdown, or extra text.
 """
 
 
 def build_prompt_for_article(
-    title: str,
-    abstract: str,
+    article: dict[str, Any],
     articles_json_path: str | Path,
 ) -> str:
     data = load_articles_json(articles_json_path)
     criteria = extract_criteria(data)
-    return generate_prompt(title, abstract, criteria)
+    return generate_prompt(article, criteria)
 
 
 def build_prompts_from_articles_json(articles_json_path: str | Path) -> list[str]:
@@ -155,8 +207,7 @@ def build_prompts_from_articles_json(articles_json_path: str | Path) -> list[str
 
     return [
         generate_prompt(
-            title=article.get("title", ""),
-            abstract=article.get("abstract", ""),
+            article=article,
             criteria=criteria,
         )
         for article in articles
@@ -193,4 +244,4 @@ def _format_criteria_schema(criteria: dict[str, dict[str, str]]) -> str:
     if not ids:
         return "{}"
 
-    return json.dumps({criterion_id: "Sim ou Nao" for criterion_id in ids})
+    return json.dumps({criterion_id: "Yes or No" for criterion_id in ids})
