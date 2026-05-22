@@ -9,6 +9,29 @@ from services.search import search_combined, enrich_incomplete_citations, clear_
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
 
+def normalize_citation_counts(citations):
+    normalized = []
+
+    for citation in citations:
+        item = dict(citation)
+
+        count = (
+            item.get("citations_count")
+            if item.get("citations_count") is not None
+            else item.get("citationCount")
+            if item.get("citationCount") is not None
+            else item.get("cited_by_count")
+        )
+
+        if count is None:
+            count = 0
+
+        item["citations_count"] = count
+        item["citationCount"] = count
+
+        normalized.append(item)
+
+    return normalized
 
 def get_references_openalex(doi):
    try:
@@ -63,7 +86,18 @@ def get_references_openalex(doi):
                        {"name": a.get("author", {}).get("display_name", "-")}
                        for a in (ref.get("authorships") or [])
                    ],
-                   "citationCount": ref.get("cited_by_count", 0),
+                   "citationCount": ref.get("cited_by_count", 0), "citations_count": ref.get("cited_by_count", 0),
+                   "open_access": ref.get("open_access", {}).get("is_oa"),
+                    "url": primary_loc.get("landing_page_url"),
+                    "keywords": [
+                        c.get("display_name")
+                        for c in ref.get("concepts", [])
+                        if c.get("display_name")
+                    ][:10],
+                    "language": ref.get("language"),
+                    "pages": ref.get("biblio", {}).get("first_page"),
+                    "numpages": ref.get("biblio", {}).get("last_page"),
+                    "source": "openalex",
                })
 
 
@@ -123,6 +157,8 @@ def main():
        # processamento
        references = deduplicate_citations(references)
        references = enrich_incomplete_citations(references)
+       references = normalize_citation_counts(references)
+
 
 
        result = {

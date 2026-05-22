@@ -49,9 +49,14 @@ def merge_prefer_filled(base, extra):
     if (not merged.get("authors")) and extra.get("authors"):
         merged["authors"] = extra["authors"]
 
-    base_count = merged.get("citations_count", 0)
-    extra_count = extra.get("citations_count", 0)
-    if (not base_count) and extra_count:
+    base_count = merged.get("citations_count") or merged.get("citationCount")
+    extra_count = extra.get("citations_count") or extra.get("citationCount")
+
+    if not base_count and extra_count:
         merged["citations_count"] = extra_count
+        merged["citationCount"] = extra_count
+    elif base_count:
+        merged["citations_count"] = base_count
+        merged["citationCount"] = base_count
 
     return merged
