@@ -221,6 +221,7 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
   function toggleIncludeAll() {
     if (!window.citationsData || window.citationsData.length === 0) {
       alert('No citations available.');
@@ -390,6 +391,8 @@
       window.forwardData = fwd.citations || [];
       window.seedData = { ...fwd, abstractExpanded: false };
 
+      localStorage.setItem('seedPaperData', JSON.stringify(window.seedData));
+
       mostrarResultado(window.seedData);
 
       const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
@@ -418,6 +421,7 @@
 
       if (!window.seedData) {
         window.seedData = { ...bwd, abstractExpanded: false };
+        localStorage.setItem('seedPaperData', JSON.stringify(window.seedData));
         mostrarResultado(window.seedData);
       }
 
