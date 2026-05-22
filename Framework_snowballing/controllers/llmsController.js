@@ -1,5 +1,39 @@
+const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
+
+function tryCommand(command) {
+  try {
+    return execSync(command, { encoding: 'utf8' }).split(/\r?\n/)[0].trim();
+  } catch {
+    return null;
+  }
+}
+
+function findPythonExecutable() {
+  const projectRoot = path.join(__dirname, '..');
+  const venvCandidates = process.platform === 'win32'
+    ? [
+        path.join(projectRoot, '.venv', 'Scripts', 'python.exe'),
+        path.join(projectRoot, 'venv', 'Scripts', 'python.exe'),
+      ]
+    : [
+        path.join(projectRoot, '.venv', 'bin', 'python'),
+        path.join(projectRoot, 'venv', 'bin', 'python'),
+      ];
+
+  for (const candidate of venvCandidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  if (process.platform === 'win32') {
+    return tryCommand('where python') || tryCommand('where python3');
+  }
+
+  return tryCommand('which python3') || tryCommand('which python');
+}
 
 exports.analisar = (req, res) => {
   const { criteriosInclusao, criteriosExclusao, artigos } = req.body;
@@ -12,8 +46,13 @@ exports.analisar = (req, res) => {
 
   // Caminho absoluto para o script Python:
   const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');
+  const pythonPath = findPythonExecutable();
 
-  const pythonProcess = spawn('python3', [scriptPath]);
+  if (!pythonPath) {
+    return res.status(500).json({ error: 'Python não encontrado no servidor.' });
+  }
+
+  const pythonProcess = spawn(pythonPath, [scriptPath]);
 
   let output = '';
   let errorOutput = '';
