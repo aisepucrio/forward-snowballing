@@ -175,6 +175,7 @@ REAL ARTICLE
 {article_metadata}
 
 CLASSIFICATION RULES:
+- Consider each key in data to decide whether the article satisfies each criterion.
 - For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
 - For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
 - When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Yes" for ambiguous inclusion criteria and "No" for ambiguous exclusion criteria.
