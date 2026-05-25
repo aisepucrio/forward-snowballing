@@ -160,15 +160,14 @@ rel="stylesheet">
       <div class="table-wrapper mb-4">
         <div class="table-topbar">
           <div class="table-info">
-            <span class="table-title">Seed Paper Analysis</span>
+            <span class="table-title">Seed Paper</span>
           </div>
         </div>
 
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Research Identity</th>
-              <th>Authors</th>
+              
             </tr>
           </thead>
           <tbody>
@@ -180,6 +179,7 @@ rel="stylesheet">
                 <div class="paper-title">
                   ${escapeHtml(artigo.title || '-')}
                 </div>
+                ${escapeHtml(authors)}
                 <div class="paper-meta">
                   <div class="paper-tags">
                     <span class="paper-tag">
@@ -190,9 +190,6 @@ rel="stylesheet">
                     </span>
                   </div>
                 </div>
-              </td>
-              <td>
-                ${escapeHtml(authors)}
               </td>
             </tr>
           </tbody>
