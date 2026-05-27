@@ -1,0 +1,144 @@
+Total: N=109
+True Positives (TP): 6
+False Positives (FP): 9
+True Negatives (TN): 90
+False Negatives (FN): 4
+
+Recall: 0.6000
+Precision: 0.4000
+F1-score: 0.4800
+
+LLM = Inclusion ^ GT = Exclusion:
+- Automated identification of security-relevant configuration settings using NLP
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
+- Feature-oriented defect prediction
+- FOCloud: feature model guided performance prediction and explanation for deployment configurable cloud applications
+- kconfig-webconf: retrofitting performance models onto kconfig-based software product lines
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Regression model trees: Compact energy models for complex IoT devices
+- Unicorn: Reasoning about configurable system performance through the lens of causality
+
+LLM = Exclusion ^ GT = Inclusion:
+- Adaptive behavioral model learning for software product lines
+- Configuration optimization with limited functional impact
+- On Programming Variability with Large Language Model-based Assistant
+- Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
+
+
+
+Criteria analysis:
+LLM > IC1:    Yes 99.09% | No 00.91% | 
+Source > IC1: Yes 99.08% | No 00.92% | 
+LLM > IC2:    Yes 88.18% | No 11.82% | 
+Source > IC2: Yes 63.30% | No 36.70% | 
+LLM > IC3:    Yes 15.45% | No 84.55% | 
+Source > IC3: Yes 22.02% | No 77.98% | 
+LLM > EC1:    Yes 16.36% | No 83.64% | 
+Source > EC1: Yes 02.75% | No 97.25% | 
+LLM > EC2:    Yes 05.45% | No 94.55% | 
+Source > EC2: Yes 09.17% | No 90.83% | 
+LLM > EC3:    Yes 00.00% | No 100.00% |
+Source > EC3: Yes 05.50% | No 94.50% | 
+LLM > EC4:    Yes 45.45% | No 54.55% | 
+Source > EC4: Yes 19.27% | No 80.73% | 
+
+----------------prompt 
+"""
+    You are an expert researcher conducting a Systematic Review.
+    Evaluate the article based on the inclusion and exclusion criteria.
+
+    INCLUSION CRITERIA (mark Yes/No)
+    {inclusion_criteria}
+
+    EXCLUSION CRITERIA (mark Yes/No)
+    {exclusion_criteria}
+
+    EXAMPLES:
+
+    ARTICLE TO ANALYZE:
+    - title: Machine learning based defect prediction using industrial software metrics
+    - abstract: This empirical study evaluates machine learning classifiers for predicting defective modules in an industrial software system. The study uses historical defect data and software metrics collected from a real company project, compares prediction performance, and discusses practical implications for software quality assurance.
+
+    EXPECTED OUTPUT (JSON):
+    {{
+      "title": "Machine learning based defect prediction using industrial software metrics",
+      "results": {{
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      }},
+      "Decision": {{
+        "decision": "inclusion"
+      }}
+    }}
+
+    ARTICLE TO ANALYZE:
+    - title: A literature review of software defect prediction techniques
+    - abstract: This paper reviews and summarizes existing software defect prediction approaches published in the literature. It compares prior studies, organizes machine learning techniques used in defect prediction, and identifies open research challenges.
+
+    EXPECTED OUTPUT (JSON):
+    {{
+      "title": "A literature review of software defect prediction techniques",
+      "results": {{
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "Yes",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "Yes"
+      }},
+      "Decision": {{
+        "decision": "exclusion"
+      }}
+    }}
+
+    ARTICLE TO ANALYZE:
+    - title: Deep learning for image classification in medical diagnosis
+    - abstract: This paper proposes a convolutional neural network for classifying medical images. Experiments are performed on a public image dataset and results show improved diagnostic accuracy compared with previous image classification approaches.
+
+    EXPECTED OUTPUT (JSON):
+    {{
+      "title": "Deep learning for image classification in medical diagnosis",
+      "results": {{
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      }},
+      "Decision": {{
+        "decision": "exclusion"
+      }}
+    }}
+
+    ARTICLE TO ANALYZE:
+    - title: {_normalize_text(title)}
+    - abstract: {_normalize_text(summary)}
+
+    EXACT OUTPUT FORMAT (JSON):
+    {{
+      "title": "<repeat the article title>",
+      "results": {criteria_output},
+      "Decision": {{
+        "decision": "inclusion|exclusion"
+      }}
+    }}
+
+    Rules:
+    - Include one key in "results" for every inclusion and exclusion criterion listed above.
+    - Use only "Yes" or "No" in the result for each criterion.
+    - If any inclusion criterion is marked "No", the decision must be "exclusion".
+    - If any exclusion criterion is marked "Yes", the decision must be "exclusion".
+    - Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
+    - Prefer "No" for an inclusion criterion when the abstract does not provide enough evidence to satisfy it.
+    - Do not include explanations, confidence, markdown, or extra keys.
+    - Return only the JSON object.
+    """
