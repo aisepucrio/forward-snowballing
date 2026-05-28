@@ -1,0 +1,112 @@
+Total: N=363
+
+- Precision: 0.3333
+- Recall: 0.5556
+- F1-score: 0.4167
+
+- True positives: 15
+- False positives: 30
+- False negatives: 12
+- True negatives: 306
+
+LLM = Inclusion ^ GT = Exclusion:
+- A Study on Software Metric Selection for Software Fault Prediction
+- A dynamical quality model to continuously monitor software maintenance
+- An investigation of cross-project learning in online just-in-time sotfware defect prediction
+- Automated defect prioritization based on defects resolved at various project periods
+- Automatically identifying code features for software defect prediction: Using AST N-grams
+- Buffer overflow detection for c programs is hard to learn
+- Classification based software defect prediction model for finance software system - An industry study
+- Continuous Build Outcome Prediction: A Small-N Experiment in Settings of a Real Software Project
+- Cost Effectiveness of Software Defect Prediction in an
+Industrial Project
+- Demo: Automatically retrainable self improving model for the automated classification of software incidents into multiple classes
+- Domain adaptation for test report classification in crowdsourced testing
+- Efficient Bug Triage For Industrial Environments
+- Efficient Bug Triage for Industrial Environments
+- Evolutionary extreme learning machine with sparse cost matrix for imbalanced learning
+- Exploration of Machine Learning Techniques for Defect Classification
+- Fault Prediction for Large Scale Projects Using Deep Learning Techniques
+- Getting Defect Prediction Into Industrial Practice: the ELFF Tool
+- Improved approach for software defect prediction using artificial neural networks
+- Incorporating fault-proneness estimations into coverage-based test case prioritization methods
+- LTRWES: A new framework for security bug report detection
+- Large-scale intent analysis for identifying large-review-effort code changes
+- Learning Feature Representations from Change Dependency Graphs for Defect Prediction
+- Learning the Evolution Regularities for BigService-Oriented Online Reliability Prediction
+- On the Defect Prediction for Large Scale Software Systems â€“ From Defect Density to Machine Learning
+- Predicting Node failure in cloud service systems
+- Research on defect detection technology of trusted behavior decision tree based on intelligent data semantic analysis of massive data
+- Singling the odd ones out: A novelty detection approach to find defects in infrastructure-as-code
+- Software Change Proneness Prediction Using Machine Learning
+- Software engineering approach to bug prediction models using machine learning as a service (MLaaS)
+- Software fault prediction based on one-class SVM
+
+LLM = Exclusion ^ GT = Inclusion:
+- Analyzing machine learning techniques for fault prediction using web applications
+- Conpredictor: Concurrency defect prediction in real-world applications
+- Convolutional Neural Networks over Control Flow Graphs for Software Defect Prediction
+- DeepBugs: a learning approach to name-based bug detection
+- DeepWukong: Statically Detecting Software Vulnerabilities Using Deep Graph Neural Network
+- Leopard: identifying vulnerable code for vulnerability assessment through program metrics
+- MTFuzz: Fuzzing with a multi-task neural network
+- OffSide: Learning to Identify Mistakes in Boundary Conditions
+- On the prediction of long-lived bugs: An analysis and comparative study using FLOSS projects
+- Precise learn-to-rank fault localization using dynamic and static features of target programs
+- The importance of accounting for real-world labelling when predicting software vulnerabilities
+- Transductive Instance Transfer Learning for Cross-Language Defect Prediction
+-------------------------------- prompt
+"""You are an expert researcher conducting a Systematic Review.
+Your task is to decide whether the article should be selected.
+
+Think through the criteria carefully before answering, but do not include your reasoning in the output.
+
+The examples below illustrate the decision process only.
+Do not reuse the example criteria when analyzing the real article.
+
+EXAMPLE CRITERIA
+
+INCLUSION CRITERIA
+- IC1: The article is a primary empirical study.
+- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
+
+EXCLUSION CRITERIA
+- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
+- EC2: The article is outside the review topic.
+
+EXAMPLE ARTICLE:
+- title: Empirical evaluation of a method in the target research area
+- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
+
+EXPECTED OUTPUT:
+1
+
+EXAMPLE ARTICLE:
+- title: A review of methods in the target research area
+- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
+
+EXPECTED OUTPUT:
+0
+
+REAL CRITERIA
+
+INCLUSION CRITERIA
+{inclusion_criteria}
+
+EXCLUSION CRITERIA
+{exclusion_criteria}
+
+REAL ARTICLE
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+DECISION RULES:
+- Return 1 if the article satisfies all inclusion criteria and no exclusion criterion is satisfied.
+- Return 0 if any inclusion criterion is not satisfied.
+- Return 0 if any exclusion criterion is satisfied.
+- Return 1 when the evidence is ambiguous, incomplete, or only weakly implied.
+
+OUTPUT:
+- Return only one character: 0 or 1.
+- Do not include explanations, reasoning, criterion labels, confidence, markdown, JSON, or extra text.
+"""

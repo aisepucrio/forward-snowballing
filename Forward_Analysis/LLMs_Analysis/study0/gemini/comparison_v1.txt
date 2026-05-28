@@ -1,0 +1,74 @@
+Total: N=110
+True Positives (TP): 5
+False Positives (FP): 8
+True Negatives (TN): 89
+False Negatives (FN): 8
+
+Recall: 0.3846
+Precision: 0.3846
+F1-score: 0.3846
+
+LLM = Inclusion ^ GT = Exclusion:
+- Baloo: Measuring and modeling the performance configurations of distributed dbms
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
+- Feature-oriented defect prediction
+- FOCloud: feature model guided performance prediction and explanation for deployment configurable cloud applications
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Regression model trees: Compact energy models for complex IoT devices
+- Unicorn: Reasoning about configurable system performance through the lens of causality
+
+LLM = Exclusion ^ GT = Inclusion:
+- A Monte Carlo tree search conceptual framework for feature model analyses
+- Adaptive behavioral model learning for software product lines
+- Configuration optimization with limited functional impact
+- Featracer: Locating features through assisted traceability
+- Feature Modelling
+- On Programming Variability with Large Language Model-based Assistant
+- Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
+- Specialization of run-time configuration space at compile-time: An exploratory study
+
+Criteria analysis:
+LLM > IC1:    Yes 99.09% | No 00.91% |
+Source > IC1: Yes 99.08% | No 00.92% | 
+LLM > IC2:    Yes 86.36% | No 13.64% | 
+Source > IC2: Yes 63.30% | No 36.70% | 
+LLM > IC3:    Yes 11.82% | No 88.18% | 
+Source > IC3: Yes 23.85% | No 76.15% | 
+LLM > EC1:    Yes 14.55% | No 85.45% | 
+Source > EC1: Yes 01.83% | No 98.17% | 
+LLM > EC2:    Yes 09.09% | No 90.91% | 
+Source > EC2: Yes 09.17% | No 90.83% | 
+LLM > EC3:    Yes 01.82% | No 98.18% | 
+Source > EC3: Yes 05.50% | No 94.50% |
+LLM > EC4:    Yes 42.73% | No 57.27% |
+Source > EC4: Yes 18.35% | No 81.65% |
+
+Prompt--------------------------------------------
+You are an expert researcher conducting a Systematic Review.
+Evaluate the article based on the inclusion and exclusion criteria.
+
+INCLUSION CRITERIA (mark Yes/No)
+{inclusion_criteria}
+
+EXCLUSION CRITERIA (mark Yes/No)
+{exclusion_criteria}
+
+ARTICLE TO ANALYZE:
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+EXACT OUTPUT FORMAT (JSON):
+{{
+  "title": "<repeat the article title>",
+{results_schema}
+}}
+
+Rules:
+- Use only "Yes" or "No" in the result for each criterion.
+- If any inclusion criterion is marked "No", the decision must be "exclusion". STOP and return the results json.
+- If any exclusion criterion is marked "Yes", the decision must be "exclusion". STOP and return the results json.
+- Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
+- Do not include any keys other than the requested ones.
+- Return only the JSON, without any markdown or extra text.
+"""
