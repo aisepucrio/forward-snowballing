@@ -347,102 +347,155 @@
       abstractExpanded: false
     }));
 
+    if (window.seedData) {
+      mostrarResultado(window.seedData, mode);
+    }
+
     mostrarCitacoes(window.citationsData);
   }
 
-  function buscarArtigo() {
-  const input = document.getElementById('searchInput');
-  const inputValue = input.value.trim();
+  async function buscarArtigo() {
+    const input = document.getElementById('searchInput');
+    const inputValue = input.value.trim();
 
-  if (inputValue) {
-    localStorage.setItem('ultimaPesquisaSnowMap', inputValue);
-  }
+    if (inputValue) {
+      localStorage.setItem('ultimaPesquisaSnowMap', inputValue);
+    }
 
-  input.blur();
+    input.blur();
 
-  if (!inputValue) {
-    alert('Please enter a DOI or title to search.');
-    return;
-  }
+    if (!inputValue) {
+      alert('Please enter a DOI or title to search.');
+      return;
+    }
 
-  document.getElementById('navbarSearchInput').value = inputValue;
-  document.getElementById('loadingSpinner').style.display = 'block';
-  document.getElementById('resultado').innerHTML = '';
+    document.getElementById('navbarSearchInput').value = inputValue;
 
-  window.forwardData = null;
-  window.backwardData = null;
-  window.citationsData = [];
-  window.seedData = null;
+    document.getElementById('loadingSpinner').style.display = 'block';
 
-  const forwardPromise = fetch(buildSearchURL(inputValue, 'forward'))
-    .then(r => {
-      if (!r.ok) throw new Error('Forward search failed');
-      return r.json();
-    });
+    document.getElementById('resultado').innerHTML = '';
 
-  const backwardPromise = fetch(buildSearchURL(inputValue, 'backward'))
-    .then(r => {
-      if (!r.ok) throw new Error('Backward search failed');
-      return r.json();
-    });
+    document.getElementById('citationsSection').style.display = 'none';
 
-  forwardPromise
-    .then(fwd => {
-      window.forwardData = fwd.citations || [];
-      window.seedData = { ...fwd, abstractExpanded: false };
+    window.forwardData = null;
+    window.backwardData = null;
+    window.citationsData = [];
+    window.seedData = null;
 
-      localStorage.setItem('seedPaperData', JSON.stringify(window.seedData));
+    const forwardPromise = fetch(buildSearchURL(inputValue, 'forward'))
+      .then(r => {
+        if (!r.ok) throw new Error('Forward search failed');
+        return r.json();
+      });
 
-      mostrarResultado(window.seedData);
+    const backwardPromise = fetch(buildSearchURL(inputValue, 'backward'))
+      .then(r => {
+        if (!r.ok) throw new Error('Backward search failed');
+        return r.json();
+      });
 
-      const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
-      if (currentMode === 'forward') {
-        trocarModo();
-      }
+    // FORWARD
+    forwardPromise
+      .then(fwd => {
 
-      document.body.classList.add('busca-realizada');
-    })
-    .catch(err => {
-      console.error(err);
-      window.forwardData = [];
+        window.forwardData = fwd.citations || [];
 
-      document.getElementById('resultado').innerHTML =
-        '<p class="text-danger">Erro: ' + err.message + '</p>';
-    })
-    .finally(() => {
-      if (window.forwardData !== null && window.backwardData !== null) {
-        document.getElementById('loadingSpinner').style.display = 'none';
-      }
-    });
+        window.seedData = {
+          ...fwd,
+          abstractExpanded: false
+        };
 
-  backwardPromise
-    .then(bwd => {
-      window.backwardData = bwd.references || [];
+        localStorage.setItem(
+          'seedPaperData',
+          JSON.stringify(window.seedData)
+        );
 
-      if (!window.seedData) {
-        window.seedData = { ...bwd, abstractExpanded: false };
-        localStorage.setItem('seedPaperData', JSON.stringify(window.seedData));
         mostrarResultado(window.seedData);
-      }
 
-      const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
-      if (currentMode === 'backward') {
-        trocarModo();
-      }
+        const currentMode =
+          document.querySelector(
+            'input[name="snowballMode"]:checked'
+          ).value;
+        mostrarResultado(window.seedData, currentMode);
 
-      document.body.classList.add('busca-realizada');
-    })
-    .catch(err => {
-      console.error(err);
-      window.backwardData = [];
-    })
-    .finally(() => {
-      if (window.forwardData !== null && window.backwardData !== null) {
-        document.getElementById('loadingSpinner').style.display = 'none';
-      }
-    });
-}
+        if (currentMode === 'forward') {
+          trocarModo();
+        }
 
+        document.body.classList.add('busca-realizada');
+      })
+
+      .catch(err => {
+        console.error(err);
+
+        window.forwardData = [];
+
+        document.getElementById('resultado').innerHTML =
+          '<p class="text-danger">Forward search failed.</p>';
+      })
+
+      .finally(() => {
+
+        if (
+          window.forwardData !== null &&
+          window.backwardData !== null
+        ) {
+          document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+      });
+
+    // BACKWARD
+    backwardPromise
+      .then(bwd => {
+
+        window.backwardData = bwd.references || [];
+
+        // Caso forward falhe
+        if (!window.seedData) {
+
+          window.seedData = {
+            ...bwd,
+            abstractExpanded: false
+          };
+
+          localStorage.setItem(
+            'seedPaperData',
+            JSON.stringify(window.seedData)
+          );
+
+          mostrarResultado(window.seedData);
+        }
+
+        const currentMode =
+          document.querySelector(
+            'input[name="snowballMode"]:checked'
+          ).value;
+
+        if (currentMode === 'backward') {
+          trocarModo();
+        }
+
+        document.body.classList.add('busca-realizada');
+      })
+
+      .catch(err => {
+        console.error(err);
+
+        window.backwardData = [];
+      })
+
+      .finally(() => {
+
+        if (
+          window.forwardData !== null &&
+          window.backwardData !== null
+        ) {
+          document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+      });
+  }
   function buscarArtigoNavbar() {
     const input = document.getElementById('navbarSearchInput');
     document.getElementById('searchInput').value = input.value;
@@ -456,18 +509,21 @@
   }
 
 
-  function mostrarResultado(artigo) {
+  function mostrarResultado(artigo, modo = 'forward') {
     if (!artigo || !artigo.title) {
       document.getElementById('resultado').innerHTML = '<p>Article not found.</p>';
       return;
     }
 
-
     const authors = formatAuthors(artigo.authors);
     const abstractPreview = truncateText(artigo.abstract || '-', 200);
     const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
-    const citedByToShow = artigo.citations_retrieved || artigo.citations_count || '-';
-    const referencesToShow = artigo.references_retrieved || artigo.references_count || '-';
+    
+    const contagemExibida = modo === 'forward' 
+      ? (artigo.citations_retrieved ?? artigo.citations_count ?? artigo.citationCount ?? artigo.cited_by_count ?? '-')
+      : (artigo.references_retrieved ?? artigo.references_count ?? '-');
+
+    const etiquetaExibida = modo === 'forward' ? 'Citations' : 'References';
 
     const openAccessToShow = artigo.open_access || '-';
     const urlToShow = artigo.url || '-';
@@ -588,23 +644,17 @@
 
 
             <td>
-
               <div class="citation-box">
-
                 <div class="citation-dot"></div>
-
                 <div>
                   <div class="citation-number">
-                    ${escapeHtml(citedByToShow)}
+                    ${escapeHtml(contagemExibida)}
                   </div>
-
                   <div class="citation-label">
-                    Citations
+                    ${escapeHtml(etiquetaExibida)}
                   </div>
                 </div>
-
               </div>
-
             </td>
 
 
@@ -627,11 +677,11 @@
     document.getElementById('resultado').onclick = function (e) {
       if (e.target && e.target.id === 'seedReadMore') {
         window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
-        mostrarResultado(window.seedData);
+        const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
+        mostrarResultado(window.seedData, currentMode);
       }
     };
   }
-
 
   function mostrarCitacoes(citations) {
     const citSection = document.getElementById('citationsSection');
@@ -974,17 +1024,11 @@
   });
 
 
-  document.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
-      buscarArtigo();
-    }
-  });
-
   document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
     radio.addEventListener('change', () => {
       const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
       if (navRadio) navRadio.checked = true;
-      if (window.forwardData !== null || window.backwardData !== null) trocarModo();
+      if (window.forwardData !== null && window.backwardData !== null) trocarModo();
     });
   });
 

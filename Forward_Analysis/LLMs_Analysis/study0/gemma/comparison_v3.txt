@@ -1,0 +1,42 @@
+Total: N=109
+True Positives (TP): 5
+False Positives (FP): 8
+True Negatives (TN): 91
+False Negatives (FN): 5
+
+Recall: 0.5000
+Precision: 0.3846
+F1-score: 0.4348
+
+LLM = Inclusion ^ GT = Exclusion:
+- Automated identification of security-relevant configuration settings using NLP
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
+- Feature-oriented defect prediction
+- FOCloud: feature model guided performance prediction and explanation for deployment configurable cloud applications
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Regression model trees: Compact energy models for complex IoT devices
+- Unicorn: Reasoning about configurable system performance through the lens of causality
+
+LLM = Exclusion ^ GT = Inclusion:
+- Adaptive behavioral model learning for software product lines
+- CoMSA: A Modeling-Driven Sampling Approach for Configuration Performance Testing
+- Configuration optimization with limited functional impact
+- On Programming Variability with Large Language Model-based Assistant
+- Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
+
+Criteria analysis:
+LLM > IC1:    Yes 98.18% | No 01.82% | 
+Source > IC1: Yes 99.08% | No 00.92% | 
+LLM > IC2:    Yes 86.36% | No 13.64% | 
+Source > IC2: Yes 63.30% | No 36.70% | 
+LLM > IC3:    Yes 12.73% | No 87.27% | 
+Source > IC3: Yes 22.02% | No 77.98% | 
+LLM > EC1:    Yes 04.55% | No 95.45% | 
+Source > EC1: Yes 02.75% | No 97.25% | 
+LLM > EC2:    Yes 05.45% | No 94.55% | 
+Source > EC2: Yes 09.17% | No 90.83% | 
+LLM > EC3:    Yes 00.00% | No 100.00% | 
+Source > EC3: Yes 05.50% | No 94.50% | 
+LLM > EC4:    Yes 14.55% | No 85.45% | 
+Source > EC4: Yes 19.27% | No 80.73% |
