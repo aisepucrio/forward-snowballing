@@ -12,8 +12,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <link rel="stylesheet" href="styles_triagem.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
-rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.7/build/d3.layout.cloud.min.js"></script>
 </head>
 <body>
   <!-- Navbar -->
@@ -87,9 +89,10 @@ rel="stylesheet">
 
     <section class="mb-5">
       <h3 class="mb-4 subtitulo">Charts</h3>
-      <div class="row gutter">
-        <div class="quadro col-md-6">
-          <div class="quadro-conteudo">
+
+      <div class="row g-4">
+        <div class="col-md-6 d-flex">
+          <div class="quadro-conteudo w-100">
             <h4 class="mb-3">Yearly Distribution</h4>
             <div class="alinhamento-checkbox">
               <label for="checkbox">Select All</label>
@@ -98,12 +101,22 @@ rel="stylesheet">
             <canvas id="graficoAno" height="300"></canvas>
           </div>
         </div>
-        <div class="quadro col-md-6">
-          <div class="quadro-conteudo">
+        <div class="col-md-6 d-flex">
+          <div class="quadro-conteudo w-100">
             <h4 class="mb-3">Venue Distribution</h4>
             <canvas id="graficoVenue" height="300"></canvas>
           </div>
         </div>
+
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="quadro-conteudo text-center w-100">
+              <h4 class="mb-3">Word Cloud</h4>
+              <div id="word-cloud" style="width: 100%; min-height: 350px; background: #fff; border-radius: 8px;"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   </main>
@@ -228,6 +241,142 @@ rel="stylesheet">
         li.textContent = `${key}: ${val}`;
         el.appendChild(li);
       });
+    }
+
+    const stopwords = new Set([
+      'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves',
+      'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their',
+      'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are',
+      'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an',
+      'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about',
+      'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up',
+      'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when',
+      'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no',
+      'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don',
+      'should', 'now', 'using', 'used', 'use', 'based', 'results', 'paper', 'study', 'approach', 'method', 'analysis'
+    ]);
+
+    function processarTextoPLN(artigos) {
+      const frequenciaPalavras = {};
+
+      artigos.forEach(artigo => {
+        const titulo = artigo.title || "";
+        const abstract = (artigo.abstract && artigo.abstract !== "No abstract available") ? artigo.abstract : "";
+        
+        let keywords = "";
+        if (artigo.keywords) {
+          if (Array.isArray(artigo.keywords)) {
+            keywords = artigo.keywords.join(" ");
+          } else if (typeof artigo.keywords === 'string') {
+            keywords = artigo.keywords;
+          }
+        }
+
+        const textoCompleto = `${titulo} ${keywords} ${abstract}`;
+        
+        if (!textoCompleto.trim()) return;
+
+        const palavras = textoCompleto.toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .split(/[\s]+/);
+
+        palavras.forEach(palavra => {
+          if (palavra.length <= 2 || stopwords.has(palavra) || !isNaN(palavra)) return;
+
+          frequenciaPalavras[palavra] = (frequenciaPalavras[palavra] || 0) + 1;
+        });
+      });
+
+      return Object.entries(frequenciaPalavras)
+        .map(([text, size]) => ({ text, size }))
+        .sort((a, b) => b.size - a.size)
+        .slice(0, 100);
+    }
+
+    let nuvemResizeTimeout;
+
+    function gerarNuvemPalavras(artigos) {
+      const container = document.getElementById('word-cloud');
+      if (!container) return;
+      
+      container.innerHTML = '';
+
+      const palavrasDados = processarTextoPLN(artigos);
+      if (palavrasDados.length === 0) {
+        container.innerHTML = '<p class="text-muted p-4">No abstract data available to generate word cloud.</p>';
+        return;
+      }
+
+      const largura = container.offsetWidth || 800;
+      const altura = largura < 576 ? 260 : 380; 
+
+      let fonteMin = 14;
+      let fonteMax = 52;
+
+      if (largura < 576) {
+        fonteMin = 10;
+        fonteMax = 24;
+      } else if (largura < 992) {
+        fonteMin = 12;
+        fonteMax = 36;
+      }
+
+      const maxSize = d3.max(palavrasDados, d => d.size);
+      const minSize = d3.min(palavrasDados, d => d.size);
+      
+      const escalaFonte = d3.scaleLinear()
+        .domain([minSize, maxSize])
+        .range([fonteMin, fonteMax]);
+
+      const coresNuvem = ['#5D8AA8', '#367588', '#2F4F4F', '#3F7CAC', '#264348', '#2C5F71', '#5B8D89', '#176D6D'];
+
+      const layout = d3.layout.cloud()
+        .size([largura, altura])
+        .words(palavrasDados.map(d => ({ text: d.text, size: escalaFonte(d.size) })))
+        .padding(5)
+        .rotate(() => (Math.random() > 0.75 ? 90 : 0))
+        .font("Poppins, sans-serif")
+        .fontSize(d => d.size)
+        .on("end", desenharNuvem);
+
+      layout.start();
+
+      function desenharNuvem(words) {
+        const svg = d3.select("#word-cloud")
+          .append("svg")
+          .attr("viewBox", `0 0 ${largura} ${altura}`)
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("preserveAspectRatio", "xMidYMid meet")
+          .append("g")
+          .attr("transform", `translate(${largura / 2},${altura / 2})`);
+
+        svg.selectAll("text")
+          .data(words)
+          .enter().append("text")
+          .style("font-size", d => `${d.size}px`)
+          .style("font-family", "Poppins, sans-serif")
+          .style("font-weight", "600")
+          .style("fill", () => coresNuvem[Math.floor(Math.random() * coresNuvem.length)])
+          .attr("text-anchor", "middle")
+          .attr("transform", d => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`)
+          .text(d => d.text)
+          .on("mouseover", function() { d3.select(this).style("opacity", "0.7"); })
+          .on("mouseout", function() { d3.select(this).style("opacity", "1"); });
+      }
+
+      window.removeEventListener('resize', forcarRecalculoNuvem);
+      window.addEventListener('resize', forcarRecalculoNuvem);
+
+      function forcarRecalculoNuvem() {
+        clearTimeout(nuvemResizeTimeout);
+        nuvemResizeTimeout = setTimeout(() => {
+          const novaLargura = document.getElementById('word-cloud')?.offsetWidth;
+          if (novaLargura && novaLargura !== largura) {
+            gerarNuvemPalavras(artigos);
+          }
+        }, 250);
+      }
     }
 
     function atualizarResumoEgraficos(artigos) {
@@ -424,6 +573,7 @@ rel="stylesheet">
       }, 100);
       
       atualizarCoresBarras(anosSelecionados);
+      gerarNuvemPalavras(artigos);
     }
 
     function carregarArtigosLocal() {

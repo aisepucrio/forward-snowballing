@@ -475,3 +475,26 @@ input[type="checkbox"] {
   background: #f3f4f6;
   color: #4b5563;
 }
+
+.quadro-conteudo {
+    background-color: #eaf7ef;
+    border-radius: 1.8rem;
+    padding: 2rem;
+    min-height: auto;
+}
+
+#word-cloud {
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 1rem;
+}
+
+#word-cloud svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
