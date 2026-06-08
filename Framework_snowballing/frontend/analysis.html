@@ -57,28 +57,37 @@
         <div class="col-md-6">
           <div class="card-resumo">
             <h5>Total Articles</h5>
-            <p id="total-artigos">0</p>
+            <p id="total-artigos">N/A</p>
           </div>
         </div>
 
         <div class="col-md-6">
           <div class="card-resumo">
             <h5>Total Venues</h5>
-            <p id="total-venue">0</p>
+            <p id="total-venue">N/A</p>
           </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="card-resumo">
             <h5>Total of Open Access Articles</h5>
             <p id="total-open-access">N/A</p>
           </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="card-resumo">
             <h5>Most Cited Articles</h5>
-            <div id="most-cited" class="mt-2 text-start" style="font-size: 0.95rem; line-height: 1.4; font-weight: 400;">
+            <div id="most-cited" class="mt-2 text-start" style="font-size: 0.95rem; line-height: 1.4; font-weight: 400; height: auto;">
+              N/A
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card-resumo">
+            <h5>Most Cited Authors</h5>
+            <div id="most-cited-authors" class="mt-2 text-start" style="font-size: 0.95rem; line-height: 1.4; font-weight: 400; height: auto;">
               N/A
             </div>
           </div>
@@ -385,18 +394,20 @@
 
       const totalOpenAccessEl = document.getElementById('total-open-access');
       const mostCitedEl = document.getElementById('most-cited');
+      const mostCitedAuthorsEl = document.getElementById('most-cited-authors');
 
       const totalOpenAccess = artigos.filter(artigo => 
         artigo.open_access === true || 
-        artigo.open_access === 'true' || 
-        artigo.open_access === 1 ||
-        artigo.open_access === 'yes'
+        artigo.open_access === 'true'
       ).length;
 
-      if (mostCitedEl) {
-        if (artigos.length === 0) {
-          mostCitedEl.innerHTML = "<p class='m-0 text-white-50'>No articles selected.</p>";
-        } else {
+      if (artigos.length === 0) {
+        if (mostCitedEl) mostCitedEl.innerHTML = "<p class='m-0 text-white-50'>No articles selected.</p>";
+        if (mostCitedAuthorsEl) mostCitedAuthorsEl.innerHTML = "<p class='m-0 text-white-50'>No articles selected.</p>";
+      } 
+      
+      else {
+        if (mostCitedEl) {
           const topCitados = [...artigos]
             .sort((a, b) => b.citations_count - a.citations_count)
             .slice(0, 3);
@@ -410,8 +421,56 @@
               </li>`;
           });
           listaHTML += '</ol>';
-          
           mostCitedEl.innerHTML = listaHTML;
+        }
+
+        if (mostCitedAuthorsEl) {
+          const citacoesAutores = {};
+
+          artigos.forEach(artigo => {
+            const numCitations = artigo.citations_count || 0;
+            const autoresOriginais = dadosOriginaisDoArtigo(artigo) || []; 
+            
+            if (Array.isArray(autoresOriginais)) {
+              autoresOriginais.forEach(autor => {
+                const nomeAutor = typeof autor === 'string' ? autor : autor?.name;
+                if (nomeAutor && nomeAutor !== '-') {
+                  citacoesAutores[nomeAutor] = (citacoesAutores[nomeAutor] || 0) + numCitations;
+                }
+              });
+            }
+          });
+
+        const topAutores = Object.entries(citacoesAutores)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+
+          if (topAutores.length === 0) {
+            mostCitedAuthorsEl.innerHTML = "<p class='m-0 text-muted'>N/A</p>";
+          } 
+          
+          else {
+            let listaAutoresHTML = '<ol class="ps-3 m-0" style="color: #000;">';
+            topAutores.forEach(([autor, citacoes]) => {
+              listaAutoresHTML += `
+                <li class="mb-2">
+                  ${escapeHtml(autor)}
+                  <strong style="color: #000;">(${citacoes} total citations)</strong> 
+                </li>`;
+            });
+            listaAutoresHTML += '</ol>';
+            mostCitedAuthorsEl.innerHTML = listaAutoresHTML;
+          }
+        }
+      }
+
+      function dadosOriginaisDoArtigo(artigoNormalizado) {
+        try {
+          const dadosOriginais = JSON.parse(window.name || '[]');
+          const original = dadosOriginais.find(a => a.paperId === artigoNormalizado.paperId || a.title === artigoNormalizado.title);
+          return original ? original.authors : null;
+        } catch(e) {
+          return null;
         }
       }
 
