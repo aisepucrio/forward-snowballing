@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import json
@@ -105,17 +106,27 @@ def extract_npages(pages):
         return None
     if "-" in pages:
         try:
-            start, end = pages.split("-")
+            start, end = pages.split("-", 1)
             return int(end) - int(start) + 1
         except:
             return None
     return None
 
 
+def build_pages(first_page, last_page):
+    if first_page and last_page:
+        return f"{first_page}-{last_page}"
+    return str(first_page) if first_page else None
+
+
+def strip_html_tags(text):
+    if not text or not isinstance(text, str):
+        return text
+    return re.sub(r"<[^>]+>", " ", text).strip()
+
 def crossref_item_to_result(item):
     title_list = item.get("title", [])
-    abstract = item.get("abstract", "-")
-
+    abstract = strip_html_tags(item.get("abstract")) or "-"
 
     year = "-"
     issued = item.get("issued", {}).get("date-parts", [])
@@ -330,6 +341,9 @@ def fallback_openalex_by_doi(doi):
         authors.append({"name": author.get("display_name", "-")})
 
 
+    biblio = data.get("biblio") or {}
+    pages = build_pages(biblio.get("first_page"), biblio.get("last_page"))
+
     result = {
         "title": data.get("title", "-"),
         "year": data.get("publication_year", "-"),
@@ -348,7 +362,8 @@ def fallback_openalex_by_doi(doi):
             if c.get("display_name")
         ][:10],
         "language": data.get("language"),
-
+        "pages": pages,
+        "numpages": extract_npages(pages),
     }
 
 
@@ -361,7 +376,7 @@ def attach_openalex_citations(paper):
 
     if merged.get("openalex_id"):
         citations = get_openalex_citations(merged["openalex_id"])
-        merged["citations"] = deduplicate_citations(citations)
+        merged["citations"] = citations
         merged["citationCount"] = len(merged["citations"])
     else:
         merged.setdefault("citations", [])
@@ -390,38 +405,28 @@ def get_openalex_citations(openalex_id):
 
 
     for item in data.get("results", []):
+        biblio = item.get("biblio") or {}
+        pages = build_pages(biblio.get("first_page"), biblio.get("last_page"))
+        abstract = reconstruct_abstract_from_inverted_index(item.get("abstract_inverted_index"))
         citations.append({
             "title": item.get("title"),
             "year": item.get("publication_year"),
+            "abstract": abstract,
             "doi": normalize_doi(item.get("doi")),
-
-
             "url": item.get("primary_location", {}).get("landing_page_url"),
-
-
             "open_access": item.get("open_access", {}).get("is_oa"),
             "citations_count": item.get("cited_by_count", 0),
             "citationCount": item.get("cited_by_count", 0),
-
-
             "keywords": [
                 c.get("display_name") for c in item.get("concepts", [])
             ],
-
-
             "language": item.get("language"),
-
-
-            "pages": item.get("biblio", {}).get("first_page"),
-            "numpages": item.get("biblio", {}).get("last_page"),
-
-
+            "pages": pages,
+            "numpages": extract_npages(pages),
             "authors": [
                 {"name": a.get("author", {}).get("display_name", "-")}
                 for a in item.get("authorships", [])
             ],
-
-
             "source": "openalex"
         })
 
@@ -859,7 +864,6 @@ def search_combined(doi=None, title=None):
 
 
             all_citations = semantic_citations + openalex_citations
-            deduped_citations = deduplicate_citations(all_citations)
 
 
             merged = openalex_data.copy() if openalex_data else {}
@@ -867,8 +871,7 @@ def search_combined(doi=None, title=None):
 
 
             merged["doi"] = semantic_doi or cleaned_doi
-            merged["citations"] = deduped_citations
-            merged["citationCount"] = len(deduped_citations)
+            merged["citations"] = all_citations
             merged["api"] = "semantic+openalex"
             merged["partial_result"] = False
 
@@ -929,8 +932,7 @@ def search_combined(doi=None, title=None):
                 return search_combined(doi=resolved_doi, title=None)
 
 
-            paper_data["citations"] = deduplicate_citations(paper_data.get("citations", []))
-            paper_data["citationCount"] = len(paper_data["citations"])
+            paper_data["citationCount"] = len(paper_data.get("citations", []))
             return paper_data
 
 
@@ -1022,21 +1024,7 @@ def search_combined(doi=None, title=None):
 
 
 
-        # REMOVE DUPLICATAS
-        deduped_citations = deduplicate_citations(all_citations)
-
-
-
-
-        merged["citations"] = deduped_citations
-        merged["citationCount"] = len(deduped_citations)
-
-
-
-
-
-
-
+        merged["citations"] = all_citations
 
         merged["api"] = f'{openalex_data.get("api", "openalex")}+{paper_data.get("api", "semantic")}'
 
