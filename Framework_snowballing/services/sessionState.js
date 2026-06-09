@@ -32,7 +32,7 @@ function ensureSession(req, res, next) {
   let sessionId = cookies[SESSION_COOKIE_NAME];
 
   if (!sessionId) {
-    sessionId = crypto.randomUUID();
+    sessionId = crypto.randomBytes(16).toString('hex');
     res.setHeader(
       'Set-Cookie',
       `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=Lax`

@@ -158,6 +158,10 @@
   </button>
   -->
 
+            <button id="dedupBtn" class="btn-export" onclick="openDedupModal()">
+              <i class="bi bi-copy"></i>
+              See Duplicates
+            </button>
             <button id="downloadBtn" class="btn-export">
               <i class="bi bi-download"></i>
               Export
@@ -340,12 +344,17 @@
     document.querySelector('#citationsList .table-title').textContent =
       mode === 'forward' ? 'Cited By' : 'References';
 
-    window.citationsData = list.map(c => ({
+    const mappedList = list.map((c, i) => ({
       ...c,
-      paperId: c.paperId || c.doi || Math.random().toString(36),
+      paperId: `${c.paperId || c.doi || 'item'}-${i}`,
       selecionado: c.selecionado || null,
       abstractExpanded: false
     }));
+    window.rawCitationsData = mappedList;
+    window.citationsData = [...mappedList];
+    window.dedupApplied = false;
+    const dedupBtn = document.getElementById('dedupBtn');
+    if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
 
     if (window.seedData) {
       mostrarResultado(window.seedData, mode);
@@ -519,11 +528,8 @@
     const abstractPreview = truncateText(artigo.abstract || '-', 200);
     const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
     
-    const contagemExibida = modo === 'forward' 
-      ? (artigo.citations_retrieved ?? artigo.citations_count ?? artigo.citationCount ?? artigo.cited_by_count ?? '-')
-      : (artigo.references_retrieved ?? artigo.references_count ?? '-');
-
-    const etiquetaExibida = modo === 'forward' ? 'Citations' : 'References';
+    const contagemCitations = artigo.citations_retrieved ?? artigo.citations_count ?? artigo.citationCount ?? artigo.cited_by_count ?? '-';
+    const contagemReferences = artigo.references_retrieved ?? artigo.references_count ?? '-';
 
     const openAccessToShow = artigo.open_access || '-';
     const urlToShow = artigo.url || '-';
@@ -555,6 +561,7 @@
             <th>Language</th>
             <th>Pages</th>
             <th>Citations</th>
+            <th>References</th>
           </tr>
         </thead>
 
@@ -639,7 +646,7 @@
             </td>
 
             <td>
-              ${escapeHtml(pagesToShow || numpagesToShow || '-')}
+              ${escapeHtml(numpagesToShow !== '-' ? numpagesToShow : pagesToShow || '-')}
             </td>
 
 
@@ -648,10 +655,24 @@
                 <div class="citation-dot"></div>
                 <div>
                   <div class="citation-number">
-                    ${escapeHtml(contagemExibida)}
+                    ${escapeHtml(String(contagemCitations))}
                   </div>
                   <div class="citation-label">
-                    ${escapeHtml(etiquetaExibida)}
+                    Citations
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div class="citation-box">
+                <div class="citation-dot"></div>
+                <div>
+                  <div class="citation-number">
+                    ${escapeHtml(String(contagemReferences))}
+                  </div>
+                  <div class="citation-label">
+                    References
                   </div>
                 </div>
               </div>
@@ -811,7 +832,7 @@
         </td>
 
         <td>
-          ${escapeHtml(cit.pages || cit.numpages || '-')}
+          ${escapeHtml(cit.numpages != null ? cit.numpages : cit.pages || '-')}
         </td>
 
 
@@ -935,7 +956,7 @@
       const url = `"${String(cit.url || '-').replace(/"/g, '""')}"`;
       const keywords = `"${(cit.keywords || []).join('; ').replace(/"/g, '""')}"`;
       const language = `"${String(cit.language || '-').replace(/"/g, '""')}"`;
-      const pages = `"${String(cit.pages || cit.numpages || '-').replace(/"/g, '""')}"`;
+      const pages = `"${String(cit.numpages != null ? cit.numpages : cit.pages || '-').replace(/"/g, '""')}"`;
       const action = `"${String(getActionLabel(cit.selecionado)).replace(/"/g, '""')}"`;
 
 
@@ -1024,6 +1045,71 @@
   });
 
 
+  function normalizeDoi(doi) {
+    if (!doi || doi === '-') return null;
+    return doi.trim().toLowerCase()
+      .replace(/^https?:\/\/doi\.org\//, '')
+      .replace(/^doi:/, '');
+  }
+
+  function normalizeTitleJs(title) {
+    if (!title || title === '-') return '';
+    return title.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+  }
+
+  function findDuplicateGroups(list) {
+    const groups = {};
+    list.forEach(item => {
+      const doi = normalizeDoi(item.doi);
+      const key = doi ? `doi:${doi}` : `title:${normalizeTitleJs(item.title)}`;
+      if (!key || key === 'doi:null' || key === 'title:') return;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    return Object.values(groups).filter(g => g.length > 1);
+  }
+
+  function openDedupModal() {
+    const groups = findDuplicateGroups(window.citationsData || []);
+    const body = document.getElementById('dedupModalBody');
+
+    if (groups.length === 0) {
+      body.innerHTML = '<p class="text-muted">No duplicates found in the current list.</p>';
+    } else {
+      body.innerHTML = groups.map((group, gi) => `
+        <div class="mb-4">
+          <div class="fw-bold mb-2 text-secondary" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">
+            Group ${gi + 1} — ${group.length} duplicates
+          </div>
+          ${group.map(item => `
+            <div class="d-flex align-items-start gap-2 p-2 mb-1 rounded" style="border:1px solid #e0e0e0; background:#fafafa;">
+              <input type="checkbox" class="dedup-checkbox form-check-input mt-1 flex-shrink-0" value="${escapeHtml(item.paperId)}" id="dedup-${escapeHtml(item.paperId)}">
+              <label for="dedup-${escapeHtml(item.paperId)}" class="mb-0" style="cursor:pointer; font-size:0.9rem;">
+                <div class="fw-semibold">${escapeHtml(item.title || '-')}</div>
+                <div class="text-muted" style="font-size:0.8rem;">
+                  ${escapeHtml(String(item.year || '-'))} · ${escapeHtml(item.venue || '-')} · DOI: ${escapeHtml(item.doi || '-')}
+                </div>
+              </label>
+            </div>
+          `).join('')}
+        </div>
+      `).join('<hr>');
+    }
+
+    new bootstrap.Modal(document.getElementById('dedupModal')).show();
+  }
+
+  function removeDedupSelected() {
+    const checked = new Set(
+      [...document.querySelectorAll('.dedup-checkbox:checked')].map(cb => cb.value)
+    );
+    if (checked.size === 0) return;
+    window.citationsData = (window.citationsData || []).filter(c => !checked.has(c.paperId));
+    mostrarCitacoes(window.citationsData);
+    atualizarBotaoIncludeAll();
+    bootstrap.Modal.getInstance(document.getElementById('dedupModal')).hide();
+  }
+
   document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
     radio.addEventListener('change', () => {
       const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
@@ -1045,6 +1131,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
+
+<!-- Modal: See Duplicates -->
+<div class="modal fade" id="dedupModal" tabindex="-1" aria-labelledby="dedupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dedupModalLabel">Duplicate Papers</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="dedupModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="removeDedupSelected()">Remove Selected</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

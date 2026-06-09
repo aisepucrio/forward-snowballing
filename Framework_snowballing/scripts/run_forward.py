@@ -62,10 +62,10 @@ def main():
 
 
         # CHECA CACHE ANTES DE TUDO
-     #   cached = get_cached(doi=doi, title=title, mode="forward")
-      #  if (cached and cached.get("citations") and len(cached.get("citations")) > 0):
-       ##    print(json.dumps(cached, ensure_ascii=False, indent=2))
-         #   return
+        cached = get_cached(doi=doi, title=title, mode="forward")
+        if cached and cached.get("citations") and len(cached.get("citations")) > 0:
+            print(json.dumps(cached, ensure_ascii=False, indent=2))
+            return
 
 
         # limpa cache das APIs
