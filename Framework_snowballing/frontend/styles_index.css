@@ -375,7 +375,7 @@ body.busca-realizada #navbarModeToggle {
 
 .custom-table {
   width: 100%;
-  min-width: 1600px;
+  min-width: 1480px;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -401,6 +401,10 @@ body.busca-realizada #navbarModeToggle {
   border-bottom: 1px solid #f1f5f9;
   vertical-align: top;
   word-break: break-word;
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.0;
+  font-weight: 400;
 }
 
 .custom-table td a {
@@ -421,12 +425,12 @@ body.busca-realizada #navbarModeToggle {
 
 .custom-table th:nth-child(1),
 .custom-table td:nth-child(1) {
-  width: 260px;
+  width: 600px;
 }
 
 .custom-table th:nth-child(2),
 .custom-table td:nth-child(2) {
-  width: 260px;
+  width: 400px;
 }
 
 .custom-table th:nth-child(3),
@@ -436,41 +440,24 @@ body.busca-realizada #navbarModeToggle {
 
 .custom-table th:nth-child(4),
 .custom-table td:nth-child(4) {
-  width: 120px;
-  text-align: center;
+  width: 220px;
 }
 
 .custom-table th:nth-child(5),
 .custom-table td:nth-child(5) {
-  width: 220px;
+  width: 100px;
+  text-align: center;
 }
 
 .custom-table th:nth-child(6),
 .custom-table td:nth-child(6) {
-  width: 220px;
+  width: 120px;
+  text-align: center;
 }
 
 .custom-table th:nth-child(7),
 .custom-table td:nth-child(7) {
   width: 120px;
-  text-align: center;
-}
-
-.custom-table th:nth-child(8),
-.custom-table td:nth-child(8) {
-  width: 100px;
-  text-align: center;
-}
-
-.custom-table th:nth-child(9),
-.custom-table td:nth-child(9) {
-  width: 120px;
-  text-align: center;
-}
-
-.custom-table th:nth-child(10),
-.custom-table td:nth-child(10) {
-  width: 110px;
   text-align: center;
 }
 
@@ -485,7 +472,6 @@ body.busca-realizada #navbarModeToggle {
 
   margin-bottom: 10px;
   line-height: 1.5;
-
   word-break: break-word;
 }
 
@@ -498,13 +484,16 @@ body.busca-realizada #navbarModeToggle {
   font-size: 11px;
   color: #10b981;
   font-weight: 600;
-
   margin-bottom: 8px;
-
   letter-spacing: 0.02em;
   text-transform: uppercase;
-
   word-break: break-all;
+}
+
+.paper-doi a {
+  color: #0b6b43;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 /* =========================================
@@ -513,9 +502,8 @@ body.busca-realizada #navbarModeToggle {
 
 .paper-tags {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-
   margin-top: 10px;
 }
 
@@ -525,18 +513,36 @@ body.busca-realizada #navbarModeToggle {
 
   padding: 4px 10px;
   border-radius: 999px;
-
+  
   font-size: 11px;
   font-weight: 600;
 
   display: inline-flex;
   align-items: center;
+  
 }
 
 .venue-tag {
   background: #f3f4f6;
   color: #4b5563;
 }
+
+.open-access-tag {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.language-tag {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.pages-tag {
+  background: #eef2ff;
+  color: #736cc3;
+}
+
+
 
 /* =========================================
    ABSTRACT
@@ -546,18 +552,31 @@ body.busca-realizada #navbarModeToggle {
   font-size: 13px;
   color: #4b5563;
   line-height: 1.7;
-
+  
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
 
   overflow: hidden;
 }
 
-.abstract-text.expanded {
+.abstract-text.expanded,
+.keywords-text.expanded {
   display: block;
   -webkit-line-clamp: unset;
   overflow: visible;
+}
+
+.keywords-text {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.7;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
 }
 
 .read-more {
@@ -570,6 +589,7 @@ body.busca-realizada #navbarModeToggle {
 
   margin-top: 8px;
   display: inline-block;
+  
 }
 /* =========================================
    AUTHORS
@@ -848,7 +868,7 @@ body.busca-realizada #citationsSection {
   }
 
   .custom-table {
-    min-width: 1600px;
+    min-width: 1480px;
   }
 
   .table-wrapper {

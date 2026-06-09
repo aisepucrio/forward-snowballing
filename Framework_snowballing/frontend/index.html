@@ -183,10 +183,7 @@
               <th>Research Identity</th>
               <th>Abstract</th>
               <th>Authors</th>
-              <th>Open Access</th>
-              <th>URL</th>
               <th>Keywords</th>
-              <th>Language</th>
               <th>Pages</th>
               <th>Citations</th>
               <th>Actions</th>
@@ -279,23 +276,48 @@
   function formatAuthors(authors) {
     if (!authors) return '-';
 
-
     if (Array.isArray(authors)) {
       if (authors.length === 0) return '-';
       return authors.map(a => a?.name || a).join('; ');
     }
 
-
     if (typeof authors === 'string') return authors;
 
-
     return '-';
+  }
+
+  function formatKeywords(keywords) {
+    if (!keywords) return '-';
+    if (Array.isArray(keywords)) {
+      return keywords.length ? keywords.join(', ') : '-';
+    }
+    return keywords || '-';
   }
 
 
   function formatDOILink(doi) {
     if (!doi || doi === '-') return '-';
-    return `<a href="https://doi.org/${encodeURIComponent(doi)}" target="_blank">${escapeHtml(doi)}</a>`;
+    return `<a href="https://doi.org/${encodeURI(doi)}" target="_blank" rel="noopener noreferrer">${escapeHtml(doi)}</a>`;
+  }
+
+  function isOpenAccess(value) {
+    return value === true || String(value).toLowerCase() === 'true';
+  }
+
+  function formatResearchIdentityTags(item) {
+    const tags = [
+      `<span class="paper-tag">${escapeHtml(item.year || '-')}</span>`,
+      `<span class="paper-tag venue-tag">${escapeHtml(item.venue || '-')}</span>`
+    ];
+    if (isOpenAccess(item.open_access)) {
+      tags.push('<span class="paper-tag open-access-tag">Open Access</span>');
+    }
+
+    if (item.language && item.language !== '-') {
+      tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
+    }
+
+    return tags.join('');
   }
 
 
@@ -348,7 +370,8 @@
       ...c,
       paperId: `${c.paperId || c.doi || 'item'}-${i}`,
       selecionado: c.selecionado || null,
-      abstractExpanded: false
+      abstractExpanded: false,
+      keywordsExpanded: false
     }));
     window.rawCitationsData = mappedList;
     window.citationsData = [...mappedList];
@@ -411,7 +434,8 @@
 
         window.seedData = {
           ...fwd,
-          abstractExpanded: false
+          abstractExpanded: false,
+          keywordsExpanded: false
         };
 
         localStorage.setItem(
@@ -465,7 +489,8 @@
 
           window.seedData = {
             ...bwd,
-            abstractExpanded: false
+            abstractExpanded: false,
+            keywordsExpanded: false
           };
 
           localStorage.setItem(
@@ -530,11 +555,8 @@
     
     const contagemCitations = artigo.citations_retrieved ?? artigo.citations_count ?? artigo.citationCount ?? artigo.cited_by_count ?? '-';
     const contagemReferences = artigo.references_retrieved ?? artigo.references_count ?? '-';
-
-    const openAccessToShow = artigo.open_access || '-';
-    const urlToShow = artigo.url || '-';
     const keywordsToShow = artigo.keywords || [];
-    const languageToShow = artigo.language || '-';
+    const keywordsText = formatKeywords(keywordsToShow);
     const pagesToShow = artigo.pages || '-';
     const numpagesToShow = artigo.numpages || '-';
     const cardHTML = `
@@ -555,10 +577,7 @@
             <th>Research Identity</th>
             <th>Abstract</th>
             <th>Authors</th>
-            <th>Open Access</th>
-            <th>URL</th>
             <th>Keywords</th>
-            <th>Language</th>
             <th>Pages</th>
             <th>Citations</th>
             <th>References</th>
@@ -573,7 +592,7 @@
             <td>
 
               <div class="paper-doi">
-                DOI: ${escapeHtml(doiToShow)}
+                DOI: ${formatDOILink(doiToShow)}
               </div>
 
               <div class="paper-title">
@@ -583,22 +602,11 @@
               <div class="paper-meta">
 
                 <div class="paper-tags">
-
-                  <span class="paper-tag">
-                    ${escapeHtml(artigo.year || '-')}
-                  </span>
-
-                  <span class="paper-tag venue-tag">
-                    ${escapeHtml(artigo.venue || '-')}
-                  </span>
+                  ${formatResearchIdentityTags(artigo)}
 
                 </div>
 
               </div>
-
-        
-
-      
             </td>
 
             <td>
@@ -613,7 +621,7 @@
 
               ${
                 artigo.abstract && artigo.abstract.length > 200
-                  ? `<span class="read-more" id="seedReadMore">
+                  ? `<span class="read-more abstract-read-more" id="seedReadMore">
                       ${window.seedData.abstractExpanded ? 'READ LESS' : 'READ MORE'}
                     </span>`
                   : ''
@@ -624,25 +632,22 @@
             <td>
               ${escapeHtml(authors)}
             </td>
-
             <td>
-              ${escapeHtml(String(openAccessToShow))}
-            </td>
+              <div class="keywords-text ${window.seedData.keywordsExpanded ? 'expanded' : ''}">
+                ${
+                  window.seedData.keywordsExpanded
+                    ? escapeHtml(keywordsText)
+                    : escapeHtml(truncateText(keywordsText, 110))
+                }
+              </div>
 
-            <td>
               ${
-                urlToShow && urlToShow !== '-'
-                  ? `<a href="${escapeHtml(urlToShow)}" target="_blank">${escapeHtml(urlToShow)}</a>`
-                  : '-'
+                keywordsText && keywordsText !== '-' && keywordsText.length > 110
+                  ? `<span class="read-more keywords-read-more" id="seedKeywordsReadMore">
+                      ${window.seedData.keywordsExpanded ? 'READ LESS' : 'READ MORE'}
+                    </span>`
+                  : ''
               }
-            </td>
-
-            <td>
-              ${escapeHtml(Array.isArray(keywordsToShow) ? keywordsToShow.join(', ') : (keywordsToShow || '-'))}
-            </td>
-
-            <td>
-              ${escapeHtml(languageToShow)}
             </td>
 
             <td>
@@ -701,6 +706,12 @@
         const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
         mostrarResultado(window.seedData, currentMode);
       }
+
+      if (e.target && e.target.id === 'seedKeywordsReadMore') {
+        window.seedData.keywordsExpanded = !window.seedData.keywordsExpanded;
+        const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
+        mostrarResultado(window.seedData, currentMode);
+      }
     };
   }
 
@@ -710,7 +721,7 @@
 
 
     if (!citations || citations.length === 0) {
-      tabelaBody.innerHTML = '<tr><td colspan="10">No citations found.</td></tr>';
+      tabelaBody.innerHTML = '<tr><td colspan="7">No citations found.</td></tr>';
       citSection.style.display = 'none';
       return;
     }
@@ -763,12 +774,13 @@
     function createTableRow(cit) {
 
       const tr = document.createElement('tr');
+      const keywordsText = formatKeywords(cit.keywords);
 
       tr.innerHTML = `
 
         <td>
           <div class="paper-doi">
-            DOI: ${escapeHtml(cit.doi || '-')}
+            DOI: ${formatDOILink(cit.doi || '-')}
           </div>
 
           <div class="paper-title">
@@ -776,14 +788,8 @@
           </div>
 
           <div class="paper-meta mt-1">
+            ${formatResearchIdentityTags(cit)}
 
-            <span class="paper-tag">
-              ${escapeHtml(cit.year || '-')}
-            </span>
-
-            <span class="paper-tag venue-tag">
-              ${escapeHtml(cit.venue || '-')}
-            </span>
 
           </div>
         </td>
@@ -800,7 +806,7 @@
           ${
             cit.abstract && cit.abstract.length > 140
               ? `
-                <span class="read-more">
+                <span class="read-more abstract-read-more">
                   ${cit.abstractExpanded ? 'READ LESS' : 'READ MORE'}
                 </span>
               `
@@ -810,25 +816,24 @@
         <td>
           ${escapeHtml(formatAuthors(cit.authors))}
         </td>
-
         <td>
-          ${escapeHtml(String(cit.open_access ?? '-'))}
-        </td>
+          <div class="keywords-text ${cit.keywordsExpanded ? 'expanded' : ''}">
+            ${
+              cit.keywordsExpanded
+                ? escapeHtml(keywordsText)
+                : escapeHtml(truncateText(keywordsText, 110))
+            }
+          </div>
 
-        <td>
           ${
-            cit.url
-              ? `<a href="${escapeHtml(cit.url)}" target="_blank">${escapeHtml(cit.url)}</a>`
-              : '-'
+            keywordsText && keywordsText !== '-' && keywordsText.length > 110
+              ? `
+                <span class="read-more keywords-read-more">
+                  ${cit.keywordsExpanded ? 'READ LESS' : 'READ MORE'}
+                </span>
+              `
+              : ''
           }
-        </td>
-
-        <td>
-          ${escapeHtml(Array.isArray(cit.keywords) ? cit.keywords.join(', ') : (cit.keywords || '-'))}
-        </td>
-
-        <td>
-          ${escapeHtml(cit.language || '-')}
         </td>
 
         <td>
@@ -873,11 +878,20 @@
       `;
 
       // READ MORE
-      const readMore = tr.querySelector('.read-more');
+      const readMore = tr.querySelector('.abstract-read-more');
 
       if (readMore) {
         readMore.addEventListener('click', () => {
           cit.abstractExpanded = !cit.abstractExpanded;
+          mostrarCitacoes(window.citationsData);
+        });
+      }
+
+      const keywordsReadMore = tr.querySelector('.keywords-read-more');
+
+      if (keywordsReadMore) {
+        keywordsReadMore.addEventListener('click', () => {
+          cit.keywordsExpanded = !cit.keywordsExpanded;
           mostrarCitacoes(window.citationsData);
         });
       }
