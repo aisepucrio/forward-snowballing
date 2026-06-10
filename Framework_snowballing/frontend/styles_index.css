@@ -399,11 +399,11 @@ body.busca-realizada #navbarModeToggle {
 .custom-table td {
   padding: 22px 16px;
   border-bottom: 1px solid #f1f5f9;
-  vertical-align: top;
+  vertical-align: middle; 
   word-break: break-word;
   font-size: 13px;
   color: #4b5563;
-  line-height: 1.0;
+  line-height: 1.5; 
   font-weight: 400;
 }
 
@@ -423,42 +423,37 @@ body.busca-realizada #navbarModeToggle {
 
 /* Largura tabela */
 
+.custom-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+  min-width: 1400px !important;
+}
+
 .custom-table th:nth-child(1),
 .custom-table td:nth-child(1) {
-  width: 600px;
+  width: 40% !important; 
+  padding-right: 24px !important;
 }
 
 .custom-table th:nth-child(2),
 .custom-table td:nth-child(2) {
-  width: 400px;
+  width: 25% !important; 
+  text-align: justify;
+  padding-right: 16px !important;
 }
 
 .custom-table th:nth-child(3),
-.custom-table td:nth-child(3) {
-  width: 220px;
-}
-
+.custom-table td:nth-child(3),
 .custom-table th:nth-child(4),
 .custom-table td:nth-child(4) {
-  width: 220px;
+  width: 12% !important;
 }
 
-.custom-table th:nth-child(5),
-.custom-table td:nth-child(5) {
-  width: 100px;
-  text-align: center;
-}
-
-.custom-table th:nth-child(6),
-.custom-table td:nth-child(6) {
-  width: 120px;
-  text-align: center;
-}
-
-.custom-table th:nth-child(7),
-.custom-table td:nth-child(7) {
-  width: 120px;
-  text-align: center;
+.custom-table th:nth-last-child(1),
+.custom-table td:nth-last-child(1),
+.custom-table th:nth-last-child(2),
+.custom-table td:nth-last-child(2) {
+  width: 9% !important;
 }
 
 /* =========================================
@@ -466,7 +461,7 @@ body.busca-realizada #navbarModeToggle {
 ========================================= */
 
 .paper-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #111827;
 
@@ -491,9 +486,8 @@ body.busca-realizada #navbarModeToggle {
 }
 
 .paper-doi a {
-  color: #0b6b43;
+  color: #10b981;
   font-weight: 700;
-  text-decoration: none;
 }
 
 /* =========================================
@@ -542,6 +536,19 @@ body.busca-realizada #navbarModeToggle {
   color: #736cc3;
 }
 
+.paper-authors {
+    font-family: 'Poppins';
+    font-size: 11px;
+    color: #4b5563;
+    line-height: 1.7;
+    font-weight: 400;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+
+  overflow: hidden;
+
+}
 
 
 /* =========================================
@@ -552,11 +559,9 @@ body.busca-realizada #navbarModeToggle {
   font-size: 13px;
   color: #4b5563;
   line-height: 1.7;
-  
   display: -webkit-box;
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
-
   overflow: hidden;
 }
 
@@ -591,16 +596,6 @@ body.busca-realizada #navbarModeToggle {
   display: inline-block;
   
 }
-/* =========================================
-   AUTHORS
-========================================= */
-.custom-table td:nth-child(3) {
-  font-size: 13px;
-  color: #4b5563;
-  line-height: 1.7;
-  font-weight: 400;
-}
-
 
 /* =========================================
    CITATIONS
@@ -611,11 +606,12 @@ body.busca-realizada #navbarModeToggle {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  height: 100%; 
 }
 
 .citation-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 
   border-radius: 50%;
   background: #10b981;
@@ -624,7 +620,7 @@ body.busca-realizada #navbarModeToggle {
 }
 
 .citation-number {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
   color: #111827;
 
