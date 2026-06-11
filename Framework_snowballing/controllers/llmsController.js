@@ -36,13 +36,13 @@ function findPythonExecutable() {
 }
 
 exports.analisar = (req, res) => {
-  const { criteriosInclusao, criteriosExclusao, artigos } = req.body;
+  const { criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt } = req.body;
   console.log('Entrou no llmsController.analisar');
   if (!artigos || artigos.length === 0) {
     return res.status(400).json({ error: "Nenhum artigo enviado." });
   }
 
-  const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos });
+  const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt });
 
   // Caminho absoluto para o script Python:
   const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');

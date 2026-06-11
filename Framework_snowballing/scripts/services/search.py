@@ -5,6 +5,7 @@ import time
 import json
 import requests
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from services.normalize import (
     normalize_doi,
@@ -392,46 +393,55 @@ def get_openalex_citations(openalex_id):
     if not openalex_id:
         return []
 
-
-    url = f"https://api.openalex.org/works?filter=cites:{openalex_id}&per-page=200"
-    data = safe_get(url)
-
-
-    if not data:
-        return []
-
-
     citations = []
+    cursor = "*"
 
+    for _ in range(10):  # max 2000 citations (10 pages × 200)
+        url = f"https://api.openalex.org/works?filter=cites:{openalex_id}&per-page=200&cursor={cursor}"
+        data = safe_get(url)
 
-    for item in data.get("results", []):
-        biblio = item.get("biblio") or {}
-        pages = build_pages(biblio.get("first_page"), biblio.get("last_page"))
-        abstract = reconstruct_abstract_from_inverted_index(item.get("abstract_inverted_index"))
-        citations.append({
-            "title": item.get("title"),
-            "year": item.get("publication_year"),
-            "abstract": abstract,
-            "doi": normalize_doi(item.get("doi")),
-            "url": item.get("primary_location", {}).get("landing_page_url"),
-            "open_access": item.get("open_access", {}).get("is_oa"),
-            "citations_count": item.get("cited_by_count", 0),
-            "citationCount": item.get("cited_by_count", 0),
-            "keywords": [
-                c.get("display_name") for c in item.get("concepts", [])
-            ],
-            "language": item.get("language"),
-            "pages": pages,
-            "numpages": extract_npages(pages),
-            "authors": [
-                {"name": a.get("author", {}).get("display_name", "-")}
-                for a in item.get("authorships", [])
-            ],
-            "source": "openalex"
-        })
+        if not data:
+            break
 
+        results = data.get("results", [])
+        if not results:
+            break
 
+        for item in results:
+            biblio = item.get("biblio") or {}
+            pages = build_pages(biblio.get("first_page"), biblio.get("last_page"))
+            abstract = reconstruct_abstract_from_inverted_index(item.get("abstract_inverted_index"))
+            primary_location = item.get("primary_location") or {}
+            source = primary_location.get("source") or {}
+            openalex_work_id = item.get("id", "").replace("https://openalex.org/", "")
+            citations.append({
+                "paperId": openalex_work_id or generate_paper_id(item.get("title", "-")),
+                "title": item.get("title"),
+                "year": item.get("publication_year"),
+                "abstract": abstract,
+                "doi": normalize_doi(item.get("doi")),
+                "url": primary_location.get("landing_page_url"),
+                "venue": source.get("display_name") or "-",
+                "open_access": item.get("open_access", {}).get("is_oa"),
+                "citations_count": item.get("cited_by_count", 0),
+                "citationCount": item.get("cited_by_count", 0),
+                "keywords": [
+                    c.get("display_name") for c in item.get("concepts", [])
+                ],
+                "language": item.get("language"),
+                "pages": pages,
+                "numpages": extract_npages(pages),
+                "authors": [
+                    {"name": a.get("author", {}).get("display_name", "-")}
+                    for a in item.get("authorships", [])
+                ],
+                "source": "openalex"
+            })
 
+        next_cursor = data.get("meta", {}).get("next_cursor")
+        if not next_cursor:
+            break
+        cursor = next_cursor
 
     return citations
 
@@ -825,6 +835,27 @@ def save_complete_cache(doi, data):
 
 
 
+def merge_citations(openalex_citations, semantic_citations):
+    """Use OpenAlex citations (complete) as primary; add Semantic Scholar ones not covered by OpenAlex."""
+    if not openalex_citations:
+        return semantic_citations or []
+
+    openalex_dois = {c["doi"] for c in openalex_citations if c.get("doi") and c["doi"] != "-"}
+    openalex_titles = {normalize_title(c["title"]) for c in openalex_citations if c.get("title")}
+
+    extras = []
+    for c in (semantic_citations or []):
+        doi = normalize_doi(c.get("doi") or c.get("externalIds", {}).get("DOI", ""))
+        title = normalize_title(c.get("title", ""))
+        if doi and doi in openalex_dois:
+            continue
+        if title and title in openalex_titles:
+            continue
+        extras.append(c)
+
+    return openalex_citations + extras
+
+
 def search_combined(doi=None, title=None):
     cleaned_doi = normalize_doi(doi) if doi else None
     cleaned_title = normalize_title(title) if title else ""
@@ -843,8 +874,11 @@ def search_combined(doi=None, title=None):
             cached["from_cache"] = True
             return cached
 
-        paper_data = fallback_via_requests(cleaned_doi)
-        openalex_data = fallback_openalex_by_doi(cleaned_doi)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            fut_semantic = executor.submit(fallback_via_requests, cleaned_doi)
+            fut_openalex = executor.submit(fallback_openalex_by_doi, cleaned_doi)
+            paper_data = fut_semantic.result()
+            openalex_data = fut_openalex.result()
 
         if paper_data:
             semantic_doi = None
@@ -855,15 +889,11 @@ def search_combined(doi=None, title=None):
             paper_data["doi"] = semantic_doi or cleaned_doi
 
 
-            semantic_citations = paper_data.get("citations", []) or []
-
-
             openalex_citations = []
             if openalex_data and openalex_data.get("openalex_id"):
                 openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
 
-
-            all_citations = semantic_citations + openalex_citations
+            all_citations = merge_citations(openalex_citations, paper_data.get("citations", []) or [])
 
 
             merged = openalex_data.copy() if openalex_data else {}
@@ -1007,19 +1037,11 @@ def search_combined(doi=None, title=None):
             ]
 
         merged["citationCount"] = paper_data.get("citationCount", merged.get("citationCount", 0))
-        # --- SEMANTIC ---
-        semantic_citations = paper_data.get("citations", []) if paper_data else []
-
-
-        # --- OPENALEX ---
         openalex_citations = []
         if openalex_data and openalex_data.get("openalex_id"):
             openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
 
-
-
-
-        all_citations = semantic_citations + openalex_citations
+        all_citations = merge_citations(openalex_citations, paper_data.get("citations", []) if paper_data else [])
 
 
 

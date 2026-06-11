@@ -1,7 +1,7 @@
 import sys
 import json
 import traceback
-
+from concurrent.futures import ThreadPoolExecutor
 
 from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
@@ -72,18 +72,21 @@ def main():
         # clear_caches()
 
 
-        # chama APIs
-        paper = search_combined(doi=doi, title=title)
-        references = []
-        if paper.get("doi"):
-                references = get_references_openalex(paper.get("doi"))
+        # chama APIs em paralelo
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            fut_paper = executor.submit(search_combined, doi, title)
+            fut_refs = executor.submit(get_references_openalex, doi) if doi else None
+            paper = fut_paper.result()
+            references = fut_refs.result() if fut_refs else []
 
 
         raw_citations = paper.get("citations", [])
 
-
-        # search_combined ja soma Semantic + OpenAlex e deduplica
-        final_citations = enrich_incomplete_citations(raw_citations)
+        from_openalex = raw_citations and all(c.get("source") == "openalex" for c in raw_citations)
+        if from_openalex:
+            final_citations = raw_citations
+        else:
+            final_citations = enrich_incomplete_citations(raw_citations)
         final_citations = normalize_citation_counts(final_citations)
 
 

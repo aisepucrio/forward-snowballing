@@ -37,6 +37,10 @@
           <a class="nav-link" href="criterios.html">Criteria Applications</a>
         </li>
 
+        <li class="nav-item">
+          <a class="nav-link" href="settings.html">LLM Configuration</a>
+        </li>
+
       </ul>
     </div>
 
@@ -570,10 +574,18 @@ automatically screen abstracts and provide decision support.</h3>
       for (let i = 0; i < lotes.length; i++) {
         const lote = lotes[i];
 
+        const settings = JSON.parse(localStorage.getItem('llmSettings') || '{}');
+        const extraPrompt = localStorage.getItem('llmPrompt') || '';
+
         const payload = {
           criteriosInclusao: criteriosInclusao,
           criteriosExclusao: criteriosExclusao,
-          artigos: lote
+          artigos: lote,
+          model: settings.model,
+          temperature: settings.temperature,
+          tokens: settings.tokens,
+          ollamaUrl: settings.url,
+          extraPrompt: extraPrompt,
         };
 
         const res = await fetch('/api/articles/analisar', {

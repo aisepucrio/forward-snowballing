@@ -125,13 +125,15 @@ def _format_article_metadata(article: dict[str, Any]) -> str:
 def generate_prompt(
     article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
+    extra_prompt: str = "",
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
     criteria_schema = _format_criteria_schema(criteria)
     article_metadata = _format_article_metadata(article)
+    extra_section = f"ADDITIONAL INSTRUCTIONS\n{extra_prompt.strip()}\n\n" if extra_prompt and extra_prompt.strip() else ""
 
-    return f"""You are an expert researcher conducting a Systematic Review.
+    return f"""{extra_section}You are an expert researcher conducting a Systematic Review.
 Your task is to classify the article against each inclusion and exclusion criterion.
 
 Think through the criteria carefully before answering, but do not include your reasoning in the output.

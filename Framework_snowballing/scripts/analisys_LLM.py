@@ -27,11 +27,13 @@ def _model_candidates():
     ]
 
 
-def _call_ollama(prompt):
+def _call_ollama(prompt, model=None, temperature=0.1, tokens=600, ollama_url=None):
     last_error = None
+    url = ollama_url or OLLAMA_URL
+    candidates = [model] + MODEL_FALLBACKS if model else _model_candidates()
 
-    for model_name in _model_candidates():
-        if model_name in FAILED_MODELS:
+    for model_name in candidates:
+        if not model_name or model_name in FAILED_MODELS:
             continue
 
         payload = {
@@ -40,15 +42,15 @@ def _call_ollama(prompt):
                 {"role": "user", "content": prompt}
             ],
             "options": {
-                "temperature": 0.1,
-                "num_predict": 600
+                "temperature": temperature,
+                "num_predict": tokens
             },
             "stream": False,
             "think": False
         }
 
         try:
-            resp = requests.post(OLLAMA_URL, json=payload, timeout=120)
+            resp = requests.post(url, json=payload, timeout=120)
             resp.raise_for_status()
             return resp.json()["message"]["content"].strip()
         except Exception as model_error:
@@ -91,15 +93,16 @@ def _fallback_result(title, criteria):
     }
 
 
-def classificar_artigo(article, criteria):
+def classificar_artigo(article, criteria, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt=""):
     title = article.get("title", "")
     prompt = generate_prompt(
         article=article,
         criteria=criteria,
+        extra_prompt=extra_prompt,
     )
 
     try:
-        data = _extract_json_object(_call_ollama(prompt))
+        data = _extract_json_object(_call_ollama(prompt, model=model, temperature=temperature, tokens=tokens, ollama_url=ollama_url))
         raw_criteria = data.get("criteria") if isinstance(data.get("criteria"), dict) else {}
 
         if not raw_criteria:
@@ -118,12 +121,12 @@ def classificar_artigo(article, criteria):
         return _fallback_result(title, criteria)
 
 
-def analisar(criterios_inclusao, criterios_exclusao, artigos):
+def analisar(criterios_inclusao, criterios_exclusao, artigos, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt=""):
     criteria = criteria_from_text(criterios_inclusao, criterios_exclusao)
     results = []
 
     for artigo in artigos:
-        results.append(classificar_artigo(artigo, criteria))
+        results.append(classificar_artigo(artigo, criteria, model=model, temperature=temperature, tokens=tokens, ollama_url=ollama_url, extra_prompt=extra_prompt))
 
     return results
 
@@ -135,7 +138,12 @@ if __name__ == "__main__":
     criterios_inclusao = data.get("criteriosInclusao", "")
     criterios_exclusao = data.get("criteriosExclusao", "")
     artigos = data.get("artigos", [])
+    model = data.get("model", MODEL_NAME)
+    temperature = data.get("temperature", 0.1)
+    tokens = data.get("tokens", 600)
+    ollama_url = data.get("ollamaUrl", OLLAMA_URL)
+    extra_prompt = data.get("extraPrompt", "")
 
-    results = analisar(criterios_inclusao, criterios_exclusao, artigos)
+    results = analisar(criterios_inclusao, criterios_exclusao, artigos, model, temperature, tokens, ollama_url, extra_prompt)
 
     print(json.dumps(results, ensure_ascii=False))
