@@ -202,7 +202,6 @@
     }
 
     const allIncluded = window.citationsData.every(c => c.selecionado === 'incluir');
-
     const newState = allIncluded ? 'excluir' : 'incluir';
 
     window.citationsData = window.citationsData.map(c => ({
@@ -211,29 +210,27 @@
     }));
 
     mostrarCitacoes(window.citationsData);
-
-    const citationsWrapper = document.querySelector('#citationsList.table-wrapper');
-
-    if (citationsWrapper) {
-      citationsWrapper.scrollTo({
-        left: citationsWrapper.scrollWidth,
-        behavior: 'smooth'
-      });
-    }
   }
 
   function atualizarBotaoIncludeAll() {
     const btn = document.getElementById('includeAllBtn');
     if (!btn) return;
 
-    const hasIncluded =
-      window.citationsData &&
-      window.citationsData.some(c => c.selecionado === 'incluir');
+    if (!window.citationsData || window.citationsData.length === 0) return;
 
-    if (hasIncluded) {
+    const allIncluded = window.citationsData.every(c => c.selecionado === 'incluir');
+
+    const allExcluded = window.citationsData.every(c => c.selecionado === 'excluir');
+
+    if (allIncluded) {
       btn.innerHTML = `<i class="bi bi-x-square"></i> Exclude All`;
       btn.className = 'btn btn-danger btn-export';
-    } else {
+    } 
+    else if (allExcluded) {
+      btn.innerHTML = `<i class="bi bi-check2-square"></i> Include All`;
+      btn.className = 'btn btn-outline-success btn-export';
+    } 
+    else {
       btn.innerHTML = `<i class="bi bi-check2-square"></i> Include All`;
       btn.className = 'btn btn-outline-success btn-export';
     }
@@ -279,24 +276,30 @@
   }
 
   function formatResearchIdentityTags(item) {
-    const pagesValue = item.numpages != null ? item.numpages : (item.pages || '-');
-
-    const tags = [
-      `<span class="paper-tag">${escapeHtml(item.year || '-')}</span>`,
-      `<span class="paper-tag venue-tag">${escapeHtml(item.venue || '-')}</span>`,
-      `<span class="paper-tag pages-tag"> Pages: ${escapeHtml(String(pagesValue))}</span>`
-    ];
-
-    if (isOpenAccess(item.open_access)) {
-      tags.push('<span class="paper-tag open-access-tag">Open Access</span>');
+      const pagesValue = item.numpages != null ? item.numpages : (item.pages || '-');
+      
+      const venueTag = `<span class="paper-tag venue-tag text-wrap">${escapeHtml(item.venue || '-')}</span>`;
+    
+      const outrasTags = [
+        `<span class="paper-tag">${escapeHtml(item.year || '-')}</span>`,
+        `<span class="paper-tag pages-tag">Pages: ${escapeHtml(String(pagesValue))}</span>`
+      ];
+      
+      if (isOpenAccess(item.open_access)) {
+        outrasTags.push('<span class="paper-tag open-access-tag">Open Access</span>');
+      }
+      
+      if (item.language && item.language !== '-') {
+        outrasTags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
+      }
+      
+      return `
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          ${venueTag}
+          ${outrasTags.join('')}
+        </div>
+      `;
     }
-
-    if (item.language && item.language !== '-') {
-      tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
-    }
-
-    return tags.join('');
-  }
 
 
   function truncateText(text, maxLength = 100) {
@@ -510,7 +513,6 @@
       return;
     }
 
-    const abstractPreview = truncateText(artigo.abstract || '-', 200);
     const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
     const authors = formatAuthors(artigo.authors);
     
@@ -518,10 +520,9 @@
     const contagemReferences = artigo.references_retrieved ?? artigo.references_count ?? '-';
     const keywordsToShow = artigo.keywords || [];
     const keywordsText = formatKeywords(keywordsToShow);
-    const pagesToShow = artigo.pages || '-';
-    const numpagesToShow = artigo.numpages || '-';
+
     const cardHTML = `
-    <div class="table-wrapper">
+    <div class="table-wrapper mb-4">
       <div class="table-topbar">
         <div class="table-info">
           <span class="table-title">Seed Paper Analysis</span>
@@ -531,12 +532,7 @@
       <table class="custom-table">
         <thead>
           <tr>
-            <th>Research Identity</th>
-            <th>Abstract</th>
-            <th>Keywords</th>
-            <th>Citations</th>
-            <th>References</th>
-          </tr>
+            </tr>
         </thead>
 
         <tbody>
@@ -546,101 +542,83 @@
                 DOI: ${formatDOILink(doiToShow)}
               </div>
 
-              <div class="paper-title">
+              <div class="paper-title fw-semibold mb-2" style="font-size: 1.2rem;">
                 ${escapeHtml(artigo.title || '-')}
               </div>
 
+              <div class="paper-authors text-muted mb-2">
+                ${escapeHtml(authors)}
+              </div>
+
               <div class="paper-meta">
-                <div class="paper-tags">
+                <div class="paper-tags mb-3">
                   ${formatResearchIdentityTags(artigo)}
                 </div>
+              </div>
 
-                <div class="paper-authors mt-2">
-                  ${escapeHtml(authors)}
+              <div class="row g-4 mt-2 pt-2 border-top align-items-stretch">
+                
+                <div class="col-md-6 d-flex flex-column">
+                  <div class="p-2 h-100 d-flex flex-column">
+                    <span class="fw-bold d-block mb-1" style="font-size: 0.85rem; color: #666; letter-spacing: 0.05em;">ABSTRACT</span>
+                    <div class="abstract-text text-box-sync flex-grow-1 ${window.seedData.abstractExpanded ? 'expanded' : ''}" style="font-size: 0.9rem; line-height: 1.5;">
+                      ${
+                        window.seedData.abstractExpanded
+                          ? escapeHtml(artigo.abstract || '-')
+                          : escapeHtml(truncateText(artigo.abstract || '-', 200))
+                      }
+                    </div>
+                    ${
+                      artigo.abstract && artigo.abstract.length > 200
+                        ? `<span class="read-more abstract-read-more mt-1 d-inline-block" id="seedReadMore" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem; width: fit-content;">
+                            ${window.seedData.abstractExpanded ? 'READ LESS' : 'READ MORE'}
+                          </span>`
+                        : ''
+                    }
+                  </div>
+                </div>
+
+                <div class="col-md-6 d-flex flex-column">
+                  <div class="p-2 h-100 d-flex flex-column" style="border-left: 1px solid #f0f0f0;">
+                    <span class="fw-bold d-block mb-1" style="font-size: 0.85rem; color: #666; letter-spacing: 0.05em;">KEYWORDS</span>
+                    <div class="keywords-text flex-grow-1" style="font-size: 0.9rem; line-height: 1.5; color: #444;">
+                      ${escapeHtml(keywordsText)}
+                    </div>
+                  </div>
                 </div>
 
               </div>
-            </td>
 
-            <td>
-              <div class="abstract-text ${window.seedData.abstractExpanded ? 'expanded' : ''}">
-                ${
-                  window.seedData.abstractExpanded
-                    ? escapeHtml(artigo.abstract || '-')
-                    : escapeHtml(truncateText(artigo.abstract || '-', 200))
-                }
-              </div>
-
-              ${
-                artigo.abstract && artigo.abstract.length > 200
-                  ? `<span class="read-more abstract-read-more" id="seedReadMore">
-                      ${window.seedData.abstractExpanded ? 'READ LESS' : 'READ MORE'}
-                    </span>`
-                  : ''
-              }
-            </td>
-
-            <td>
-              <div class="keywords-text ${window.seedData.keywordsExpanded ? 'expanded' : ''}">
-                ${
-                  window.seedData.keywordsExpanded
-                    ? escapeHtml(keywordsText)
-                    : escapeHtml(truncateText(keywordsText, 110))
-                }
-              </div>
-
-              ${
-                keywordsText && keywordsText !== '-' && keywordsText.length > 110
-                  ? `<span class="read-more keywords-read-more" id="seedKeywordsReadMore">
-                      ${window.seedData.keywordsExpanded ? 'READ LESS' : 'READ MORE'}
-                    </span>`
-                  : ''
-              }
-            </td>
-
-            <td>
-              <div class="citation-box">
-                <div class="citation-dot"></div>
-                <div>
-                  <div class="citation-number">
-                    ${escapeHtml(String(contagemCitations))}
+              <div class="d-flex gap-4 mt-3 pt-3 border-top">
+                <div class="citation-box d-flex align-items-center gap-2">
+                  <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
+                  <div>
+                    <span class="citation-number fw-bold">${escapeHtml(String(contagemCitations))}</span>
+                    <span class="citation-label text-muted" style="font-size: 0.85rem;"> Citations</span>
                   </div>
-                  <div class="citation-label">
-                    Citations
+                </div>
+
+                <div class="citation-box d-flex align-items-center gap-2">
+                  <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
+                  <div>
+                    <span class="citation-number fw-bold">${escapeHtml(String(contagemReferences))}</span>
+                    <span class="citation-label text-muted" style="font-size: 0.85rem;"> References</span>
                   </div>
                 </div>
               </div>
-            </td>
 
-            <td>
-              <div class="citation-box">
-                <div class="citation-dot"></div>
-                <div>
-                  <div class="citation-number">
-                    ${escapeHtml(String(contagemReferences))}
-                  </div>
-                  <div class="citation-label">
-                    References
-                  </div>
-                </div>
-              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
     `;
-
     document.getElementById('resultado').innerHTML = cardHTML;
+    
+    // Simplificado para monitorar apenas o clique do Abstract
     document.getElementById('resultado').onclick = function (e) {
       if (e.target && e.target.id === 'seedReadMore') {
         window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
-        const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
-        mostrarResultado(window.seedData, currentMode);
-      }
-
-      if (e.target && e.target.id === 'seedKeywordsReadMore') {
-        window.seedData.keywordsExpanded = !window.seedData.keywordsExpanded;
         const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
         mostrarResultado(window.seedData, currentMode);
       }
@@ -708,12 +686,11 @@
             ${escapeHtml(cit.title || '-')}
           </div>
 
-          <div class="paper-meta mt-1">
-            ${formatResearchIdentityTags(cit)}
-
-            <div class="paper-authors mt-2">
-              ${escapeHtml(authorsText)}
-            </div>
+          <div class="paper-authors mt-2">
+            ${escapeHtml(authorsText)}
+          </div>
+          <div class="d-flex flex-wrap gap-1 mt-1">
+              ${formatResearchIdentityTags(cit)}
           </div>
         </td>
 
@@ -763,9 +740,6 @@
             <div>
               <div class="citation-number">
                 ${escapeHtml(cit.citations_count ?? cit.citationCount ?? cit.cited_by_count ?? '0')}
-              </div>
-              <div class="citation-label">
-                Citations
               </div>
             </div>
           </div>
