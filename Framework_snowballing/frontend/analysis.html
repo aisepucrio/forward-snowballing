@@ -16,6 +16,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.7/build/d3.layout.cloud.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
 </head>
 <body>
   <!-- Navbar -->
@@ -51,6 +54,8 @@
     </section>
 
     <section class="mb-5">
+          <button id="btn-exportar-pdf">Export PDF</button>
+
       <h3 class="mb-4 titulo">Summary</h3>
       <div class="row g-4 cards-resumo-row">
 
@@ -724,6 +729,282 @@
       } catch (e) {
         alert('Error preparing data for criteria screen:  ' + e.message);
       }
+    });
+
+   document.getElementById('btn-exportar-pdf').addEventListener('click', function () {
+      const elemento = document.querySelector('main.container');
+      
+      this.style.display = 'none';
+      const checkboxContainer = document.querySelector('.alinhamento-checkbox');
+      if (checkboxContainer) checkboxContainer.style.display = 'none';
+
+      const nuvemPalavras = document.getElementById('word-cloud');
+      if (nuvemPalavras) nuvemPalavras.style.display = 'none';
+
+      let tituloWordCloud = null;
+      document.querySelectorAll('h3, h4, p, div').forEach(el => {
+        if (el.textContent.trim() === 'Word Cloud') {
+          tituloWordCloud = el;
+          tituloWordCloud.style.display = 'none';
+        }
+      });
+
+      if (!document.getElementById('fonte-poppins-pdf')) {
+        const linkFonte = document.createElement('link');
+        linkFonte.id = 'fonte-poppins-pdf';
+        linkFonte.rel = 'stylesheet';
+        linkFonte.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap';
+        document.head.appendChild(linkFonte);
+      }
+
+      const cabecalhoDocs = document.createElement('div');
+      cabecalhoDocs.id = 'cabecalho-pdf-docs';
+      cabecalhoDocs.innerHTML = `
+        <div style="padding-bottom: 12px; margin-bottom: 30px; font-family: 'Poppins', sans-serif; box-sizing: border-box;">
+          <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; padding: 0;">
+            <tr>
+              <td style="vertical-align: middle; border: none; padding: 0; text-align: left;">
+                <h1 style="margin: 0; color: #000000; font-size: 24px; letter-spacing: -0.5px;">SnowMap — Data Analysis Report</h1>
+                <p style="margin: 4px 0 0 0; color: #2d3748; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">AISE Lab (Artificial Intelligence and Software Engineering)</p>
+              </td>
+              <td style="text-align: right; vertical-align: middle; border: none; padding: 0; color: #2d3748; font-size: 11px; line-height: 1.4;">
+                <div><strong>Issue Date:</strong> ${new Date().toLocaleDateString('pt-BR')}</div>
+                <div><strong>Document Type:</strong> Systematic Review</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      `;
+      elemento.insertBefore(cabecalhoDocs, elemento.firstChild);
+
+      const estiloImpressao = document.createElement('style');
+      estiloImpressao.id = 'estilo-pdf-linear-absoluto';
+      estiloImpressao.innerHTML = `
+        * {
+          box-sizing: border-box !important;
+        }
+
+        main.container {
+          font-family: 'Poppins', sans-serif !important;
+          color: #000000 !important;
+          background: #ffffff !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          overflow: hidden !important;
+        }
+
+        .row, .cards-resumo-row, .d-flex {
+          display: block !important;
+          width: 100% !important;
+          clear: both !important;
+          float: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        
+        h3.titulo, h3.subtitulo {
+          font-family: 'Poppins', sans-serif !important;
+          font-size: 16px !important;
+          color: #000000 !important;
+          border-left: none !important;
+          padding-left: 0 !important;
+          margin-top: 25px !important;
+          margin-bottom: 15px !important;
+          font-weight: bold !important;
+          text-transform: none !important;
+          page-break-after: avoid !important;
+          break-after: avoid !important;
+        }
+
+        h4 {
+          font-family: 'Poppins', sans-serif !important;
+          font-size: 13px !important;
+          color: #2d3748 !important;
+          margin-top: 20px !important;
+          margin-bottom: 10px !important;
+          font-weight: bold !important;
+          page-break-after: avoid !important;
+          break-after: avoid !important;
+        }
+
+        .col-md-6, .col-md-4, .col-12 {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          float: none !important;
+          margin-bottom: 12px !important;
+          padding: 0 !important;
+        }
+
+        .card-resumo, .quadro-conteudo {
+          display: block !important;
+          width: 100% !important;
+          background: #ffffff !important;
+          border: none !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+          box-shadow: none !important;
+          padding: 8px 0 !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          height: auto !important;
+          min-height: 0 !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+
+        .card-resumo h5 {
+          font-size: 12px !important;
+          color: #4a5568 !important;
+          margin: 0 0 2px 0 !important;
+          font-weight: bold !important;
+        }
+
+        .card-resumo p {
+          font-size: 15px !important;
+          color: #000000 !important;
+          font-weight: bold !important;
+          margin: 0 !important;
+        }
+
+        .table-wrapper {
+          border: 1px solid #cbd5e0 !important;
+          border-radius: 8px !important;
+          margin-bottom: 25px !important;
+          width: 100% !important;
+          overflow: hidden !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          background: #ffffff !important;
+        }
+
+        .table-topbar {
+          background: #f3f4f6 !important;
+          border-bottom: 1px solid #cbd5e0 !important;
+          padding: 8px 12px !important;
+        }
+
+        .table-title {
+          font-size: 11px !important;
+          font-weight: bold !important;
+          color: #2b2d42 !important;
+          text-transform: uppercase;
+        }
+
+        .custom-table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+        }
+
+        .custom-table td {
+          padding: 12px !important;
+          color: #2d3748 !important;
+          font-size: 11px !important;
+          line-height: 1.5 !important;
+        }
+
+        .paper-doi {
+          color: #2d3748 !important;
+          font-size: 10px !important;
+          margin-bottom: 4px !important;
+        }
+
+        .paper-title {
+          font-size: 14px !important;
+          font-weight: bold !important;
+          color: #000000 !important;
+          margin-bottom: 6px !important;
+        }
+
+        .paper-tags {
+          margin-top: 8px !important;
+        }
+
+        .paper-tag {
+          background: #f3f4f6 !important;
+          color: #2d3748 !important;
+          padding: 3px 8px !important;
+          border: 1px solid #f3f4f6 !important;
+          border-radius: 4px !important;
+          font-size: 10px !important;
+          font-weight: 600 !important;
+          display: inline-block !important;
+          margin-right: 6px !important;
+        }
+
+        #most-cited, #most-cited-authors {
+          font-size: 11px !important;
+          color: #2d3748 !important;
+          line-height: 1.5 !important;
+        }
+        
+        #most-cited ol, #most-cited-authors ol {
+          padding-left: 18px !important;
+          margin: 4px 0 0 0 !important;
+        }
+
+        #most-cited li, #most-cited-authors li {
+          margin-bottom: 6px !important;
+        }
+
+        canvas {
+          display: block !important;
+          width: 100% !important;
+          max-width: 320px !important;
+          height: auto !important;
+          margin: 10px auto !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          filter: grayscale(100%) !important;
+        }
+      `;
+      document.head.appendChild(estiloImpressao);
+
+      const configuracoes = {
+        margin:       [20, 15, 20, 15],
+        filename:     'SnowMap-Data-Analysis-Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+          scale: 2,
+          useCORS: true, 
+          logging: false,
+          letterRendering: true,
+          scrollY: 0,
+          scrollX: 0,
+          background: '#ffffff',
+          windowWidth: elemento.scrollWidth
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['css', 'legacy'] }
+      };
+
+      html2pdf().set(configuracoes).from(elemento).save().then(() => {
+        this.style.display = 'block';
+        if (checkboxContainer) checkboxContainer.style.display = 'block';
+        
+        if (nuvemPalavras) nuvemPalavras.style.display = 'block';
+        if (tituloWordCloud) tituloWordCloud.style.display = '';
+
+        const cabecalhoRemover = document.getElementById('cabecalho-pdf-docs');
+        if (cabecalhoRemover) cabecalhoRemover.remove();
+
+        const estiloRemover = document.getElementById('estilo-pdf-linear-absoluto');
+        if (estiloRemover) estiloRemover.remove();
+      }).catch(err => {
+        console.error("Error generating PDF:", err);
+        this.style.display = 'block';
+        if (checkboxContainer) checkboxContainer.style.display = 'block';
+        
+        if (nuvemPalavras) nuvemPalavras.style.display = 'block';
+        if (tituloWordCloud) tituloWordCloud.style.display = '';
+
+        const cabecalhoRemover = document.getElementById('cabecalho-pdf-docs');
+        if (cabecalhoRemover) cabecalhoRemover.remove();
+
+        const estiloRemover = document.getElementById('estilo-pdf-linear-absoluto');
+        if (estiloRemover) estiloRemover.remove();
+      });
     });
   </script>
 
