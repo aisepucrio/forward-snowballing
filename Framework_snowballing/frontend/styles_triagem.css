@@ -498,3 +498,17 @@ input[type="checkbox"] {
     height: auto;
     display: block;
 }
+
+#btn-exportar-pdf {
+  border: none;
+  background: #0b6b43;
+  color: white;
+
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+
+  transition: 0.2s;
+  float: right;
+  margin-top: 1rem;
+}
