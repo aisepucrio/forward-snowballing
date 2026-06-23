@@ -133,46 +133,10 @@ def generate_prompt(
     article_metadata = _format_article_metadata(article)
     extra_section = f"ADDITIONAL INSTRUCTIONS\n{extra_prompt.strip()}\n\n" if extra_prompt and extra_prompt.strip() else ""
 
-    return f"""{extra_section}You are an expert researcher conducting a Systematic Review.
-Your task is to classify the article against each inclusion and exclusion criterion.
+    return f"""{extra_section}Classify this systematic-review candidate article.
+Return only compact valid JSON. Do not explain.
 
-Think through the criteria carefully before answering, but do not include your reasoning in the output.
-
-The examples below illustrate the decision process only.
-Do not reuse the example criteria when analyzing the real article.
-
-EXAMPLE CRITERIA
-
-INCLUSION CRITERIA
-- IC1: The article is a primary empirical study.
-- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
-
-EXCLUSION CRITERIA
-- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
-- EC2: The article is outside the review topic.
-
-EXAMPLE ARTICLE:
-- title: Empirical evaluation of a method in the target research area
-- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
-
-EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}}}
-
-EXAMPLE ARTICLE:
-- title: A review of methods in the target research area
-- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
-
-EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"No"}}}}
-
-EXAMPLE ARTICLE:
-- title: An exploration of approaches in the target research area
-- abstract: This paper discusses approaches in the target research area. The abstract does not clearly state whether the study is empirical or theoretical, and the scope of the work is not evident from the available information.
-
-EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Unsure","IC2":"Yes","EC1":"No","EC2":"Unsure"}}}}
-
-REAL CRITERIA
+CRITERIA
 
 INCLUSION CRITERIA
 {inclusion_criteria}
@@ -180,20 +144,17 @@ INCLUSION CRITERIA
 EXCLUSION CRITERIA
 {exclusion_criteria}
 
-REAL ARTICLE
+ARTICLE
 {article_metadata}
 
-CLASSIFICATION RULES:
-- For each inclusion criterion, return "Yes" if the article satisfies it, "No" if it does not, or "Unsure" if the available information is genuinely insufficient to decide.
-- For each exclusion criterion, return "Yes" if the article satisfies it, "No" if it does not, or "Unsure" if the available information is genuinely insufficient to decide.
-- Use "Unsure" only when the abstract or metadata truly lacks the information needed — not as a way to avoid making a decision when enough information is present.
-
-OUTPUT:
-- Return only valid compact JSON.
-- The JSON must contain exactly one top-level key: "criteria".
-- The "criteria" object must contain exactly these criterion keys and values "Yes", "No", or "Unsure":
+RULES
+- For every criterion key, answer exactly "Yes", "No", or "Unsure".
+- Answer "Yes" only when title/abstract/metadata provide positive evidence.
+- Answer "No" only when title/abstract/metadata provide clear negative evidence.
+- Answer "Unsure" when the criterion asks for information that is not stated in title/abstract/metadata.
+- Do not answer "No" merely because evidence is missing.
+- Output schema:
 {criteria_schema}
-- Do not include explanations, reasoning, confidence, markdown, or extra text.
 """
 
 

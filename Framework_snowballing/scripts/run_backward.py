@@ -6,6 +6,7 @@ import requests
 
 from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
+from services.search import reconstruct_abstract_from_inverted_index, build_pages, extract_npages
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
 
@@ -75,12 +76,15 @@ def get_references_openalex(doi):
            for ref in results:
                primary_loc = ref.get("primary_location") or {}
                source = primary_loc.get("source") or {}
+               biblio = ref.get("biblio") or {}
+               pages = build_pages(biblio.get("first_page"), biblio.get("last_page"))
 
 
                references.append({
                    "title": ref.get("title") or "Untitled",
                    "year": ref.get("publication_year", "-"),
                    "venue": source.get("display_name", "-"),
+                   "abstract": reconstruct_abstract_from_inverted_index(ref.get("abstract_inverted_index")),
                    "doi": normalize_doi(ref.get("doi")) if ref.get("doi") else "-",
                    "authors": [
                        {"name": a.get("author", {}).get("display_name", "-")}
@@ -95,8 +99,8 @@ def get_references_openalex(doi):
                         if c.get("display_name")
                     ][:10],
                     "language": ref.get("language"),
-                    "pages": ref.get("biblio", {}).get("first_page"),
-                    "numpages": ref.get("biblio", {}).get("last_page"),
+                    "pages": pages,
+                    "numpages": extract_npages(pages),
                     "source": "openalex",
                })
 
@@ -209,4 +213,3 @@ def main():
 
 if __name__ == "__main__":
    main()
-

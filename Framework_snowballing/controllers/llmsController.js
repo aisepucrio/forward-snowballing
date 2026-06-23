@@ -36,7 +36,7 @@ function findPythonExecutable() {
 }
 
 exports.analisar = (req, res) => {
-  const { criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt } = req.body;
+  const { criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt, maxWorkers } = req.body;
   console.log('Entrou no llmsController.analisar');
   console.log('[DEBUG] ollamaUrl recebido:', ollamaUrl);
   console.log('[DEBUG] model recebido:', model);
@@ -45,7 +45,7 @@ exports.analisar = (req, res) => {
     return res.status(400).json({ error: "Nenhum artigo enviado." });
   }
 
-  const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt });
+  const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt, maxWorkers });
 
   // Caminho absoluto para o script Python:
   const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');
@@ -55,15 +55,54 @@ exports.analisar = (req, res) => {
     return res.status(500).json({ error: 'Python não encontrado no servidor.' });
   }
 
+  console.log('[DEBUG] Python LLM path:', pythonPath);
   const pythonProcess = spawn(pythonPath, [scriptPath]);
+  let finished = false;
+
+  const timeoutMs = 150 * 1000;
+  const timeout = setTimeout(() => {
+    if (finished) return;
+    finished = true;
+    pythonProcess.kill('SIGTERM');
+    console.error(`Análise LLM excedeu ${timeoutMs / 1000}s e foi interrompida.`);
+    if (!res.headersSent) {
+      res.status(504).json({
+        error: 'A análise demorou demais. Tente menos artigos ou um modelo mais rápido.'
+      });
+    }
+  }, timeoutMs);
+
+  req.on('close', () => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timeout);
+    pythonProcess.kill('SIGTERM');
+    console.error('Cliente desconectou durante a análise LLM; processo Python interrompido.');
+  });
 
   let output = '';
   let errorOutput = '';
 
   pythonProcess.stdout.on('data', (data) => { output += data.toString(); });
   pythonProcess.stderr.on('data', (data) => { errorOutput += data.toString(); });
+  pythonProcess.on('error', (err) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timeout);
+    console.error('Erro ao iniciar script Python:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Erro ao iniciar o script Python.' });
+    }
+  });
 
   pythonProcess.on('close', (code) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timeout);
+    console.log('[DEBUG] Python LLM finalizou com code:', code);
+    if (errorOutput) {
+      console.error('[DEBUG] Python LLM stderr:', errorOutput);
+    }
     if (code !== 0) {
       console.error('Erro no script Python:', errorOutput);
       return res.status(500).json({ error: 'Erro ao processar os artigos.' });

@@ -507,6 +507,8 @@ def fallback_openalex_by_title(title):
         author = a.get("author") or {}
         authors.append({"name": author.get("display_name", "-")})
 
+    biblio = best.get("biblio") or {}
+    pages = build_pages(biblio.get("first_page"), biblio.get("last_page"))
 
     result = {
         "title": best.get("title", "-"),
@@ -526,6 +528,8 @@ def fallback_openalex_by_title(title):
             if c.get("display_name")
         ][:10],
         "language": best.get("language"),
+        "pages": pages,
+        "numpages": extract_npages(pages),
 
 
     }
@@ -1141,7 +1145,14 @@ def needs_enrichment(citation):
         is_missing(citation.get("doi")) or
         is_missing(citation.get("year")) or
         is_missing(citation.get("venue")) or
+        is_missing(citation.get("abstract")) or
         not citation.get("authors") or
+        is_missing(citation.get("url")) or
+        is_missing(citation.get("language")) or
+        is_missing(citation.get("pages")) or
+        is_missing(citation.get("numpages")) or
+        is_missing(citation.get("open_access")) or
+        is_missing(citation.get("keywords")) or
         is_missing(citation.get("citationCount")) or
         is_missing(citation.get("citations_count"))
     )
@@ -1168,12 +1179,23 @@ def enrich_citation(citation):
             if cr:
                 enriched = merge_prefer_filled(enriched, cr)
 
+        if needs_enrichment(enriched):
+            oa = fallback_openalex_by_doi(doi)
+            if oa:
+                enriched = merge_prefer_filled(enriched, oa)
+
 
     elif title and normalize_title(title):
         if needs_enrichment(enriched):
             cr = fallback_crossref(title=title)
             if cr:
                 enriched = merge_prefer_filled(enriched, cr)
+
+        resolved_doi = get_citation_doi(enriched)
+        if resolved_doi and needs_enrichment(enriched):
+            oa = fallback_openalex_by_doi(resolved_doi)
+            if oa:
+                enriched = merge_prefer_filled(enriched, oa)
 
 
     enriched["paperId"] = generate_paper_id(enriched.get("title", "-"))
@@ -1205,7 +1227,7 @@ def enrich_incomplete_citations(citations):
 
     crossref_by_doi = fallback_crossref_batch_by_doi(dois_to_fetch)
 
-    # Apply batch results; collect what still needs individual calls
+    # Apply batch results; collect what still needs individual enrichment.
     individual_tasks = []
     for i in indices_to_enrich:
         citation = enriched_citations[i]
@@ -1215,25 +1237,43 @@ def enrich_incomplete_citations(citations):
             cr = crossref_by_doi.get(doi)
             if cr:
                 enriched_citations[i] = merge_prefer_filled(citation, cr)
-            else:
+            if needs_enrichment(enriched_citations[i]):
                 individual_tasks.append((i, "doi", doi))
         elif title and normalize_title(title):
             individual_tasks.append((i, "title", title))
 
-    # Parallelize remaining individual Crossref calls
+    # Parallelize remaining individual calls to avoid serial API waits.
     if individual_tasks:
         def _fetch(task):
             index, kind, value = task
-            cr = fallback_crossref(doi=value) if kind == "doi" else fallback_crossref(title=value)
-            return index, cr
+            result = dict(enriched_citations[index])
+
+            if kind == "doi":
+                cr = fallback_crossref(doi=value)
+                if cr:
+                    result = merge_prefer_filled(result, cr)
+                if needs_enrichment(result):
+                    oa = fallback_openalex_by_doi(value)
+                    if oa:
+                        result = merge_prefer_filled(result, oa)
+            else:
+                cr = fallback_crossref(title=value)
+                if cr:
+                    result = merge_prefer_filled(result, cr)
+                resolved_doi = get_citation_doi(result)
+                if resolved_doi and needs_enrichment(result):
+                    oa = fallback_openalex_by_doi(resolved_doi)
+                    if oa:
+                        result = merge_prefer_filled(result, oa)
+
+            return index, result
 
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = {executor.submit(_fetch, task): task for task in individual_tasks}
             for fut in as_completed(futures):
                 try:
-                    index, cr = fut.result()
-                    if cr:
-                        enriched_citations[index] = merge_prefer_filled(enriched_citations[index], cr)
+                    index, enriched = fut.result()
+                    enriched_citations[index] = enriched
                 except Exception:
                     pass
 
@@ -1263,6 +1303,3 @@ def clear_caches():
     CROSSREF_CACHE.clear()
     SEMANTIC_CACHE.clear()
     REQUEST_CACHE.clear()
-
-
-

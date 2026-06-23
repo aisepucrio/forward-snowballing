@@ -340,10 +340,34 @@ automatically screen abstracts and provide decision support.</h3>
     }
 
     function prepararArtigosParaAnalise(artigos) {
+      const limitarTexto = (valor, limite = 1200) => {
+        const texto = String(valor || '');
+        return texto.length > limite ? `${texto.slice(0, limite)}...` : texto;
+      };
+
       return artigos.map(artigo => ({
-        title: artigo.title || '',
-        abstract: artigo.abstract || ''
+        title: limitarTexto(artigo.title || '', 300),
+        abstract: limitarTexto(artigo.abstract || '', 1200)
       }));
+    }
+
+    function atualizarResultadoManual(resultados, artigoIndex, criterio, valor) {
+      if (!resultados[artigoIndex]) {
+        resultados[artigoIndex] = {
+          title: artigosIncluidos[artigoIndex]?.title || '',
+          results: {}
+        };
+      }
+
+      if (!resultados[artigoIndex].results) {
+        resultados[artigoIndex].results = {};
+      }
+
+      resultados[artigoIndex].results[criterio] = valor;
+
+      const divResultado = document.getElementById('resultadoAnalise');
+      divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
+      mostrarTabelaComResultados(artigosIncluidos, resultados);
     }
 
     function mostrarTabelaComResultados(artigos, resultados) {
@@ -490,7 +514,23 @@ automatically screen abstracts and provide decision support.</h3>
       } else if (valor === 'não' || valor === 'nao' || valor === 'no' || valor === 'No' || valor === 'Não') {
         td.innerHTML = `<span class="criteria-badge criteria-no">No</span>`;
       } else if (valor === 'unsure' || valor === 'Unsure') {
-        td.innerHTML = `<span class="criteria-badge criteria-unsure">Unsure</span>`;
+        td.innerHTML = `
+          <div class="criteria-review">
+            <span class="criteria-badge criteria-unsure">Unsure</span>
+            <div class="criteria-review-actions" aria-label="Resolve unsure classification">
+              <button type="button" class="criteria-review-btn criteria-review-yes">Yes</button>
+              <button type="button" class="criteria-review-btn criteria-review-no">No</button>
+            </div>
+          </div>
+        `;
+
+        td.querySelector('.criteria-review-yes').addEventListener('click', () => {
+          atualizarResultadoManual(resultados, index, col, 'Yes');
+        });
+
+        td.querySelector('.criteria-review-no').addEventListener('click', () => {
+          atualizarResultadoManual(resultados, index, col, 'No');
+        });
       } else {
         td.textContent = raw ?? '-';
       }
@@ -555,7 +595,7 @@ automatically screen abstracts and provide decision support.</h3>
 
     async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
       const artigosLimpos = prepararArtigosParaAnalise(artigos);
-      const tamanhoLote = 10;
+      const tamanhoLote = 1;
       const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
       const resultadosFinais = [];
 
@@ -587,6 +627,7 @@ automatically screen abstracts and provide decision support.</h3>
           tokens: settings.tokens,
           ollamaUrl: settings.url,
           extraPrompt: extraPrompt,
+          maxWorkers: 1,
         };
 
         const res = await fetch('/api/articles/analisar', {

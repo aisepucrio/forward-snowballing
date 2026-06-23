@@ -16,6 +16,7 @@ def generate_paper_id(title):
 
 
 def normalize_doi(doi):
+
     if not doi:
         return None
 
@@ -61,4 +62,4 @@ def token_overlap_score(a, b):
 
 
 def is_missing(value):
-    return value in (None, "", "-", "null", "None")
+    return value in (None, "", "-", "null", "None", [])
