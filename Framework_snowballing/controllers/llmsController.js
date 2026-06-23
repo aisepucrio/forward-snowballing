@@ -38,6 +38,9 @@ function findPythonExecutable() {
 exports.analisar = (req, res) => {
   const { criteriosInclusao, criteriosExclusao, artigos, model, temperature, tokens, ollamaUrl, extraPrompt } = req.body;
   console.log('Entrou no llmsController.analisar');
+  console.log('[DEBUG] ollamaUrl recebido:', ollamaUrl);
+  console.log('[DEBUG] model recebido:', model);
+  console.log('[DEBUG] artigos count:', artigos ? artigos.length : 0);
   if (!artigos || artigos.length === 0) {
     return res.status(400).json({ error: "Nenhum artigo enviado." });
   }

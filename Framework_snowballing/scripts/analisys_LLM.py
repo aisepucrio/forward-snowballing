@@ -80,6 +80,9 @@ def _normalize_criterion_answer(value):
     if normalized in {"nao", "não", "nÃ£o", "nÃƒÂ£o", "no", "nÃƒÆ’Ã‚Â£o"}:
         return "No"
 
+    if normalized in {"unsure", "incerto", "talvez", "maybe"}:
+        return "Unsure"
+
     return "error"
 
 

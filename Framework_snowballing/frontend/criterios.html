@@ -37,10 +37,6 @@
           <a class="nav-link" href="criterios.html">Criteria Applications</a>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="settings.html">LLM Configuration</a>
-        </li>
-
       </ul>
     </div>
 
@@ -83,11 +79,16 @@ automatically screen abstracts and provide decision support.</h3>
 
   </div>
 
-  <button id="analisarBtn" type="submit" class="analisarBtn btn btn-success">
-    <i class="bi bi-stars"></i>
-    <span id="btnTexto" class="fw-semibold">Apply Criteria</span>
-    <span id="btnLoading" class="spinner-border spinner-border-sm d-none"></span>
-  </button>
+  <div class="d-flex justify-content-center align-items-center gap-3" style="margin: 30px 0;">
+    <button id="analisarBtn" type="submit" class="analisarBtn btn btn-success" style="margin: 0;">
+      <i class="bi bi-stars"></i>
+      <span id="btnTexto" class="fw-semibold">Apply Criteria</span>
+      <span id="btnLoading" class="spinner-border spinner-border-sm d-none"></span>
+    </button>
+    <button type="button" class="btn btn-outline-secondary fw-semibold" style="padding: 10px 20px; border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#llmConfigModal">
+      <i class="bi bi-gear me-1"></i>LLM Configuration
+    </button>
+  </div>
 
 </form>
 
@@ -488,9 +489,9 @@ automatically screen abstracts and provide decision support.</h3>
         td.innerHTML = `<span class="criteria-badge criteria-yes">Yes</span>`;
       } else if (valor === 'não' || valor === 'nao' || valor === 'no' || valor === 'No' || valor === 'Não') {
         td.innerHTML = `<span class="criteria-badge criteria-no">No</span>`;
-      }
-    
-      else {
+      } else if (valor === 'unsure' || valor === 'Unsure') {
+        td.innerHTML = `<span class="criteria-badge criteria-unsure">Unsure</span>`;
+      } else {
         td.textContent = raw ?? '-';
       }
 
@@ -806,5 +807,82 @@ document.addEventListener('DOMContentLoaded', () => {
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- LLM Configuration Modal -->
+  <div class="modal fade" id="llmConfigModal" tabindex="-1" aria-labelledby="llmConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-semibold" id="llmConfigModalLabel">
+            <i class="bi bi-gear me-2"></i>LLM Configuration
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-4" style="font-size: 0.9rem;">Configure the language model used to classify articles against your criteria.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Ollama URL</label>
+            <input type="text" class="form-control" id="configUrl">
+            <div class="form-text">Address of the Ollama server running the models.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Model</label>
+            <input type="text" class="form-control" id="configModel">
+            <div class="form-text">Name of the model to use (e.g. gemma4:31b, llama3.2:3b, mistral:latest).</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Temperature <span class="text-muted fw-normal">(0.0 – 1.0)</span></label>
+            <input type="number" class="form-control" id="configTemperature" min="0" max="1" step="0.1">
+            <div class="form-text">Lower values produce more consistent results. Higher values produce more varied responses.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Max tokens</label>
+            <input type="number" class="form-control" id="configTokens" min="100" step="50">
+            <div class="form-text">Maximum number of tokens the model can generate per response.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div id="llmSaveMsg" class="me-auto d-none alert alert-success py-2 mb-0">Settings saved successfully.</div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" id="llmSaveBtn">
+            <i class="bi bi-floppy"></i>
+            <span class="fw-semibold ms-1">Save settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LLM_DEFAULTS = {
+      url: 'http://11.0.0.35:11434/api/chat',
+      model: 'gemma4:31b',
+      temperature: 0.1,
+      tokens: 600,
+    };
+
+    function loadLlmSettings() {
+      const saved = JSON.parse(localStorage.getItem('llmSettings') || '{}');
+      document.getElementById('configUrl').value = saved.url ?? LLM_DEFAULTS.url;
+      document.getElementById('configModel').value = saved.model ?? LLM_DEFAULTS.model;
+      document.getElementById('configTemperature').value = saved.temperature ?? LLM_DEFAULTS.temperature;
+      document.getElementById('configTokens').value = saved.tokens ?? LLM_DEFAULTS.tokens;
+    }
+
+    document.getElementById('llmConfigModal').addEventListener('show.bs.modal', loadLlmSettings);
+
+    document.getElementById('llmSaveBtn').addEventListener('click', () => {
+      const settings = {
+        url: document.getElementById('configUrl').value.trim(),
+        model: document.getElementById('configModel').value.trim(),
+        temperature: parseFloat(document.getElementById('configTemperature').value),
+        tokens: parseInt(document.getElementById('configTokens').value),
+      };
+      localStorage.setItem('llmSettings', JSON.stringify(settings));
+      const msg = document.getElementById('llmSaveMsg');
+      msg.classList.remove('d-none');
+      setTimeout(() => msg.classList.add('d-none'), 2500);
+    });
+  </script>
 </body>
 </html>

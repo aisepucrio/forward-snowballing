@@ -63,3 +63,33 @@ TITLE recebido: -
 Executando comando: "/home/dev/projeto/forward-snowballing/Framework_snowballing/venv/bin/python3" -X utf8 "/home/dev/projeto/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1109/csie.2009.360" "-"
 DOI recebido: 10.1109/csie.2009.360
 TITLE recebido: -
+/Users/mariafernandapiquet/Downloads/forward-snowballing/Framework_snowballing/controllers/llmsController.js:43
+  console.log('[DEBUG] artigos count:', artigos?.length);
+                                                ^
+
+SyntaxError: Unexpected token .
+    at Module._compile (internal/modules/cjs/loader.js:723:23)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)
+    at Module.load (internal/modules/cjs/loader.js:653:32)
+    at tryModuleLoad (internal/modules/cjs/loader.js:593:12)
+    at Function.Module._load (internal/modules/cjs/loader.js:585:3)
+    at Module.require (internal/modules/cjs/loader.js:692:17)
+    at require (internal/modules/cjs/helpers.js:25:18)
+    at Object.<anonymous> (/Users/mariafernandapiquet/Downloads/forward-snowballing/Framework_snowballing/routes/articlesRoutes.js:4:24)
+    at Module._compile (internal/modules/cjs/loader.js:778:30)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)
+✅ Server running at: http://localhost:3000
+Entrou no llmsController.analisar
+[DEBUG] ollamaUrl recebido: http://localhost:11434/api/chat
+[DEBUG] model recebido: llama3.2:3b
+[DEBUG] artigos count: 8
+Executando comando: "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3" -X utf8 "/Users/mariafernandapiquet/Downloads/forward-snowballing/Framework_snowballing/scripts/run_backward.py" "10.1145/3439961.3439993" "-"
+DOI recebido: 10.1145/3439961.3439993
+TITLE recebido: -
+Executando comando: "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3" -X utf8 "/Users/mariafernandapiquet/Downloads/forward-snowballing/Framework_snowballing/scripts/run_forward.py" "10.1145/3439961.3439993" "-"
+DOI recebido: 10.1145/3439961.3439993
+TITLE recebido: -
+Entrou no llmsController.analisar
+[DEBUG] ollamaUrl recebido: http://localhost:11434/api/chat
+[DEBUG] model recebido: llama3.2:3b
+[DEBUG] artigos count: 8

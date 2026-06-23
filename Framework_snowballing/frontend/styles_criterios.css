@@ -499,3 +499,7 @@ td.col-ec {
   /*background: #fdecec;*/
   color: #b42318;
 }
+
+.criteria-unsure {
+  color: #b45309;
+}

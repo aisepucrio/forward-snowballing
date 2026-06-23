@@ -232,6 +232,8 @@ def fallback_via_requests(doi):
         return None
 
     data["api"] = "semantic_doi_lookup"
+    if "open_access" not in data:
+        data["open_access"] = data.get("isOpenAccess")
 
     return data
 
@@ -396,7 +398,7 @@ def get_openalex_citations(openalex_id):
     citations = []
     cursor = "*"
 
-    for _ in range(10):  # max 2000 citations (10 pages × 200)
+    for _ in range(5):  # max 1000 citations (5 pages × 200)
         url = f"https://api.openalex.org/works?filter=cites:{openalex_id}&per-page=200&cursor={cursor}"
         data = safe_get(url)
 
@@ -893,7 +895,7 @@ def search_combined(doi=None, title=None):
             if openalex_data and openalex_data.get("openalex_id"):
                 openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
 
-            all_citations = merge_citations(openalex_citations, paper_data.get("citations", []) or [])
+            all_citations = (paper_data.get("citations", []) or []) + openalex_citations
 
 
             merged = openalex_data.copy() if openalex_data else {}
@@ -912,8 +914,8 @@ def search_combined(doi=None, title=None):
 
         if openalex_data:
 
-            for retry in range(5):
-                time.sleep(3)
+            for retry in range(3):
+                time.sleep(2 ** retry)
                 paper_data = fallback_via_requests(cleaned_doi)
 
                 if paper_data:
@@ -1041,7 +1043,7 @@ def search_combined(doi=None, title=None):
         if openalex_data and openalex_data.get("openalex_id"):
             openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
 
-        all_citations = merge_citations(openalex_citations, paper_data.get("citations", []) if paper_data else [])
+        all_citations = (paper_data.get("citations", []) if paper_data else []) + openalex_citations
 
 
 
@@ -1188,48 +1190,56 @@ def enrich_citation(citation):
 def enrich_incomplete_citations(citations):
     enriched_citations = [dict(citation) for citation in citations]
 
+    indices_to_enrich = [
+        i for i, c in enumerate(enriched_citations)
+        if needs_enrichment(c)
+    ]
 
     dois_to_fetch = []
-
-
-    for citation in enriched_citations:
-        if needs_enrichment(citation):
-            doi = get_citation_doi(citation)
-            if doi:
-                citation["doi"] = doi
-                dois_to_fetch.append(doi)
-
+    for i in indices_to_enrich:
+        citation = enriched_citations[i]
+        doi = get_citation_doi(citation)
+        if doi:
+            citation["doi"] = doi
+            dois_to_fetch.append(doi)
 
     crossref_by_doi = fallback_crossref_batch_by_doi(dois_to_fetch)
 
+    # Apply batch results; collect what still needs individual calls
+    individual_tasks = []
+    for i in indices_to_enrich:
+        citation = enriched_citations[i]
+        doi = get_citation_doi(citation)
+        title = citation.get("title")
+        if doi:
+            cr = crossref_by_doi.get(doi)
+            if cr:
+                enriched_citations[i] = merge_prefer_filled(citation, cr)
+            else:
+                individual_tasks.append((i, "doi", doi))
+        elif title and normalize_title(title):
+            individual_tasks.append((i, "title", title))
+
+    # Parallelize remaining individual Crossref calls
+    if individual_tasks:
+        def _fetch(task):
+            index, kind, value = task
+            cr = fallback_crossref(doi=value) if kind == "doi" else fallback_crossref(title=value)
+            return index, cr
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(_fetch, task): task for task in individual_tasks}
+            for fut in as_completed(futures):
+                try:
+                    index, cr = fut.result()
+                    if cr:
+                        enriched_citations[index] = merge_prefer_filled(enriched_citations[index], cr)
+                except Exception:
+                    pass
 
     for index, citation in enumerate(enriched_citations):
-        if needs_enrichment(citation):
-            doi = get_citation_doi(citation)
-            title = citation.get("title")
-
-
-            if doi:
-                cr = crossref_by_doi.get(doi)
-
-
-                if not cr:
-                    cr = fallback_crossref(doi=doi)
-
-
-                if cr:
-                    citation = merge_prefer_filled(citation, cr)
-
-
-            elif title and normalize_title(title):
-                cr = fallback_crossref(title=title)
-                if cr:
-                    citation = merge_prefer_filled(citation, cr)
-
-
         citation["paperId"] = generate_paper_id(citation.get("title", "-"))
         citation["doi"] = normalize_doi(citation.get("doi")) or "-"
-
 
         if (
             not citation.get("url")
@@ -1237,9 +1247,7 @@ def enrich_incomplete_citations(citations):
         ):
             citation["url"] = f"https://doi.org/{citation['doi']}"
 
-
         enriched_citations[index] = citation
-
 
     return enriched_citations
 

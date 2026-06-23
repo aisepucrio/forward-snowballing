@@ -12,7 +12,7 @@ except ModuleNotFoundError:
     from prompt import generate_prompt
 
 
-MODEL_NAME = "gemini-3.1-flash-lite-preview"
+MODEL_NAME = "gemini-3.1-flash-lite-preview" 
 GEMINI_API_KEY_ENV = "GEMINI_API_KEY"
 DEFAULT_REQUEST_DELAY_SECONDS = 5
 GEMINI_API_URL = (

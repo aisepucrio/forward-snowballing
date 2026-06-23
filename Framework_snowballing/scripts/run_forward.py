@@ -82,11 +82,7 @@ def main():
 
         raw_citations = paper.get("citations", [])
 
-        from_openalex = raw_citations and all(c.get("source") == "openalex" for c in raw_citations)
-        if from_openalex:
-            final_citations = raw_citations
-        else:
-            final_citations = enrich_incomplete_citations(raw_citations)
+        final_citations = enrich_incomplete_citations(raw_citations)
         final_citations = normalize_citation_counts(final_citations)
 
 

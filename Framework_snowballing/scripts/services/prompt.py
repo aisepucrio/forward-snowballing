@@ -165,6 +165,13 @@ EXAMPLE ARTICLE:
 EXPECTED OUTPUT:
 {{"criteria":{{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"No"}}}}
 
+EXAMPLE ARTICLE:
+- title: An exploration of approaches in the target research area
+- abstract: This paper discusses approaches in the target research area. The abstract does not clearly state whether the study is empirical or theoretical, and the scope of the work is not evident from the available information.
+
+EXPECTED OUTPUT:
+{{"criteria":{{"IC1":"Unsure","IC2":"Yes","EC1":"No","EC2":"Unsure"}}}}
+
 REAL CRITERIA
 
 INCLUSION CRITERIA
@@ -177,14 +184,14 @@ REAL ARTICLE
 {article_metadata}
 
 CLASSIFICATION RULES:
-- For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
-- For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
-- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Yes" for ambiguous inclusion criteria and "No" for ambiguous exclusion criteria.
+- For each inclusion criterion, return "Yes" if the article satisfies it, "No" if it does not, or "Unsure" if the available information is genuinely insufficient to decide.
+- For each exclusion criterion, return "Yes" if the article satisfies it, "No" if it does not, or "Unsure" if the available information is genuinely insufficient to decide.
+- Use "Unsure" only when the abstract or metadata truly lacks the information needed — not as a way to avoid making a decision when enough information is present.
 
 OUTPUT:
 - Return only valid compact JSON.
 - The JSON must contain exactly one top-level key: "criteria".
-- The "criteria" object must contain exactly these criterion keys and values "Yes" or "No":
+- The "criteria" object must contain exactly these criterion keys and values "Yes", "No", or "Unsure":
 {criteria_schema}
 - Do not include explanations, reasoning, confidence, markdown, or extra text.
 """
@@ -246,4 +253,4 @@ def _format_criteria_schema(criteria: dict[str, dict[str, str]]) -> str:
     if not ids:
         return "{}"
 
-    return json.dumps({criterion_id: "Yes or No" for criterion_id in ids})
+    return json.dumps({criterion_id: "Yes, No, or Unsure" for criterion_id in ids})
