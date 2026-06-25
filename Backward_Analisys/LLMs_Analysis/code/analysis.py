@@ -3,6 +3,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -12,9 +13,11 @@ except ModuleNotFoundError:
     from prompt import generate_prompt
 
 
-MODEL_NAME = "gemini-3.1-flash-lite-preview" 
+MODEL_NAME = "gemini-3.1-flash-lite-preview"
 GEMINI_API_KEY_ENV = "GEMINI_API_KEY"
-DEFAULT_REQUEST_DELAY_SECONDS = 5
+DEFAULT_REQUEST_DELAY_SECONDS = 0
+DEFAULT_MAX_WORKERS = 4
+BASE_DIR = Path(__file__).resolve().parents[1]
 GEMINI_API_URL = (
     "https://generativelanguage.googleapis.com/v1beta/"
     f"models/{MODEL_NAME}:generateContent"
@@ -52,10 +55,15 @@ def get_gemini_api_key(env_path: str | Path = ".env") -> str:
     return api_key
 
 
-def read_json(path: str | Path) -> dict[str, Any]:
+def read_json(path: str | Path, allow_missing: bool = False) -> dict[str, Any]:
     json_path = Path(path)
     if not json_path.exists():
-        return {}
+        if allow_missing:
+            return {}
+        raise FileNotFoundError(f"Arquivo JSON nao encontrado: {json_path}")
+
+    if not json_path.is_file():
+        raise FileNotFoundError(f"Caminho JSON nao e um arquivo: {json_path}")
 
     text = json_path.read_text(encoding="utf-8-sig").strip()
     if not text:
@@ -86,7 +94,7 @@ def load_articles_data(articles_json_path: str | Path) -> dict[str, Any]:
 
 
 def load_results_data(results_json_path: str | Path) -> dict[str, list[dict[str, Any]]]:
-    data = read_json(results_json_path)
+    data = read_json(results_json_path, allow_missing=True)
     results = data.get(RESULTS_KEY, [])
 
     if not isinstance(results, list):
@@ -206,6 +214,7 @@ def analyze_articles_json(
     results_json_path: str | Path,
     env_path: str | Path = ".env",
     delay_seconds: float = DEFAULT_REQUEST_DELAY_SECONDS,
+    max_workers: int = DEFAULT_MAX_WORKERS,
 ) -> dict[str, list[dict[str, Any]]]:
     articles_data = load_articles_data(articles_json_path)
     results_data = load_results_data(results_json_path)
@@ -214,6 +223,7 @@ def analyze_articles_json(
 
     criteria = articles_data[CRITERIA_KEY]
     articles = articles_data[ARTICLES_KEY]
+    pending_articles: list[tuple[str, str]] = []
 
     for article in articles:
         title = str(article.get(TITLE_KEY, "")).strip()
@@ -226,29 +236,66 @@ def analyze_articles_json(
             print(f"artigo {title} foi avaliado")
             continue
 
-        try:
-            if delay_seconds > 0:
-                time.sleep(delay_seconds)
+        pending_articles.append((title, abstract))
 
-            result = analyze_article(title, abstract, criteria, api_key)
-        except Exception as error:
-            print(f"erro {error}")
-            continue
+    worker_count = max(1, min(int(max_workers or 1), len(pending_articles) or 1))
 
-        if result is None:
-            print("erro resposta invalida da LLM")
-            continue
+    def analyze_pending_article(title: str, abstract: str) -> dict[str, Any] | None:
+        if delay_seconds > 0:
+            time.sleep(delay_seconds)
+        return analyze_article(title, abstract, criteria, api_key)
 
-        results_data[RESULTS_KEY].append(result)
-        analyzed_titles.add(title)
-        write_json(results_data, results_json_path)
-        print(f"artigo {title} classificado")
+    if worker_count == 1:
+        for title, abstract in pending_articles:
+            try:
+                result = analyze_pending_article(title, abstract)
+            except Exception as error:
+                print(f"erro {error}")
+                continue
+
+            if result is None:
+                print("erro resposta invalida da LLM")
+                continue
+
+            results_data[RESULTS_KEY].append(result)
+            analyzed_titles.add(title)
+            write_json(results_data, results_json_path)
+            print(f"artigo {title} classificado")
+
+        return results_data
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        futures = {
+            executor.submit(analyze_pending_article, title, abstract): title
+            for title, abstract in pending_articles
+        }
+
+        for future in as_completed(futures):
+            title = futures[future]
+            if title in analyzed_titles:
+                continue
+
+            try:
+                result = future.result()
+            except Exception as error:
+                print(f"erro {error}")
+                continue
+
+            if result is None:
+                print("erro resposta invalida da LLM")
+                continue
+
+            results_data[RESULTS_KEY].append(result)
+            analyzed_titles.add(title)
+            write_json(results_data, results_json_path)
+            print(f"artigo {title} classificado")
 
     return results_data
 
 
 if __name__ == "__main__":
     analyze_articles_json(
-        articles_json_path="data/study1/articles.json",
-        results_json_path="data/study1/results_llm.json",
+        articles_json_path=BASE_DIR / "study1/start_data/articles.json",
+        results_json_path=BASE_DIR / "study1/gemini/results_llm.json",
+        env_path=BASE_DIR / ".env",
     )

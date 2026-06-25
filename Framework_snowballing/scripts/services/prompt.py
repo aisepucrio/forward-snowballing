@@ -158,6 +158,49 @@ RULES
 """
 
 
+def generate_batch_prompt(
+    articles: list[dict[str, Any]],
+    criteria: dict[str, dict[str, str]],
+    extra_prompt: str = "",
+) -> str:
+    inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
+    exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
+    criteria_schema = _format_criteria_schema(criteria)
+    extra_section = f"ADDITIONAL INSTRUCTIONS\n{extra_prompt.strip()}\n\n" if extra_prompt and extra_prompt.strip() else ""
+    articles_payload = [
+        {
+            "index": index,
+            "title": article.get("title"),
+            "abstract": article.get("abstract"),
+        }
+        for index, article in enumerate(articles)
+    ]
+
+    return f"""{extra_section}Classify each systematic-review candidate article.
+Return only compact valid JSON. Do not explain.
+
+CRITERIA
+
+INCLUSION CRITERIA
+{inclusion_criteria}
+
+EXCLUSION CRITERIA
+{exclusion_criteria}
+
+ARTICLES
+{json.dumps(articles_payload, ensure_ascii=False)}
+
+RULES
+- For every article and every criterion key, answer exactly "Yes", "No", or "Unsure".
+- Answer "Yes" only when title/abstract provide positive evidence.
+- Answer "No" only when title/abstract provide clear negative evidence.
+- Answer "Unsure" when the criterion asks for information that is not stated.
+- Do not answer "No" merely because evidence is missing.
+- Output exactly this JSON shape:
+{{"articles":[{{"index":0,"criteria":{criteria_schema}}}]}}
+"""
+
+
 def build_prompt_for_article(
     article: dict[str, Any],
     articles_json_path: str | Path,

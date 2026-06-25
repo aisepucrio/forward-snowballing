@@ -59,7 +59,7 @@ exports.analisar = (req, res) => {
   const pythonProcess = spawn(pythonPath, [scriptPath]);
   let finished = false;
 
-  const timeoutMs = 150 * 1000;
+  const timeoutMs = 5 * 60 * 1000;
   const timeout = setTimeout(() => {
     if (finished) return;
     finished = true;
@@ -72,12 +72,9 @@ exports.analisar = (req, res) => {
     }
   }, timeoutMs);
 
-  req.on('close', () => {
+  req.on('aborted', () => {
     if (finished) return;
-    finished = true;
-    clearTimeout(timeout);
-    pythonProcess.kill('SIGTERM');
-    console.error('Cliente desconectou durante a análise LLM; processo Python interrompido.');
+    console.error('Cliente abortou a análise LLM; aguardando processo Python finalizar.');
   });
 
   let output = '';

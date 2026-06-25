@@ -184,6 +184,12 @@ def main():
            "references": references,
            "citations": [],
            "mode": "backward",
+           "open_access": paper.get("open_access", None),
+           "url": paper.get("url", None),
+           "keywords": paper.get("keywords", []),
+           "language": paper.get("language", None),
+           "pages": paper.get("pages", None),
+           "numpages": paper.get("numpages", None),
        }
 
 

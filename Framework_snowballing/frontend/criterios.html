@@ -120,22 +120,13 @@ automatically screen abstracts and provide decision support.</h3>
       <!-- Tabela -->
       <div class="table-wrapper">
         <table class="custom-table" id="tabela-criterios">
-
           <thead>
             <tr>
-              <th style="min-width: 260px;">Research Identity</th>
-              <th style="min-width: 240px;">Abstract</th>
-              <th style="min-width: 120px;">Authors</th>
-              <th style="min-width: 90px;">Year</th>
-              <th style="min-width: 180px;">Venue</th>
-              <th style="min-width: 180px;">DOI</th>
-              <th style="min-width: 100px;">Cited by</th>
-              <th style="min-width: 120px;">Open Access</th>
-              <th style="min-width: 180px;">URL</th>
-              <th style="min-width: 180px;">Keywords</th>
-              <th style="min-width: 120px;">Language</th>
-              <th style="min-width: 140px;">Pages</th>
-            </tr>
+              <th>Research Identity</th>
+              <th>Abstract</th>
+              <th>Keywords</th>
+              <th>Citations</th>
+              </tr>
           </thead>
           <tbody id="tabelaArtigosBody"></tbody>
         </table>
@@ -174,12 +165,19 @@ automatically screen abstracts and provide decision support.</h3>
         .replace(/'/g, '&#039;');
     }
 
+    function firstPresent(...values) {
+      for (const value of values) {
+        if (value !== null && value !== undefined) return value;
+      }
+      return undefined;
+    }
+
     function formatAuthors(authors) {
       if (!authors) return '-';
 
       if (Array.isArray(authors)) {
         if (authors.length === 0) return '-';
-        return authors.map(a => a?.name || a).join('; ');
+        return authors.map(a => (a && a.name) || a).join('; ');
       }
 
       if (typeof authors === 'string') return authors;
@@ -189,7 +187,27 @@ automatically screen abstracts and provide decision support.</h3>
 
     function formatDOILink(doi) {
       if (!doi || doi === '-') return '-';
-      return `<a href="https://doi.org/${encodeURIComponent(doi)}" target="_blank">${escapeHtml(doi)}</a>`;
+      
+      let cleanDoi = doi.trim();
+      let targetUrl = /^https?:\/\//i.test(cleanDoi) 
+        ? cleanDoi 
+        : `https://doi.org/${cleanDoi}`;
+        
+      return `<a href="${encodeURI(targetUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: #10b981;">${escapeHtml(doi)}</a>`;
+    }
+
+    function toggleAbstract(index) {
+      artigosIncluidos[index].abstractExpanded = !artigosIncluidos[index].abstractExpanded;
+
+      const divResultado = document.getElementById('resultadoAnalise');
+      const resultadosText = divResultado.dataset.resultadosRaw;
+
+      if (resultadosText) {
+        const resultados = JSON.parse(resultadosText);
+        mostrarTabelaComResultados(artigosIncluidos, resultados);
+      } else {
+        mostrarTabelaArtigos(artigosIncluidos);
+      }
     }
 
     function truncateText(text, maxLength = 100) {
@@ -203,98 +221,91 @@ automatically screen abstracts and provide decision support.</h3>
       const tbody = document.getElementById('tabelaArtigosBody');
 
       if (!artigos || artigos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="12">No articles selected.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4">No articles selected.</td></tr>';
         return;
       }
 
       tbody.innerHTML = '';
 
       artigos.forEach((artigo, index) => {
-
         const tr = document.createElement('tr');
+        
+        const keywordsText = formatKeywords(artigo.keywords);
+        const authorsText = formatAuthors(artigo.authors);
+        const contagemCitations = firstPresent(artigo.citations_count, artigo.citationCount, artigo.cited_by_count, '0');
 
-        const titleCell = document.createElement('td');
-        titleCell.textContent = artigo.title || '-';
+        tr.innerHTML = `
+          <td>
+            <div class="paper-doi">
+              DOI: ${formatDOILink(artigo.doi || '-')}
+            </div>
+            <div class="paper-title" style="font-weight:600;">
+              ${escapeHtml(artigo.title || '-')}
+            </div>
+            <div class="paper-authors mt-2">
+              ${escapeHtml(authorsText)}
+            </div>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+              ${formatResearchIdentityTags(artigo)}
+            </div>
+          </td>
 
-        const abstractCell = document.createElement('td');
-        abstractCell.style.cursor = 'pointer';
+          <td>
+            <div class="abstract-text ${artigo.abstractExpanded ? 'expanded' : ''}">
+              ${artigo.abstractExpanded 
+                ? escapeHtml(artigo.abstract || '-') 
+                : escapeHtml(truncateText(artigo.abstract || '-', 140))}
+            </div>
+            ${artigo.abstract && artigo.abstract.length > 140 
+              ? `<span class="read-more abstract-read-more" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem;">
+                  ${artigo.abstractExpanded ? 'READ LESS' : 'READ MORE'}
+                </span>` 
+              : ''}
+          </td>
+        
+          <td>
+            <div class="keywords-text ${artigo.keywordsExpanded ? 'expanded' : ''}">
+              ${artigo.keywordsExpanded 
+                ? escapeHtml(keywordsText) 
+                : escapeHtml(truncateText(keywordsText, 110))}
+            </div>
+            ${keywordsText && keywordsText !== '-' && keywordsText.length > 110 
+              ? `<span class="read-more keywords-read-more" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem;">
+                  ${artigo.keywordsExpanded ? 'READ LESS' : 'READ MORE'}
+                </span>` 
+              : ''}
+          </td>
 
-        abstractCell.innerHTML = `
-          <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span><br>
-          <small class="text-primary">
-            ${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}
-          </small>
+          <td>
+            <div class="citation-box">
+              <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
+              <div>
+                <div class="citation-number" style="font-weight:bold;">
+                  ${escapeHtml(String(contagemCitations))}
+                </div>
+              </div>
+            </div>
+          </td>
         `;
 
-        abstractCell.addEventListener('click', () => toggleAbstract(index));
+        // Eventos para expandir os textos (Read More / Read Less)
+        const readMoreAbs = tr.querySelector('.abstract-read-more');
+        if (readMoreAbs) {
+          readMoreAbs.addEventListener('click', () => {
+            artigo.abstractExpanded = !artigo.abstractExpanded;
+            mostrarTabelaArtigos(artigosIncluidos);
+          });
+        }
 
-
-        const authorsCell = document.createElement('td');
-        authorsCell.textContent = formatAuthors(artigo.authors);
-
-        const yearCell = document.createElement('td');
-        yearCell.textContent = artigo.year || '-';
-
-        const venueCell = document.createElement('td');
-        venueCell.textContent = artigo.venue || '-';
-
-        const doiCell = document.createElement('td');
-        doiCell.innerHTML = formatDOILink(artigo.doi);
-
-        const citedByCell = document.createElement('td');
-        citedByCell.textContent = artigo.citations_count || '-';
-
-        tr.appendChild(titleCell);
-        tr.appendChild(abstractCell);
-        tr.appendChild(authorsCell);
-        tr.appendChild(yearCell);
-        tr.appendChild(venueCell);
-        tr.appendChild(doiCell);
-        tr.appendChild(citedByCell);
-        const openAccessCell = document.createElement('td');
-        openAccessCell.textContent = artigo.open_access || '-';
-
-        const urlCell = document.createElement('td');
-        urlCell.innerHTML = artigo.url
-          ? `<a href="${escapeHtml(artigo.url)}" target="_blank">${escapeHtml(artigo.url)}</a>`
-          : '-';
-
-
-        const keywordsCell = document.createElement('td');
-        keywordsCell.textContent = (artigo.keywords || []).join(', ') || '-';
-
-        const languageCell = document.createElement('td');
-        languageCell.textContent = artigo.language || '-';
-
-        const pagesCell = document.createElement('td');
-        pagesCell.textContent = artigo.pages || artigo.numpages || '-';
-        tr.appendChild(openAccessCell);
-        tr.appendChild(urlCell);
-        tr.appendChild(keywordsCell);
-        tr.appendChild(languageCell);
-        tr.appendChild(pagesCell);
+        const readMoreKey = tr.querySelector('.keywords-read-more');
+        if (readMoreKey) {
+          readMoreKey.addEventListener('click', () => {
+            artigo.keywordsExpanded = !artigo.keywordsExpanded;
+            mostrarTabelaArtigos(artigosIncluidos);
+          });
+        }
 
         tbody.appendChild(tr);
-        if (artigo.abstractExpanded) {
-          const abstractRow = document.createElement('tr');
-          abstractRow.className = 'table-light';
-
-          const td = document.createElement('td');
-          td.colSpan = 12;
-
-          td.innerHTML = `
-            <div class="p-3">
-              <strong>Full Abstract:</strong>
-              <p class="mb-0 mt-2">
-                ${escapeHtml(artigo.abstract || 'Abstract unavailable.')}
-              </p>
-            </div>
-  `;
-
-  abstractRow.appendChild(td);
-  tbody.appendChild(abstractRow);
-}
-
       });
     }
 
@@ -347,14 +358,14 @@ automatically screen abstracts and provide decision support.</h3>
 
       return artigos.map(artigo => ({
         title: limitarTexto(artigo.title || '', 300),
-        abstract: limitarTexto(artigo.abstract || '', 1200)
+        abstract: limitarTexto(artigo.abstract || '', 650)
       }));
     }
 
     function atualizarResultadoManual(resultados, artigoIndex, criterio, valor) {
       if (!resultados[artigoIndex]) {
         resultados[artigoIndex] = {
-          title: artigosIncluidos[artigoIndex]?.title || '',
+          title: (artigosIncluidos[artigoIndex] && artigosIncluidos[artigoIndex].title) || '',
           results: {}
         };
       }
@@ -370,199 +381,193 @@ automatically screen abstracts and provide decision support.</h3>
       mostrarTabelaComResultados(artigosIncluidos, resultados);
     }
 
+    function formatKeywords(keywords) {
+      if (!keywords) return '-';
+      if (Array.isArray(keywords)) {
+        return keywords.length ? keywords.join(', ') : '-';
+      }
+      return keywords || '-';
+    }
+
+    function isOpenAccess(value) {
+      return value === true || String(value).toLowerCase() === 'true';
+    }
+
+    function formatResearchIdentityTags(item) {
+      const pagesValue = item.numpages != null ? item.numpages : (item.pages || '-');
+      const tags = [
+        `<span class="paper-tag">${escapeHtml(item.year || '-')}</span>`,
+        `<span class="paper-tag venue-tag">${escapeHtml(item.venue || '-')}</span>`,
+        `<span class="paper-tag pages-tag"> Pages: ${escapeHtml(String(pagesValue))}</span>`
+      ];
+      if (isOpenAccess(item.open_access)) {
+        tags.push('<span class="paper-tag open-access-tag">Open Access</span>');
+      }
+      if (item.language && item.language !== '-') {
+        tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
+      }
+      return tags.join('');
+    }
+
+    // Substitua a sua função mostrarTabelaComResultados antiga por esta:
     function mostrarTabelaComResultados(artigos, resultados) {
-  console.log("RESULTADOS COMPLETOS:", resultados);
-  console.log("RESULT RESULTADO[0]:", resultados[0]?.results);
+      const tbody = document.getElementById('tabelaArtigosBody');
+      const table = document.getElementById('tabela-criterios');
+      const theadRow = table.querySelector('thead tr');
 
-  const tbody = document.getElementById('tabelaArtigosBody');
-  const table = document.getElementById('tabela-criterios');
-  const theadRow = table.querySelector('thead tr');
-
-  if (!artigos || artigos.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12">No articles selected.</td></tr>';
-    return;
-  }
-
-  // 1. GERAR COLUNAS SEM DUPLICAÇÃO (FORMA CORRETA)
-  const colunas = Array.from(
-    new Set(
-      (resultados || []).flatMap(r => Object.keys(r?.results || {}))
-    )
-  );
-
-  // 2. LIMPAR HEADER DE FORMA SEGURA
-  while (theadRow.firstChild) {
-    theadRow.removeChild(theadRow.firstChild);
-  }
-
-  const fixedHeaders = [
-    "Research Identity",
-    "Abstract",
-    "Authors",
-    "Year",
-    "Venue",
-    "DOI",
-    "Cited by",
-    "Open Access",
-    "URL",
-    "Keywords",
-    "Language",
-    "Pages"
-  ];
-
-  // 3. RECRIAR HEADER FIXO
-  fixedHeaders.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    theadRow.appendChild(th);
-  });
-
-  // 4. RECRIAR HEADER DINÂMICO (EC/IC)
-  colunas.forEach(col => {
-    const th = document.createElement('th');
-    th.textContent = col;
-    //th.style.backgroundColor = 'black';
-    //th.style.color = 'white';
-    //th.style.textAlign = 'center';
-    th.classList.add('criteria-header');
-    
-    theadRow.appendChild(th);
-  });
-
-  // 5. LIMPAR BODY
-  tbody.innerHTML = '';
-
-  // 6. RENDER LINHAS
-  artigos.forEach((artigo, index) => {
-    const resultado = resultados?.[index] || { results: {} };
-    const tr = document.createElement('tr');
-
-    const titleCell = document.createElement('td');
-    titleCell.textContent = artigo.title || '-';
-
-    const abstractCell = document.createElement('td');
-    abstractCell.style.cursor = 'pointer';
-    abstractCell.innerHTML = `
-      <span>${escapeHtml(truncateText(artigo.abstract || '-', 100))}</span><br>
-      <small class="text-primary">
-        ${artigo.abstractExpanded ? 'Hide abstract' : 'Show abstract'}
-      </small>
-    `;
-
-    abstractCell.addEventListener('click', () => toggleAbstract(index));
-
-    const authorsCell = document.createElement('td');
-    authorsCell.textContent = formatAuthors(artigo.authors);
-
-    const yearCell = document.createElement('td');
-    yearCell.textContent = artigo.year || '-';
-
-    const venueCell = document.createElement('td');
-    venueCell.textContent = artigo.venue || '-';
-
-    const doiCell = document.createElement('td');
-    doiCell.innerHTML = formatDOILink(artigo.doi);
-
-    const citedByCell = document.createElement('td');
-    citedByCell.textContent = artigo.citations_count || '-';
-
-    const openAccessCell = document.createElement('td');
-    openAccessCell.textContent = artigo.open_access || '-';
-
-    const urlCell = document.createElement('td');
-    urlCell.innerHTML = artigo.url
-      ? `<a href="${escapeHtml(artigo.url)}" target="_blank">${escapeHtml(artigo.url)}</a>`
-      : '-';
-
-    const keywordsCell = document.createElement('td');
-    keywordsCell.textContent = Array.isArray(artigo.keywords)
-      ? artigo.keywords.join(', ') || '-'
-      : artigo.keywords || '-';
-
-    const languageCell = document.createElement('td');
-    languageCell.textContent = artigo.language || '-';
-
-    const pagesCell = document.createElement('td');
-    pagesCell.textContent = artigo.pages || artigo.numpages || '-';
-
-    // fixa colunas base
-    tr.appendChild(titleCell);
-    tr.appendChild(abstractCell);
-    tr.appendChild(authorsCell);
-    tr.appendChild(yearCell);
-    tr.appendChild(venueCell);
-    tr.appendChild(doiCell);
-    tr.appendChild(citedByCell);
-    tr.appendChild(openAccessCell);
-    tr.appendChild(urlCell);
-    tr.appendChild(keywordsCell);
-    tr.appendChild(languageCell);
-    tr.appendChild(pagesCell);
-
-    // colunas IC/EC
-    colunas.forEach(col => {
-      const td = document.createElement('td');
-
-      const raw = resultado?.results?.[col];
-
-      const valor = typeof raw === 'string'
-        ? raw.trim().toLowerCase()
-        : '-';
-
-      if (valor === 'sim' || valor === 'Sim' || valor === 'yes' || valor === 'Yes') {
-        td.innerHTML = `<span class="criteria-badge criteria-yes">Yes</span>`;
-      } else if (valor === 'não' || valor === 'nao' || valor === 'no' || valor === 'No' || valor === 'Não') {
-        td.innerHTML = `<span class="criteria-badge criteria-no">No</span>`;
-      } else if (valor === 'unsure' || valor === 'Unsure') {
-        td.innerHTML = `
-          <div class="criteria-review">
-            <span class="criteria-badge criteria-unsure">Unsure</span>
-            <div class="criteria-review-actions" aria-label="Resolve unsure classification">
-              <button type="button" class="criteria-review-btn criteria-review-yes">Yes</button>
-              <button type="button" class="criteria-review-btn criteria-review-no">No</button>
-            </div>
-          </div>
-        `;
-
-        td.querySelector('.criteria-review-yes').addEventListener('click', () => {
-          atualizarResultadoManual(resultados, index, col, 'Yes');
-        });
-
-        td.querySelector('.criteria-review-no').addEventListener('click', () => {
-          atualizarResultadoManual(resultados, index, col, 'No');
-        });
-      } else {
-        td.textContent = raw ?? '-';
+      if (!artigos || artigos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No articles selected.</td></tr>';
+        return;
       }
 
-        td.classList.add('text-center');
-        tr.appendChild(td);
+      // 1. Identificar colunas dinâmicas (Critérios IC/EC)
+      const colunas = Array.from(
+        new Set((resultados || []).flatMap(r => Object.keys((r && r.results) || {})))
+      );
+
+      // 2. Remontar o Header combinando o layout clássico com as colunas novas
+      while (theadRow.firstChild) {
+        theadRow.removeChild(theadRow.firstChild);
+      }
+
+      const fixedHeaders = ["Research Identity", "Abstract", "Keywords", "Citations"];
+      fixedHeaders.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        theadRow.appendChild(th);
       });
 
-    tbody.appendChild(tr);
+      colunas.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        th.classList.add('criteria-header');
+        theadRow.appendChild(th);
+      });
 
-    //  expansão abstract
-    if (artigo.abstractExpanded) {
-      const abstractRow = document.createElement('tr');
-      abstractRow.className = 'table-light';
+      tbody.innerHTML = '';
 
-      const td = document.createElement('td');
-      td.colSpan = fixedHeaders.length + colunas.length;
+      // 3. Renderizar as linhas com o layout idêntico ao do index.html
+      artigos.forEach((artigo, index) => {
+        const resultado = (resultados && resultados[index]) || { results: {} };
+        const tr = document.createElement('tr');
+        
+        const keywordsText = formatKeywords(artigo.keywords);
+        const authorsText = formatAuthors(artigo.authors);
+        const contagemCitations = firstPresent(artigo.citations_count, artigo.citationCount, artigo.cited_by_count, '0');
 
-      td.innerHTML = `
-        <div class="p-3">
-          <strong>Full Abstract:</strong>
-          <p class="mb-0 mt-2">
-            ${escapeHtml(artigo.abstract || 'Abstract unavailable.')}
-          </p>
-        </div>
-      `;
+        tr.innerHTML = `
+          <td>
+            <div class="paper-doi">
+              DOI: ${formatDOILink(artigo.doi || '-')}
+            </div>
+            <div class="paper-title">
+              ${escapeHtml(artigo.title || '-')}
+            </div>
+            <div class="paper-authors mt-2">
+              ${escapeHtml(authorsText)}
+            </div>
+            <div class="paper-tags mt-2">
+              ${formatResearchIdentityTags(artigo)}
+            </div>
+          </td>
 
-      abstractRow.appendChild(td);
-      tbody.appendChild(abstractRow);
+          <td>
+            <div class="abstract-text ${artigo.abstractExpanded ? 'expanded' : ''}">
+              ${artigo.abstractExpanded 
+                ? escapeHtml(artigo.abstract || '-') 
+                : escapeHtml(truncateText(artigo.abstract || '-', 140))}
+            </div>
+            ${artigo.abstract && artigo.abstract.length > 140 
+              ? `<span class="read-more abstract-read-more" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem;">
+                  ${artigo.abstractExpanded ? 'READ LESS' : 'READ MORE'}
+                </span>` 
+              : ''}
+          </td>
+        
+          <td>
+            <div class="keywords-text ${artigo.keywordsExpanded ? 'expanded' : ''}">
+              ${artigo.keywordsExpanded 
+                ? escapeHtml(keywordsText) 
+                : escapeHtml(truncateText(keywordsText, 110))}
+            </div>
+            ${keywordsText && keywordsText !== '-' && keywordsText.length > 110 
+              ? `<span class="read-more keywords-read-more" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem;">
+                  ${artigo.keywordsExpanded ? 'READ LESS' : 'READ MORE'}
+                </span>` 
+              : ''}
+          </td>
+
+          <td>
+            <div class="citation-box">
+              <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
+              <div>
+                <div class="citation-number" style="font-weight:bold;">
+                  ${escapeHtml(String(contagemCitations))}
+                </div>
+                <div class="citation-label" style="font-size:0.85rem; color:#666;">
+                  citations
+                </div>
+              </div>
+            </div>
+          </td>
+        `;
+
+        colunas.forEach(col => {
+          const td = document.createElement('td');
+          const raw = resultado && resultado.results ? resultado.results[col] : undefined;
+          const valor = typeof raw === 'string' ? raw.trim().toLowerCase() : '-';
+
+          if (['sim', 'yes'].includes(valor)) {
+            td.innerHTML = `<span class="criteria-badge criteria-yes">Yes</span>`;
+          } else if (['não', 'nao', 'no'].includes(valor)) {
+            td.innerHTML = `<span class="criteria-badge criteria-no">No</span>`;
+          } else if (valor === 'unsure') {
+            td.innerHTML = `
+              <div class="criteria-review">
+                <span class="criteria-badge criteria-unsure">Unsure</span>
+                <div class="criteria-review-actions" aria-label="Resolve unsure classification">
+                  <button type="button" class="criteria-review-btn criteria-review-yes">Yes</button>
+                  <button type="button" class="criteria-review-btn criteria-review-no">No</button>
+                </div>
+              </div>
+            `;
+
+            td.querySelector('.criteria-review-yes').addEventListener('click', () => {
+              atualizarResultadoManual(resultados, index, col, 'Yes');
+            });
+
+            td.querySelector('.criteria-review-no').addEventListener('click', () => {
+              atualizarResultadoManual(resultados, index, col, 'No');
+            });
+          } else {
+            td.textContent = firstPresent(raw, '-');
+          }
+          td.classList.add('text-center');
+          tr.appendChild(td);
+        });
+
+        // Eventos de clique para expandir os textos (Read More / Read Less)
+        const readMoreAbs = tr.querySelector('.abstract-read-more');
+        if (readMoreAbs) {
+          readMoreAbs.addEventListener('click', () => {
+            artigo.abstractExpanded = !artigo.abstractExpanded;
+            mostrarTabelaComResultados(artigos, resultados);
+          });
+        }
+
+        const readMoreKey = tr.querySelector('.keywords-read-more');
+        if (readMoreKey) {
+          readMoreKey.addEventListener('click', () => {
+            artigo.keywordsExpanded = !artigo.keywordsExpanded;
+            mostrarTabelaComResultados(artigos, resultados);
+          });
+        }
+
+        tbody.appendChild(tr);
+      });
     }
-  });
-}
+
+    
     function jsonParaCSV(resultados) {
       if (!resultados || resultados.length === 0) return '';
 
@@ -580,7 +585,7 @@ automatically screen abstracts and provide decision support.</h3>
       resultados.forEach(r => {
         const linha = [r.title || ''];
         colunas.forEach(col => {
-          let val = r.results?.[col] || '';
+          let val = r.results ? (r.results[col] || '') : '';
           val = String(val);
           if (val.includes(',') || val.includes('"') || val.includes('\n')) {
             val = `"${val.replace(/"/g, '""')}"`;
@@ -593,9 +598,12 @@ automatically screen abstracts and provide decision support.</h3>
       return linhas.join('\n');
     }
 
+    const ANALYSIS_BATCH_SIZE = 40;
+    const ANALYSIS_MAX_WORKERS = 4;
+
     async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
       const artigosLimpos = prepararArtigosParaAnalise(artigos);
-      const tamanhoLote = 1;
+      const tamanhoLote = ANALYSIS_BATCH_SIZE;
       const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
       const resultadosFinais = [];
 
@@ -614,7 +622,6 @@ automatically screen abstracts and provide decision support.</h3>
 
       for (let i = 0; i < lotes.length; i++) {
         const lote = lotes[i];
-
         const settings = JSON.parse(localStorage.getItem('llmSettings') || '{}');
         const extraPrompt = localStorage.getItem('llmPrompt') || '';
 
@@ -627,7 +634,7 @@ automatically screen abstracts and provide decision support.</h3>
           tokens: settings.tokens,
           ollamaUrl: settings.url,
           extraPrompt: extraPrompt,
-          maxWorkers: 1,
+          maxWorkers: ANALYSIS_MAX_WORKERS
         };
 
         const res = await fetch('/api/articles/analisar', {
@@ -897,17 +904,17 @@ document.addEventListener('DOMContentLoaded', () => {
   <script>
     const LLM_DEFAULTS = {
       url: 'http://11.0.0.35:11434/api/chat',
-      model: 'gemma4:31b',
+      model: 'llama3.2:3b',
       temperature: 0.1,
-      tokens: 600,
+      tokens: 300,
     };
 
     function loadLlmSettings() {
       const saved = JSON.parse(localStorage.getItem('llmSettings') || '{}');
-      document.getElementById('configUrl').value = saved.url ?? LLM_DEFAULTS.url;
-      document.getElementById('configModel').value = saved.model ?? LLM_DEFAULTS.model;
-      document.getElementById('configTemperature').value = saved.temperature ?? LLM_DEFAULTS.temperature;
-      document.getElementById('configTokens').value = saved.tokens ?? LLM_DEFAULTS.tokens;
+      document.getElementById('configUrl').value = firstPresent(saved.url, LLM_DEFAULTS.url);
+      document.getElementById('configModel').value = firstPresent(saved.model, LLM_DEFAULTS.model);
+      document.getElementById('configTemperature').value = firstPresent(saved.temperature, LLM_DEFAULTS.temperature);
+      document.getElementById('configTokens').value = firstPresent(saved.tokens, LLM_DEFAULTS.tokens);
     }
 
     document.getElementById('llmConfigModal').addEventListener('show.bs.modal', loadLlmSettings);
