@@ -245,7 +245,7 @@ automatically screen abstracts and provide decision support.</h3>
                 : escapeHtml(truncateText(artigo.abstract || '-', 140))}
             </div>
             ${artigo.abstract && artigo.abstract.length > 140 
-              ? `<span class="read-more abstract-read-more" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem;">
+              ? `<span class="read-more abstract-read-more" style="cursor:pointer; color:#0b6b43; font-weight:600; font-size:0.8rem;">
                   ${artigo.abstractExpanded ? 'READ LESS' : 'READ MORE'}
                 </span>` 
               : ''}
@@ -255,10 +255,10 @@ automatically screen abstracts and provide decision support.</h3>
             <div class="keywords-text ${artigo.keywordsExpanded ? 'expanded' : ''}">
               ${artigo.keywordsExpanded 
                 ? escapeHtml(keywordsText) 
-                : escapeHtml(truncateText(keywordsText, 110))}
+                : escapeHtml(truncateText(keywordsText, 140))}
             </div>
-            ${keywordsText && keywordsText !== '-' && keywordsText.length > 110 
-              ? `<span class="read-more keywords-read-more" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem;">
+            ${keywordsText && keywordsText !== '-' && keywordsText.length > 140 
+              ? `<span class="read-more keywords-read-more" style="cursor:pointer; color:#0b6b43; font-weight:600; font-size:0.8rem;">
                   ${artigo.keywordsExpanded ? 'READ LESS' : 'READ MORE'}
                 </span>` 
               : ''}
@@ -276,7 +276,6 @@ automatically screen abstracts and provide decision support.</h3>
           </td>
         `;
 
-        // Eventos para expandir os textos (Read More / Read Less)
         const readMoreAbs = tr.querySelector('.abstract-read-more');
         if (readMoreAbs) {
           readMoreAbs.addEventListener('click', () => {
@@ -358,22 +357,27 @@ automatically screen abstracts and provide decision support.</h3>
     }
 
     function formatResearchIdentityTags(item) {
-      const pagesValue = item.numpages != null ? item.numpages : (item.pages || '-');
       const tags = [
         `<span class="paper-tag">${escapeHtml(item.year || '-')}</span>`,
-        `<span class="paper-tag venue-tag">${escapeHtml(item.venue || '-')}</span>`,
-        `<span class="paper-tag pages-tag"> Pages: ${escapeHtml(String(pagesValue))}</span>`
+        `<span class="paper-tag venue-tag">${escapeHtml(item.venue || '-')}</span>`
       ];
+
+      const pagesValue = item.numpages != null ? item.numpages : item.pages;
+
+      if (pagesValue != null && pagesValue !== '-') {
+        tags.push(`<span class="paper-tag pages-tag"> Pages: ${escapeHtml(String(pagesValue))}</span>`);
+      }
       if (isOpenAccess(item.open_access)) {
         tags.push('<span class="paper-tag open-access-tag">Open Access</span>');
       }
+      
       if (item.language && item.language !== '-') {
         tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
       }
+
       return tags.join('');
     }
 
-    // Substitua a sua função mostrarTabelaComResultados antiga por esta:
     function mostrarTabelaComResultados(artigos, resultados) {
       const tbody = document.getElementById('tabelaArtigosBody');
       const table = document.getElementById('tabela-criterios');
@@ -384,12 +388,10 @@ automatically screen abstracts and provide decision support.</h3>
         return;
       }
 
-      // 1. Identificar colunas dinâmicas (Critérios IC/EC)
       const colunas = Array.from(
         new Set((resultados || []).flatMap(r => Object.keys(r?.results || {})))
       );
 
-      // 2. Remontar o Header combinando o layout clássico com as colunas novas
       while (theadRow.firstChild) {
         theadRow.removeChild(theadRow.firstChild);
       }
@@ -410,7 +412,6 @@ automatically screen abstracts and provide decision support.</h3>
 
       tbody.innerHTML = '';
 
-      // 3. Renderizar as linhas com o layout idêntico ao do index.html
       artigos.forEach((artigo, index) => {
         const resultado = resultados?.[index] || { results: {} };
         const tr = document.createElement('tr');
@@ -492,7 +493,6 @@ automatically screen abstracts and provide decision support.</h3>
           tr.appendChild(td);
         });
 
-        // Eventos de clique para expandir os textos (Read More / Read Less)
         const readMoreAbs = tr.querySelector('.abstract-read-more');
         if (readMoreAbs) {
           readMoreAbs.addEventListener('click', () => {
@@ -613,7 +613,6 @@ automatically screen abstracts and provide decision support.</h3>
       const inclusaoInput = document.getElementById('inclusaoInput');
       const exclusaoInput = document.getElementById('exclusaoInput');
 
-      // Se houver texto nos inputs, cria as tags automaticamente
       if (inclusaoInput.value.trim()) {
         criarTag(document.getElementById('inclusaoBox'), inclusaoInput.value.trim(), 'bg-success');
         inclusaoInput.value = '';
@@ -786,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
   tooltipTriggerList.forEach(el => {
   new bootstrap.Tooltip(el);//
   });
-});
+});s
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

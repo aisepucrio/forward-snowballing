@@ -239,7 +239,6 @@ body.busca-realizada #navbarModeToggle {
   margin-right: auto;
 }
 
-
 .navbar-brand {
     z-index: 2;
 }
@@ -532,34 +531,41 @@ body.busca-realizada #navbarModeToggle {
 
 }
 
-
 /* =========================================
    ABSTRACT
 ========================================= */
 
 .abstract-text {
-  font-size: 13px;
-  color: #4b5563;
-  line-height: 1.7;
   display: -webkit-box;
-  -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;      
   overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.7;            
+  height: auto; 
 }
 
-.abstract-text.expanded,
-.keywords-text.expanded {
-  display: block;
-  -webkit-line-clamp: unset;
-  overflow: visible;
+.abstract-text.expanded {
+  display: block;              
+  -webkit-line-clamp: unset;   
+  overflow: visible;           
+  height: auto;            
 }
 
+.custom-table tbody tr {
+  height: auto !important;    
+}
+
+.custom-table tbody td {
+  height: auto !important;     
+  vertical-align: top;         
+}
 .keywords-text {
   font-size: 13px;
   color: #4b5563;
   line-height: 1.7;
   display: -webkit-box;
-  -webkit-line-clamp: 6;
+  -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -571,6 +577,44 @@ body.busca-realizada #navbarModeToggle {
   cursor: pointer;
   margin-top: 8px;
   display: inline-block;
+}
+
+.seed-paper-details {
+  display: block;
+  margin-top: 12px;
+}
+
+.seed-detail-line {
+  color: #374151;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.65;
+  margin-top: 4px;
+}
+
+.seed-detail-label {
+  font-weight: 700;
+  color: #047857;
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+
+.seed-detail-text {
+  white-space: normal;
+}
+
+.seed-detail-ellipsis {
+  color: #0b6b43;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.seed-detail-ellipsis:hover,
+.seed-detail-ellipsis:focus {
+  color: #064e3b;
+  outline: none;
+  text-decoration: underline;
 }
 
 /* =========================================
@@ -661,7 +705,6 @@ body.busca-realizada #navbarModeToggle {
   background: #fee2e2;
   color: #dc2626;
 }
-
 
 /* =========================================
    TRIAGEM BUTTONS

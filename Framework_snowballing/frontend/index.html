@@ -276,29 +276,25 @@
   }
 
   function formatResearchIdentityTags(item) {
-      const pagesValue = item.numpages != null ? item.numpages : (item.pages || '-');
-      
-      const venueTag = `<span class="paper-tag venue-tag text-wrap">${escapeHtml(item.venue || '-')}</span>`;
-    
-      const outrasTags = [
+      const tags = [
         `<span class="paper-tag">${escapeHtml(item.year || '-')}</span>`,
-        `<span class="paper-tag pages-tag">Pages: ${escapeHtml(String(pagesValue))}</span>`
+        `<span class="paper-tag venue-tag">${escapeHtml(item.venue || '-')}</span>`
       ];
-      
+
+      const pagesValue = item.numpages != null ? item.numpages : item.pages;
+
+      if (pagesValue != null && pagesValue !== '-') {
+        tags.push(`<span class="paper-tag pages-tag"> Pages: ${escapeHtml(String(pagesValue))}</span>`);
+      }
       if (isOpenAccess(item.open_access)) {
-        outrasTags.push('<span class="paper-tag open-access-tag">Open Access</span>');
+        tags.push('<span class="paper-tag open-access-tag">Open Access</span>');
       }
       
       if (item.language && item.language !== '-') {
-        outrasTags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
+        tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
       }
-      
-      return `
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          ${venueTag}
-          ${outrasTags.join('')}
-        </div>
-      `;
+
+      return tags.join('');
     }
 
 
@@ -500,13 +496,6 @@
     buscarArtigo();
   }
 
-  function toggleSeedAbstract() {
-    if (!window.seedData) return;
-    window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
-    mostrarResultado(window.seedData);
-  }
-
-
   function mostrarResultado(artigo, modo = 'forward') {
     if (!artigo || !artigo.title) {
       document.getElementById('resultado').innerHTML = '<p>Article not found.</p>';
@@ -520,6 +509,7 @@
     const contagemReferences = artigo.references_retrieved ?? artigo.references_count ?? '-';
     const keywordsToShow = artigo.keywords || [];
     const keywordsText = formatKeywords(keywordsToShow);
+    const abstractText = artigo.abstract || '-';
 
     const cardHTML = `
     <div class="table-wrapper mb-4">
@@ -556,37 +546,42 @@
                 </div>
               </div>
 
-              <div class="row g-4 mt-2 pt-2 border-top align-items-stretch">
-                
-                <div class="col-md-6 d-flex flex-column">
-                  <div class="p-2 h-100 d-flex flex-column">
-                    <span class="fw-bold d-block mb-1" style="font-size: 0.85rem; color: #666; letter-spacing: 0.05em;">ABSTRACT</span>
-                    <div class="abstract-text text-box-sync flex-grow-1 ${window.seedData.abstractExpanded ? 'expanded' : ''}" style="font-size: 0.9rem; line-height: 1.5;">
-                      ${
-                        window.seedData.abstractExpanded
-                          ? escapeHtml(artigo.abstract || '-')
-                          : escapeHtml(truncateText(artigo.abstract || '-', 200))
-                      }
-                    </div>
+              <div class="seed-paper-details">
+                <div class="seed-detail-line ${window.seedData.abstractExpanded ? 'expanded' : ''}">
+                  <span class="seed-detail-label">Abstract</span>
+                  <span class="seed-detail-text">
                     ${
-                      artigo.abstract && artigo.abstract.length > 200
-                        ? `<span class="read-more abstract-read-more mt-1 d-inline-block" id="seedReadMore" style="cursor:pointer; color:#10b981; font-weight:600; font-size:0.8rem; width: fit-content;">
-                            ${window.seedData.abstractExpanded ? 'READ LESS' : 'READ MORE'}
-                          </span>`
-                        : ''
+                      window.seedData.abstractExpanded
+                        ? escapeHtml(abstractText)
+                        : escapeHtml(truncateText(abstractText, 140).replace(/\.\.\.$/, ''))
                     }
-                  </div>
+                  </span>
+                  ${
+                    abstractText && abstractText !== '-' && abstractText.length > 140
+                      ? `<span class="seed-detail-ellipsis" data-seed-toggle="abstract" role="button" tabindex="0" aria-expanded="${window.seedData.abstractExpanded ? 'true' : 'false'}">
+                          ${window.seedData.abstractExpanded ? ' READ LESS' : '...'}
+                        </span>`
+                      : ''
+                  }
                 </div>
 
-                <div class="col-md-6 d-flex flex-column">
-                  <div class="p-2 h-100 d-flex flex-column" style="border-left: 1px solid #f0f0f0;">
-                    <span class="fw-bold d-block mb-1" style="font-size: 0.85rem; color: #666; letter-spacing: 0.05em;">KEYWORDS</span>
-                    <div class="keywords-text flex-grow-1" style="font-size: 0.9rem; line-height: 1.5; color: #444;">
-                      ${escapeHtml(keywordsText)}
-                    </div>
-                  </div>
+                <div class="seed-detail-line ${window.seedData.keywordsExpanded ? 'expanded' : ''}">
+                  <span class="seed-detail-label">Keywords</span>
+                  <span class="seed-detail-text">
+                    ${
+                      window.seedData.keywordsExpanded
+                        ? escapeHtml(keywordsText)
+                        : escapeHtml(truncateText(keywordsText, 110).replace(/\.\.\.$/, ''))
+                    }
+                  </span>
+                  ${
+                    keywordsText && keywordsText !== '-' && keywordsText.length > 110
+                      ? `<span class="seed-detail-ellipsis" data-seed-toggle="keywords" role="button" tabindex="0" aria-expanded="${window.seedData.keywordsExpanded ? 'true' : 'false'}">
+                          ${window.seedData.keywordsExpanded ? ' READ LESS' : '...'}
+                        </span>`
+                      : ''
+                  }
                 </div>
-
               </div>
 
               <div class="d-flex gap-4 mt-3 pt-3 border-top">
@@ -615,13 +610,27 @@
     `;
     document.getElementById('resultado').innerHTML = cardHTML;
     
-    // Simplificado para monitorar apenas o clique do Abstract
     document.getElementById('resultado').onclick = function (e) {
-      if (e.target && e.target.id === 'seedReadMore') {
-        window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
+      const toggle = e.target.closest('[data-seed-toggle]');
+      if (toggle) {
+        const target = toggle.dataset.seedToggle;
+        if (target === 'abstract') {
+          window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
+        }
+        if (target === 'keywords') {
+          window.seedData.keywordsExpanded = !window.seedData.keywordsExpanded;
+        }
         const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
         mostrarResultado(window.seedData, currentMode);
       }
+    };
+
+    document.getElementById('resultado').onkeydown = function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const toggle = e.target.closest('[data-seed-toggle]');
+      if (!toggle) return;
+      e.preventDefault();
+      toggle.click();
     };
   }
 
@@ -636,40 +645,6 @@
     }
 
     document.getElementById('navbarSnowballing').style.display = 'flex';
-
-    function createActionButton(type, title, icon, artigoData, selecionado) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `btn btn-sm btn-triagem btn-${type} me-1`;
-      btn.title = title;
-      btn.innerHTML = `<i class="bi bi-${icon}"></i> ${title}`;
-
-      if (selecionado === type) {
-        btn.classList.add('active');
-      }
-
-      btn.addEventListener('click', () => {
-        const row = btn.closest('tr');
-        row.querySelectorAll('.btn-triagem').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        if (!artigoData.paperId) {
-          alert('Article has no identifier (missing paperId).');
-          return;
-        }
-
-        marcarArtigoLocal(artigoData.paperId, type);
-      });
-
-      return btn;
-    }
-
-    function toggleAbstractRow(paperId) {
-      const cit = window.citationsData.find(c => c.paperId === paperId);
-      if (!cit) return;
-      cit.abstractExpanded = !cit.abstractExpanded;
-      mostrarCitacoes(window.citationsData);
-    }
 
     function createTableRow(cit) {
       const tr = document.createElement('tr');
@@ -699,12 +674,12 @@
             ${
               cit.abstractExpanded
                 ? escapeHtml(cit.abstract || '-')
-                : escapeHtml(truncateText(cit.abstract || '-', 140))
+                : escapeHtml(truncateText(cit.abstract || '-', 300))
             }
           </div>
 
           ${
-            cit.abstract && cit.abstract.length > 140
+            cit.abstract && cit.abstract.length > 300
               ? `
                 <span class="read-more abstract-read-more">
                   ${cit.abstractExpanded ? 'READ LESS' : 'READ MORE'}
