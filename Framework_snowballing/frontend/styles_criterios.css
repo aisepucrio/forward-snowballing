@@ -29,72 +29,6 @@ main button {
 }
 
 /* =========================
-   NAVBAR
-========================= */
-
-.navbar {
-  background-color: #eaf7ef !important;
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-  padding: 0;
-}
-
-.navbar-custom {
-  background: #eaf7ef !important;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #d8eee1;
-}
-
-
-.navbar .nav-link {
-  font-family: 'Poppins', sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  color: #000000 !important;
-}
-
-.navbar-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 28px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 10px;
-  background: #eaf7ef;
-}
-
-.logo-nav {
-  height: 28px;
-}
-
-.brand-text {
-  font-weight: 600;
-  font-size: 18px;
-  color: #000;
-}
-
-/* NAV BUTTON */
-.btn-nav-custom {
-  background-color: #d5d5d5 !important;
-  color: #333 !important;
-  border-radius: 20px !important;
-  padding: 8px 20px !important;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.btn-nav-custom:hover {
-  background-color: #c5c5c5 !important;
-  transform: translateY(-1px);
-}
-
-/* =========================
    TOOLTIP
 ========================= */
 
@@ -121,10 +55,6 @@ main button {
 .tooltip-custom.bs-tooltip-end .tooltip-arrow::before {
   border-right-color: #5c5a5c9e;
 }
-
-/* =========================
-   SUBTITLE
-========================= */
 
 #sub {
   color: #4C616C;
@@ -154,7 +84,6 @@ main button {
   min-height: 140px;
 }
 
-/* LABEL */
 .criteria-box .form-label {
   font-weight: 600;
   display: flex;
@@ -181,14 +110,12 @@ main button {
   align-content: flex-start !important;
 }
 
-/* FOCUS */
 .criteria-box .form-control:focus-within {
   border-color: #198754;
   background-color: #F3F4F5;
   box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.15);
 }
 
-/* INPUT */
 .criteria-box input {
   border: none;
   outline: none;
@@ -202,7 +129,6 @@ main button {
   border-radius: 6px;
 }
 
-/* LABEL COLORS */
 label[for="inclusao"] {
   color: #00693D;
   font-weight: 600;
@@ -232,7 +158,7 @@ td.col-ec {
   background-color: #fdecea;
 }
 /* =========================
-   TAGS (CHIPS)
+   TAGS
 ========================= */
 
 .badge.ic-tag,
@@ -291,8 +217,6 @@ td.col-ec {
   opacity: 0.8;
 }
 
-
-
 /* =========================
    BUTTONS
 ========================= */
@@ -311,7 +235,6 @@ td.col-ec {
   background: #157347;
 }
 
-/* spacing helper */
 .espacamento-nav {
   margin: 1rem;
 }
@@ -513,12 +436,10 @@ td.col-ec {
 }
 
 .criteria-yes {
-  /*background: #e8f7ee;*/
   color: #0f7b46;
 }
 
 .criteria-no {
-  /*background: #fdecec;*/
   color: #b42318;
 }
 .criteria-badge {
@@ -657,17 +578,6 @@ td.col-ec {
   display: inline-block;
   
 }
-/* =========================================
-.citation-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f9fafb;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #f3f4f6;
-  width: fit-content;
-}========================================= */
 
 .citation-box {
   display: flex;

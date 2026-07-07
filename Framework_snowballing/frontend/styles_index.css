@@ -139,142 +139,8 @@ body.busca-realizada #searchForm > div {
   border-radius: 20px;
 }
 
-/* =========================================
-   NAVBAR
-========================================= */
-
-.navbar-custom {
-  background: #eaf7ef;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #d8eee1;
-}
-
-body.busca-realizada .navbar {
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-}
-
-body.busca-realizada .navbar .navbar-brand {
-  color: #000000 !important;
-}
-
-.navbar .container-fluid {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.navbar-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 28px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 10px;
-  background: #eaf7ef;
-}
-
-.logo-nav {
-  height: 28px;
-}
-
-.brand-text {
-  font-weight: 600;
-  font-size: 18px;
-  color: #000;
-}
-
 body:not(.busca-realizada) .main-brand {
   display: none !important;
-}
-
-/* =========================================
-   NAVBAR SEARCH
-========================================= */
-
-#navbarSearchForm {
-  flex: 1 1 300px;
-  max-width: 500px;
-  z-index: 1051;
-}
-
-body.busca-realizada #navbarSearchForm {
-  display: flex !important;
-  border: 1px solid #fff;
-}
-
-body.busca-realizada #navbarModeToggle {
-  display: flex !important;
-  align-items: center;
-}
-
-#navbarNav {
-  flex-grow: 0;
-}
-
-#navbarSnowballing span {
-  white-space: nowrap;
-}
-
-.navbar-search {
-  background: #fff;
-  border-radius: 999px;
-  padding: 8px 14px;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  width: 100%;
-  max-width: 500px;
-
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.navbar-brand {
-    z-index: 2;
-}
-
-.navbar-collapse {
-    margin-left: auto;
-    z-index: 2;
-}
-
-.navbar-search input {
-  border: none;
-  outline: none;
-  background: #fff;
-  width: 260px;
-  font-size: 14px;
-}
-
-.navbar-search button {
-  background: #1f7a4d;
-  color: white;
-  border: none;
-
-  padding: 6px 18px;
-  border-radius: 999px;
-
-  font-size: 14px;
-  font-weight: 500;
-
-  transition: all 0.2s ease;
-
-  margin-left: auto;
-}
-
-.navbar-search button:hover {
-  background: #17633f;
-  transform: translateY(-1px);
 }
 
 /* =========================================
@@ -831,10 +697,6 @@ body.busca-realizada #citationsSection {
   color: #999;
 }
 
-/* =========================================
-   MISC
-========================================= */
-
 #citedHeader {
   color: #064E3B;
 }
@@ -915,14 +777,6 @@ body:not(.busca-realizada) .text-center p {
 
 body:not(.busca-realizada) #searchForm {
   margin-bottom: 0 !important;
-}
-
-.nav-link {
-  color: #1f3d35;
-}
-
-.nav-link:hover {
-  color: #0b6b43;
 }
 
 .table-wrapper {
