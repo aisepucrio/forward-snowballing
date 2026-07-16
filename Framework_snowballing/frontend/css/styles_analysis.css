@@ -137,47 +137,6 @@ input[type="checkbox"] {
     margin-bottom: 2rem;
 }
 
-.footer {
-    flex-shrink: 0;
-}
-
-.footer-custom {
-    border-top: 1px solid #e5e5e5;
-    background: #fff;
-    padding: 16px 0;
-    margin-top: 70px;
-    width: 100%;
-}
-
-.footer-inner {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 32px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-
-    gap: 24px;
-}
-
-.footer-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-}
-
-.footer-left img {
-    height: 24px;
-}
-
-.footer-right {
-    font-size: 12px;
-    color: #999;
-}
-
 #citedHeader {
     color: #064E3B;
 }

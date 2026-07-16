@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SnowMap - Data Analysis</title>
+  <link rel="icon" href="../images/favicon-32x32.png" type="image/x-icon">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="../css/styles_analysis.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.7/build/d3.layout.cloud.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+</head>
+<body>
+  <!-- Navbar -->
+  <div id="navbar-component"></div>
+  <link rel="stylesheet" href="components/navbar.css" />
+
+  <script src="components/navbar.js"></script>
+  <script src="/js/analysis.js"></script>
+
+  <main class="container">
+    <section class="mb-4">
+      <div id="resultado"></div>
+    </section>
+
+    <section class="mb-5">
+          <button id="btn-exportar-pdf">Export PDF</button>
+
+      <h3 class="mb-4 titulo">Summary</h3>
+      <div class="row g-4 cards-resumo-row">
+
+        <div class="col-md-6">
+          <div class="card-resumo">
+            <h5>Total Articles</h5>
+            <p id="total-artigos">N/A</p>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card-resumo">
+            <h5>Total Venues</h5>
+            <p id="total-venue">N/A</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card-resumo">
+            <h5>Total of Open Access Articles</h5>
+            <p id="total-open-access">N/A</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card-resumo">
+            <h5>Most Cited Articles</h5>
+            <div id="most-cited" class="mt-2 text-start" style="font-size: 0.95rem; line-height: 1.4; font-weight: 400; height: auto;">
+              N/A
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card-resumo">
+            <h5>Most Cited Authors</h5>
+            <div id="most-cited-authors" class="mt-2 text-start" style="font-size: 0.95rem; line-height: 1.4; font-weight: 400; height: auto;">
+              N/A
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <h3 class="mb-4 subtitulo">Charts</h3>
+
+      <div class="row g-4">
+        <div class="col-md-6 d-flex">
+          <div class="quadro-conteudo w-100">
+            <h4 class="mb-3">Yearly Distribution</h4>
+            <div class="alinhamento-checkbox">
+              <label for="checkbox">Select All</label>
+              <input type="checkbox" id="checkbox">
+            </div>
+            <canvas id="graficoAno" height="300"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6 d-flex">
+          <div class="quadro-conteudo w-100">
+            <h4 class="mb-3">Venue Distribution</h4>
+            <canvas id="graficoVenue" height="300"></canvas>
+          </div>
+        </div>
+
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="quadro-conteudo text-center w-100">
+              <h4 class="mb-3">Word Cloud</h4>
+              <div id="word-cloud" style="width: 100%; min-height: 350px; background: #fff; border-radius: 8px;"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-component"></div>
+  <link rel="stylesheet" href="components/footer/footer.css" />
+  <script src="components/footer/footer.js"></script>
+  <script src="js/analysis.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
