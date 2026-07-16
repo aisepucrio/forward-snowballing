@@ -565,18 +565,20 @@
 
     document.addEventListener('DOMContentLoaded', carregarArtigosLocal);
 
-    document.getElementById('linkCriterios').addEventListener('click', function (e) {
-      e.preventDefault();
-
-      try {
-        const dados = JSON.parse(window.name || '[]');
-        const selecionados = dados.filter(a => a.selecionado === 'incluir');
-        window.name = JSON.stringify(selecionados);
-        window.location.href = 'criterios.html';
-      } catch (e) {
-        alert('Error preparing data for criteria screen:  ' + e.message);
-      }
-    });
+    const linkCriteriosEl = document.getElementById('linkCriterios');
+    if (linkCriteriosEl) {
+      linkCriteriosEl.addEventListener('click', function (e) {
+        e.preventDefault();
+        try {
+          const dados = JSON.parse(window.name || '[]');
+          const selecionados = dados.filter(a => a.selecionado === 'incluir');
+          window.name = JSON.stringify(selecionados);
+          window.location.href = 'criterios.html';
+        } catch (e) {
+          alert('Error preparing data for criteria screen:  ' + e.message);
+        }
+      });
+    }
 
    document.getElementById('btn-exportar-pdf').addEventListener('click', function () {
       const elemento = document.querySelector('main.container');
