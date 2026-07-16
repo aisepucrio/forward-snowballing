@@ -12,14 +12,21 @@ app.use(ensureSession);
 const articlesRoutes = require('./routes/articlesRoutes');
 app.use('/api/articles', articlesRoutes);
 
-// Novo: Serve arquivos estáticos da pasta "frontend"
 app.use(express.static(path.join(__dirname, 'frontend')));
 
+app.use(express.static(path.join(__dirname, 'frontend', 'html')));
 // Novo: Redireciona a rota raiz para o index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'html', 'index.html'));
 });
 
+app.get('/analysis.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'html', 'analysis.html'));
+});
+
+app.get('/criterios.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'html', 'criterios.html'));
+});
 
 
 app.listen(port, "0.0.0.0", () => {
