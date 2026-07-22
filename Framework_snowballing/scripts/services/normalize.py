@@ -16,6 +16,7 @@ def generate_paper_id(title):
 
 
 def normalize_doi(doi):
+
     if not doi:
         return None
 
