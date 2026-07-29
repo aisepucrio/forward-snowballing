@@ -216,6 +216,8 @@ function escapeHtml(text) {
     // FORWARD
     forwardPromise
       .then(fwd => {
+        window.currentSearchId = fwd.search_id || null;
+        console.log('[DEBUG] search_id recebido:', window.currentSearchId);
         window.forwardData = fwd.citations || [];
         window.seedData = {
           ...fwd,
@@ -566,14 +568,42 @@ function escapeHtml(text) {
       // INCLUDE
       const includeBtn = tr.querySelector('.include-btn');
       includeBtn.addEventListener('click', () => {
-        cit.selecionado = cit.selecionado === 'incluir' ? null : 'incluir';
+        const novoEstado = cit.selecionado === 'incluir' ? null : 'incluir';
+        cit.selecionado = novoEstado;
+
+        // salva flag no BD
+        if (cit.paper_id && window.currentSearchId) {
+          fetch('/api/articles/flag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              search_id: window.currentSearchId,
+              paper_id: cit.paper_id,
+              selected_first_page: novoEstado === 'incluir',
+            })
+          });
+        }
         mostrarCitacoes(window.citationsData);
       });
 
       // EXCLUDE
       const excludeBtn = tr.querySelector('.exclude-btn');
       excludeBtn.addEventListener('click', () => {
-        cit.selecionado = cit.selecionado === 'excluir' ? null : 'excluir';
+        const novoEstado = cit.selecionado === 'excluir' ? null : 'excluir';
+        cit.selecionado = novoEstado;
+
+        if (cit.paper_id && window.currentSearchId) {
+          fetch('/api/articles/flag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              search_id: window.currentSearchId,
+              paper_id: cit.paper_id,
+              excluded_duplicate: novoEstado === 'excluir',
+            })
+          });
+        }
+
         mostrarCitacoes(window.citationsData);
       });
 
@@ -643,9 +673,13 @@ function escapeHtml(text) {
     URL.revokeObjectURL(url);
   }
 
-
-  document.getElementById('downloadBtn').onclick = baixarCitationsCSV;
-  document.getElementById('includeAllBtn').onclick = toggleIncludeAll;
+  document.addEventListener('DOMContentLoaded', () => {
+    const downloadBtn = document.getElementById('downloadBtn');
+    const includeAllBtn = document.getElementById('includeAllBtn');
+    
+    if (downloadBtn) downloadBtn.onclick = baixarCitationsCSV;
+    if (includeAllBtn) includeAllBtn.onclick = toggleIncludeAll;
+  });
 
   function irParaTriagem() {
     if (!window.citationsData || window.citationsData.length === 0) {

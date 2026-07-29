@@ -119,3 +119,39 @@ exports.getArtigosIncluidos = (req, res) => {
   const incluidos = data.citations.filter((a) => a.selecionado === 'incluir');
   res.json(incluidos);
 };
+
+// atualiza flags de um paper no BD: search_id, paper_id, selected_first_page, excluded_duplicate, duplicate_of
+exports.updateFlag = (req, res) => {
+  const { search_id, paper_id, selected_first_page, excluded_duplicate, duplicate_of } = req.body;
+
+  if (!search_id || !paper_id) {
+    return res.status(400).json({ error: 'search_id e paper_id são obrigatórios' });
+  }
+
+  const pythonPath = findPythonExecutable();
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'services', 'update_flag.py');
+
+  const payload = JSON.stringify({
+    search_id,
+    paper_id,
+    selected_first_page: selected_first_page ?? null,
+    excluded_duplicate: excluded_duplicate ?? null,
+    duplicate_of: duplicate_of ?? null,
+  });
+
+  const safePayload = payload.replace(/"/g, '\\"');
+  const command = `"${pythonPath}" -X utf8 "${scriptPath}" "${safePayload}"`;
+
+  exec(command, { maxBuffer: 1 * 1024 * 1024 }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('[FLAG ERROR]', stderr || error.message);
+      return res.status(500).json({ error: 'Erro ao atualizar flag no banco.' });
+    }
+    try {
+      const result = JSON.parse(stdout);
+      res.json(result);
+    } catch {
+      res.status(500).json({ error: 'Erro ao processar resposta do script de flag.' });
+    }
+  });
+};

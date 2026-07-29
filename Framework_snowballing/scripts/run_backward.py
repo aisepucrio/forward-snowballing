@@ -2,12 +2,20 @@ import sys
 import json
 import traceback
 import requests
+import os
 
+from dotenv import load_dotenv
+load_dotenv()
 
 from services.normalize import normalize_doi
 from services.search import search_combined, enrich_incomplete_citations, clear_caches
 from services.deduplication import deduplicate_citations
 from services.cache import init_db, get_cached, save_to_cache
+from services.snowmap_bd import save_full_result
+
+# ID fixo temporário até ter sistema de login
+# Quando tiver autenticação, substituir pelo id do usuário logado
+TEMP_USER_ID = os.getenv("TEMP_USER_ID", "00000000-0000-0000-0000-000000000001")
 
 def normalize_citation_counts(citations):
     normalized = []
@@ -38,44 +46,34 @@ def get_references_openalex(doi):
        clean_doi = normalize_doi(doi)
        url = f"https://api.openalex.org/works/https://doi.org/{clean_doi}"
 
-
        resp = requests.get(url)
        if resp.status_code != 200:
            return []
 
-
        data = resp.json()
        refs_ids = data.get("referenced_works", [])
-
 
        if not refs_ids:
            return []
 
-
        references = []
        chunk_size = 50
-
 
        for i in range(0, len(refs_ids), chunk_size):
            chunk = refs_ids[i:i + chunk_size]
            ids = "|".join(chunk)
 
-
            batch_url = f"https://api.openalex.org/works?filter=openalex_id:{ids}"
            resp_batch = requests.get(batch_url)
-
 
            if resp_batch.status_code != 200:
                continue
 
-
            results = resp_batch.json().get("results", [])
-
 
            for ref in results:
                primary_loc = ref.get("primary_location") or {}
                source = primary_loc.get("source") or {}
-
 
                references.append({
                    "title": ref.get("title") or "Untitled",
@@ -100,37 +98,27 @@ def get_references_openalex(doi):
                     "source": "openalex",
                })
 
-
        return references
-
 
    except Exception as e:
        print(f"[ERROR OPENALEX] {e}", file=sys.stderr)
        return []
-
-
-
 
 def main():
    try:
        doi = sys.argv[1].strip() if len(sys.argv) > 1 else None
        title = sys.argv[2].strip() if len(sys.argv) > 2 else None
 
-
        doi = None if doi in {None, "", "-", "null", "None"} else doi
        title = None if title in {None, "", "-", "null", "None"} else title
-
 
        if not doi and not title:
            print(json.dumps({"error": "DOI ou título devem ser informados"}))
            sys.exit(1)
 
-
        doi = normalize_doi(doi) if doi else None
 
-
        init_db()
-
 
        cached = get_cached(doi=doi, title=title, mode="backward")
        if (cached and cached.get("references") and len(cached.get("references")) > 0):         
@@ -138,28 +126,21 @@ def main():
         print(json.dumps(cached, ensure_ascii=False, indent=2))
         return
 
-
        #clear_caches()
-
 
        # busca principal
        paper = search_combined(doi=doi, title=title)
 
-
        references = paper.get("references", []) or []
-
 
        if not references and doi:
            print("[DEBUG] Fallback OpenAlex...", file=sys.stderr)
            references = get_references_openalex(doi)
 
-
        # processamento
        references = deduplicate_citations(references)
        references = enrich_incomplete_citations(references)
        references = normalize_citation_counts(references)
-
-
 
        result = {
            "input_doi": doi or "-",
@@ -191,21 +172,26 @@ def main():
            data=result
        )
 
+       # salva no novo BD
+       try:
+            result_para_bd = {**result, "citations": references}
+            ids = save_full_result(output_json=result_para_bd, user_id=TEMP_USER_ID)
+            result["search_id"] = ids["search_id"]
+            result["seed_id"] = ids["seed_id"]
+       except Exception as db_err:
+            result["search_id"] = None
+            result["seed_id"] = None
 
+       # salva arquivo local
        with open("output.json", "w", encoding="utf-8") as f:
            json.dump(result, f, ensure_ascii=False, indent=2)
 
-
        print(json.dumps(result, ensure_ascii=False, indent=2))
-
 
    except Exception:
        traceback.print_exc(file=sys.stderr)
        print(json.dumps({"error": "Erro inesperado ao processar o artigo."}))
        sys.exit(1)
-
-
-
 
 if __name__ == "__main__":
    main()
