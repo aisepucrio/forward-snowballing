@@ -1,8 +1,12 @@
 const { PythonRunner } = require('./pythonRunner');
+const crypto = require('crypto');
+
+const MAX_CACHE_ENTRIES = 100;
 
 class LlmAnalysisService {
   constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 5 * 60 * 1000 }) } = {}) {
     this.pythonRunner = pythonRunner;
+    this.cache = new Map();
   }
 
   async analyze(payload, { abortEmitter = null } = {}) {
@@ -13,20 +17,44 @@ class LlmAnalysisService {
       throw err;
     }
 
-    return this.pythonRunner.runJsonScript('analisys_LLM.py', {
+    const input = {
+      criteriosInclusao: payload.criteriosInclusao,
+      criteriosExclusao: payload.criteriosExclusao,
+      artigos,
+      model: payload.model,
+      temperature: payload.temperature,
+      tokens: payload.tokens,
+      ollamaUrl: payload.ollamaUrl,
+      extraPrompt: payload.extraPrompt,
+      maxWorkers: payload.maxWorkers,
+    };
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(input))
+      .digest('hex');
+
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    const result = await this.pythonRunner.runJsonScript('analisys_LLM.py', {
       input: {
-        criteriosInclusao: payload.criteriosInclusao,
-        criteriosExclusao: payload.criteriosExclusao,
-        artigos,
-        model: payload.model,
-        temperature: payload.temperature,
-        tokens: payload.tokens,
-        ollamaUrl: payload.ollamaUrl,
-        extraPrompt: payload.extraPrompt,
-        maxWorkers: payload.maxWorkers,
+        ...input,
       },
       abortEmitter,
     });
+
+    const hasErrors = result.some((article) =>
+      Object.values(article.results || {}).some((value) => value === 'error')
+    );
+    if (!hasErrors) {
+      if (this.cache.size >= MAX_CACHE_ENTRIES) {
+        this.cache.delete(this.cache.keys().next().value);
+      }
+      this.cache.set(cacheKey, result);
+    }
+
+    return result;
   }
 }
 

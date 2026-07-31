@@ -18,8 +18,8 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://11.0.0.35:11434/api/chat")
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 MODEL_FALLBACKS = ["mistral:latest", "gemma4:31b"]
 FAILED_MODELS = set()
-DEFAULT_LLM_WORKERS = 4
-DEFAULT_BATCH_SIZE = 5
+DEFAULT_LLM_WORKERS = 1
+DEFAULT_BATCH_SIZE = 10
 
 
 def _model_candidates():

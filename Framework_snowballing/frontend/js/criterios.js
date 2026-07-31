@@ -408,7 +408,7 @@ let artigosIncluidos = [];
     }
 
     const ANALYSIS_BATCH_SIZE = 40;
-    const ANALYSIS_MAX_WORKERS = 4;
+    const ANALYSIS_MAX_WORKERS = 1;
     const DEFAULT_LLM_SETTINGS = {
       url: 'http://localhost:11434/api/chat',
       model: 'llama3.2:3b',
