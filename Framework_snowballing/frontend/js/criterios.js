@@ -394,9 +394,18 @@ let artigosIncluidos = [];
       return linhas.join('\n');
     }
 
+    const ANALYSIS_BATCH_SIZE = 40;
+    const ANALYSIS_MAX_WORKERS = 4;
+    const DEFAULT_LLM_SETTINGS = {
+      url: 'http://localhost:11434/api/chat',
+      model: 'llama3.2:3b',
+      temperature: 0.1,
+      tokens: 300,
+    };
+
     async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
       const artigosLimpos = prepararArtigosParaAnalise(artigos);
-      const tamanhoLote = 10;
+      const tamanhoLote = ANALYSIS_BATCH_SIZE;
       const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
       const resultadosFinais = [];
 
@@ -415,11 +424,23 @@ let artigosIncluidos = [];
 
       for (let i = 0; i < lotes.length; i++) {
         const lote = lotes[i];
+        let settings = {};
+        try {
+          settings = JSON.parse(localStorage.getItem('llmSettings') || '{}');
+        } catch {
+          settings = {};
+        }
 
         const payload = {
           criteriosInclusao: criteriosInclusao,
           criteriosExclusao: criteriosExclusao,
-          artigos: lote
+          artigos: lote,
+          model: settings.model ?? DEFAULT_LLM_SETTINGS.model,
+          temperature: settings.temperature ?? DEFAULT_LLM_SETTINGS.temperature,
+          tokens: settings.tokens ?? DEFAULT_LLM_SETTINGS.tokens,
+          ollamaUrl: settings.url ?? DEFAULT_LLM_SETTINGS.url,
+          extraPrompt: localStorage.getItem('llmPrompt') || '',
+          maxWorkers: ANALYSIS_MAX_WORKERS,
         };
 
         const res = await fetch('/api/articles/analisar', {
