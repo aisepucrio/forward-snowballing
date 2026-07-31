@@ -18,6 +18,7 @@ from services.search import (
 
 
 NULL_INPUTS = {None, "", "-", "null", "None"}
+RESULT_CACHE_VERSION = 2
 
 
 class SearchInput:
@@ -127,6 +128,7 @@ class OpenAlexReferenceProvider:
 class SnowballingResultBuilder:
     def build_base(self, search_input, paper, mode):
         return {
+            "_cache_version": RESULT_CACHE_VERSION,
             "input_doi": search_input.doi or "-",
             "input_title": search_input.title or "-",
             "resolved_doi": normalize_doi(paper.get("doi")) or search_input.doi or "-",
@@ -156,6 +158,7 @@ class SnowballingResultBuilder:
             "citations": citations,
             "references_count": len(references),
             "references_retrieved": len(references),
+            "references": references,
         })
         return result
 
@@ -181,7 +184,12 @@ class SnowballingPipeline:
         init_db()
 
         cached = get_cached(doi=search_input.doi, title=search_input.title, mode="forward")
-        if cached and cached.get("citations"):
+        if (
+            cached
+            and cached.get("citations")
+            and cached.get("references")
+            and cached.get("_cache_version") == RESULT_CACHE_VERSION
+        ):
             return cached
 
         with ThreadPoolExecutor(max_workers=2) as executor:
@@ -191,7 +199,14 @@ class SnowballingPipeline:
             references = fut_refs.result() if fut_refs else []
 
         citations = CitationNormalizer.normalize_counts(
-            enrich_incomplete_citations(paper.get("citations", []))
+            enrich_incomplete_citations(
+                deduplicate_citations(paper.get("citations", []))
+            )
+        )
+        references = CitationNormalizer.normalize_counts(
+            enrich_incomplete_citations(
+                deduplicate_citations(references)
+            )
         )
         result = self.result_builder.build_forward(search_input, paper, citations, references)
         self._save(result, search_input.doi)

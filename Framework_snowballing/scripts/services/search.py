@@ -22,6 +22,7 @@ OPENALEX_CACHE = {}
 CROSSREF_CACHE = {}
 SEMANTIC_CACHE = {}
 REQUEST_CACHE = {}
+COMPLETE_CACHE_VERSION = 2
 
 
 def load_project_env():
@@ -69,7 +70,7 @@ def safe_get(url, headers=None):
     headers.update({"User-Agent": USER_AGENT})
 
 
-    for attempt in range(4):
+    for attempt in range(2):
         try:
             response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
 
@@ -86,15 +87,14 @@ def safe_get(url, headers=None):
 
             if response.status_code == 429:
                 retry_after = response.headers.get("Retry-After")
-                wait_time = int(retry_after) if retry_after else 15 * (attempt + 1)
+                wait_time = min(int(retry_after), 2) if retry_after else attempt + 1
                 time.sleep(wait_time)
                 continue
 
             return None
             
-        except Exception as e:
-            wait_time = 3 * (attempt + 1)
-            time.sleep(wait_time)
+        except Exception:
+            time.sleep(attempt + 1)
             continue
 
 
@@ -812,13 +812,17 @@ def load_complete_cache(doi):
 
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            cached = json.load(f)
+        if cached.get("_cache_version") != COMPLETE_CACHE_VERSION:
+            return None
+        return cached
     except Exception:
         return None
 
 
 def save_complete_cache(doi, data):
     path = cache_path_for_doi(doi)
+    data = {**data, "_cache_version": COMPLETE_CACHE_VERSION}
 
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -863,7 +867,9 @@ def search_combined(doi=None, title=None):
                 openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
 
 
-            all_citations = semantic_citations + openalex_citations
+            all_citations = deduplicate_citations(
+                semantic_citations + openalex_citations
+            )
 
 
             merged = openalex_data.copy() if openalex_data else {}
@@ -881,34 +887,11 @@ def search_combined(doi=None, title=None):
 
 
         if openalex_data:
-
-            for retry in range(5):
-                time.sleep(3)
-                paper_data = fallback_via_requests(cleaned_doi)
-
-                if paper_data:
-                    REQUEST_CACHE.clear()
-                    SEMANTIC_CACHE.clear()
-                    return search_combined(doi=cleaned_doi, title=None)
-
-            cached = load_complete_cache(cleaned_doi)
-            if cached:
-                cached["from_cache"] = True
-                cached["warning"] = (
-                    f"Semantic Scholar falhou para o DOI {cleaned_doi}; "
-                    "usando último resultado completo salvo."
-                )
-                return cached
-
-            return {
-    "error": (
-        f"Semantic Scholar falhou para o DOI {cleaned_doi} "
-        "e ainda não existe cache completo salvo."
-    ),
-    "partial_result": True,
-    "citationCount": None,
-    "citations": [],
-}
+            result = attach_openalex_citations(openalex_data)
+            result["warning"] = "Semantic Scholar indisponível; resultado obtido pelo OpenAlex."
+            result["partial_result"] = True
+            save_complete_cache(cleaned_doi, result)
+            return result
 
         crossref_data = fallback_crossref(doi=cleaned_doi)
         if crossref_data:
@@ -1019,7 +1002,9 @@ def search_combined(doi=None, title=None):
 
 
 
-        all_citations = semantic_citations + openalex_citations
+        all_citations = deduplicate_citations(
+            semantic_citations + openalex_citations
+        )
 
 
 
@@ -1233,6 +1218,4 @@ def clear_caches():
     CROSSREF_CACHE.clear()
     SEMANTIC_CACHE.clear()
     REQUEST_CACHE.clear()
-
-
 
