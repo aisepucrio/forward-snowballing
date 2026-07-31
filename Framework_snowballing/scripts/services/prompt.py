@@ -125,13 +125,15 @@ def _format_article_metadata(article: dict[str, Any]) -> str:
 def generate_prompt(
     article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
+    extra_prompt: str = "",
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
     criteria_schema = _format_criteria_schema(criteria)
     article_metadata = _format_article_metadata(article)
+    extra_section = _format_extra_prompt(extra_prompt)
 
-    return f"""You are an expert researcher conducting a Systematic Review.
+    return f"""{extra_section}You are an expert researcher conducting a Systematic Review.
 Your task is to classify the article against each inclusion and exclusion criterion.
 
 Think through the criteria carefully before answering, but do not include your reasoning in the output.
@@ -183,6 +185,47 @@ OUTPUT:
 - Return only valid compact JSON.
 - The JSON must contain exactly one top-level key: "criteria".
 - The "criteria" object must contain exactly these criterion keys and values "Yes" or "No":
+{criteria_schema}
+- Do not include explanations, reasoning, confidence, markdown, or extra text.
+"""
+
+
+def generate_batch_prompt(
+    articles: list[dict[str, Any]],
+    criteria: dict[str, dict[str, str]],
+    extra_prompt: str = "",
+) -> str:
+    inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
+    exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
+    criteria_schema = _format_criteria_schema(criteria)
+    extra_section = _format_extra_prompt(extra_prompt)
+    articles_metadata = "\n\n".join(
+        f"ARTICLE {index}\n{_format_article_metadata(article)}"
+        for index, article in enumerate(articles)
+    )
+
+    return f"""{extra_section}You are an expert researcher conducting a Systematic Review.
+Classify every article against each inclusion and exclusion criterion.
+
+INCLUSION CRITERIA
+{inclusion_criteria}
+
+EXCLUSION CRITERIA
+{exclusion_criteria}
+
+ARTICLES
+{articles_metadata}
+
+CLASSIFICATION RULES:
+- For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- When evidence is ambiguous, favor selection: use "Yes" for inclusion and "No" for exclusion.
+
+OUTPUT:
+- Return only valid compact JSON with exactly one top-level key: "articles".
+- "articles" must be an array with one item per input article, in the same order.
+- Each item must contain its zero-based "index" and a "criteria" object.
+- Every "criteria" object must use exactly these keys and values "Yes" or "No":
 {criteria_schema}
 - Do not include explanations, reasoning, confidence, markdown, or extra text.
 """
@@ -245,3 +288,10 @@ def _format_criteria_schema(criteria: dict[str, dict[str, str]]) -> str:
         return "{}"
 
     return json.dumps({criterion_id: "Yes or No" for criterion_id in ids})
+
+
+def _format_extra_prompt(extra_prompt: str) -> str:
+    cleaned = normalize_text(extra_prompt)
+    if not cleaned:
+        return ""
+    return f"ADDITIONAL INSTRUCTIONS\n{cleaned}\n\n"
