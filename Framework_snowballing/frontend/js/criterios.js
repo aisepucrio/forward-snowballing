@@ -188,9 +188,22 @@ let artigosIncluidos = [];
     }
 
     function prepararArtigosParaAnalise(artigos) {
+      const limitarTexto = (valor, limite) => {
+        const texto = String(valor || '');
+        return texto.length > limite ? `${texto.slice(0, limite)}...` : texto;
+      };
+
       return artigos.map(artigo => ({
-        title: artigo.title || '',
-        abstract: artigo.abstract || ''
+        title: limitarTexto(artigo.title, 300),
+        abstract: limitarTexto(artigo.abstract, 650),
+        language: artigo.language,
+        year: artigo.year,
+        venue: artigo.venue,
+        open_access: artigo.open_access,
+        keywords: artigo.keywords,
+        pages: artigo.pages,
+        numpages: artigo.numpages,
+        citationCount: artigo.citationCount ?? artigo.citations_count,
       }));
     }
 

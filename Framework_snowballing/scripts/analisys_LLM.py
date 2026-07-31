@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
@@ -31,7 +32,16 @@ def _model_candidates():
     ]
 
 
-def _call_ollama(prompt, model=None, temperature=0.1, tokens=600, ollama_url=None, max_predict=900, timeout=120):
+def _call_ollama(
+    prompt,
+    model=None,
+    temperature=0.1,
+    tokens=600,
+    ollama_url=None,
+    max_predict=900,
+    timeout=120,
+    response_format="json",
+):
     last_error = None
     url = ollama_url or OLLAMA_URL
     explicit_model = bool(model)
@@ -53,7 +63,7 @@ def _call_ollama(prompt, model=None, temperature=0.1, tokens=600, ollama_url=Non
                 "temperature": temperature,
                 "num_predict": min(_coerce_positive_int(tokens, 180), max_predict)
             },
-            "format": "json",
+            "format": response_format,
             "stream": False,
             "think": False
         }
@@ -119,10 +129,63 @@ def _fallback_result(title, criteria):
     return {
         "title": title,
         "results": {
-            criterion_id: "Unsure"
+            criterion_id: "error"
             for criterion_id in expected_criteria_ids(criteria)
         }
     }
+
+
+def _normalize_search_text(value):
+    text = unicodedata.normalize("NFKD", str(value or ""))
+    return "".join(char for char in text if not unicodedata.combining(char)).lower()
+
+
+def _normalized_language(value):
+    normalized = _normalize_search_text(value).strip()
+    aliases = {
+        "en": "english",
+        "eng": "english",
+        "english": "english",
+        "ingles": "english",
+        "pt": "portuguese",
+        "por": "portuguese",
+        "portuguese": "portuguese",
+        "portugues": "portuguese",
+        "es": "spanish",
+        "spa": "spanish",
+        "spanish": "spanish",
+        "espanhol": "spanish",
+    }
+    return aliases.get(normalized)
+
+
+def _criterion_language(description):
+    normalized = _normalize_search_text(description)
+    language_terms = {
+        "english": ("english", "ingles"),
+        "portuguese": ("portuguese", "portugues"),
+        "spanish": ("spanish", "espanhol"),
+    }
+    for language, terms in language_terms.items():
+        if any(term in normalized for term in terms):
+            return language
+    return None
+
+
+def _apply_deterministic_metadata(article, results, criteria):
+    article_language = _normalized_language(article.get("language"))
+    if not article_language:
+        return results
+
+    descriptions = {
+        **criteria.get("Inclusion", {}),
+        **criteria.get("Exclusion", {}),
+    }
+    for criterion_id, description in descriptions.items():
+        required_language = _criterion_language(description)
+        if required_language:
+            results[criterion_id] = "Yes" if article_language == required_language else "No"
+    return results
 
 
 def _coerce_positive_int(value, default):
@@ -131,6 +194,55 @@ def _coerce_positive_int(value, default):
         return parsed if parsed > 0 else default
     except (TypeError, ValueError):
         return default
+
+
+def _criteria_schema(criteria):
+    criterion_ids = expected_criteria_ids(criteria)
+    return {
+        "type": "object",
+        "properties": {
+            criterion_id: {
+                "type": "string",
+                "enum": ["Yes", "No", "Unsure"],
+            }
+            for criterion_id in criterion_ids
+        },
+        "required": criterion_ids,
+        "additionalProperties": False,
+    }
+
+
+def _single_response_schema(criteria):
+    return {
+        "type": "object",
+        "properties": {"criteria": _criteria_schema(criteria)},
+        "required": ["criteria"],
+        "additionalProperties": False,
+    }
+
+
+def _batch_response_schema(criteria, article_count):
+    return {
+        "type": "object",
+        "properties": {
+            "articles": {
+                "type": "array",
+                "minItems": article_count,
+                "maxItems": article_count,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "index": {"type": "integer"},
+                        "criteria": _criteria_schema(criteria),
+                    },
+                    "required": ["index", "criteria"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["articles"],
+        "additionalProperties": False,
+    }
 
 
 def classificar_artigo(article, criteria, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt=""):
@@ -142,7 +254,16 @@ def classificar_artigo(article, criteria, model=None, temperature=0.1, tokens=60
     )
 
     try:
-        data = _extract_json_object(_call_ollama(prompt, model=model, temperature=temperature, tokens=tokens, ollama_url=ollama_url, max_predict=400, timeout=60))
+        data = _extract_json_object(_call_ollama(
+            prompt,
+            model=model,
+            temperature=temperature,
+            tokens=tokens,
+            ollama_url=ollama_url,
+            max_predict=400,
+            timeout=60,
+            response_format=_single_response_schema(criteria),
+        ))
         raw_criteria = data.get("criteria") if isinstance(data.get("criteria"), dict) else {}
         if not raw_criteria and isinstance(data, dict):
             expected_ids = set(expected_criteria_ids(criteria))
@@ -155,12 +276,13 @@ def classificar_artigo(article, criteria, model=None, temperature=0.1, tokens=60
         if not raw_criteria:
             raise ValueError("Resposta da LLM sem objeto 'criteria' valido")
 
+        results = {
+            criterion_id: _normalize_criterion_answer(raw_criteria.get(criterion_id))
+            for criterion_id in expected_criteria_ids(criteria)
+        }
         return {
             "title": title,
-            "results": {
-                criterion_id: _normalize_criterion_answer(raw_criteria.get(criterion_id))
-                for criterion_id in expected_criteria_ids(criteria)
-            }
+            "results": _apply_deterministic_metadata(article, results, criteria),
         }
 
     except Exception as e:
@@ -185,12 +307,13 @@ def _normalize_result_from_raw(article, raw_result, criteria):
     if not raw_criteria:
         return _fallback_result(article.get("title", ""), criteria)
 
+    results = {
+        criterion_id: _normalize_criterion_answer(raw_criteria.get(criterion_id))
+        for criterion_id in expected_criteria_ids(criteria)
+    }
     return {
         "title": article.get("title", ""),
-        "results": {
-            criterion_id: _normalize_criterion_answer(raw_criteria.get(criterion_id))
-            for criterion_id in expected_criteria_ids(criteria)
-        }
+        "results": _apply_deterministic_metadata(article, results, criteria),
     }
 
 
@@ -205,10 +328,10 @@ def classificar_lote(articles, criteria, model=None, temperature=0.1, tokens=600
     )
 
     try:
-        requested_tokens = max(
-            _coerce_positive_int(tokens, 300),
-            120 + len(articles) * max(len(expected_criteria_ids(criteria)), 1) * 35,
-        )
+        configured_limit = _coerce_positive_int(tokens, 300)
+        criteria_count = max(len(expected_criteria_ids(criteria)), 1)
+        estimated_json_tokens = 32 + len(articles) * (12 + criteria_count * 10)
+        requested_tokens = max(40, min(configured_limit, estimated_json_tokens))
         data = _extract_json_value(
             _call_ollama(
                 prompt,
@@ -216,8 +339,9 @@ def classificar_lote(articles, criteria, model=None, temperature=0.1, tokens=600
                 temperature=temperature,
                 tokens=requested_tokens,
                 ollama_url=ollama_url,
-                max_predict=1200,
+                max_predict=600,
                 timeout=120,
+                response_format=_batch_response_schema(criteria, len(articles)),
             )
         )
 
