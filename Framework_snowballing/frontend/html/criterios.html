@@ -10,15 +10,16 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles_criterios.css" />
+  
 
 </head>
 <body>
 
   <div id="navbar-component"></div>
+  <div id="custom-table-component"></div>
   <link rel="stylesheet" href="components/navbar/navbar.css" />
-
   <script src="components/navbar/navbar.js"></script>
-  <script src="/js/criterios.js"></script>
+  <link rel="stylesheet" href="components/table/table.css" />
 
   <main class="mt-5 pt-5">
     <h2 class="mb-4 fw-semibold">Define Inclusion and Exclusion Criteria</h2>
@@ -84,8 +85,9 @@ automatically screen abstracts and provide decision support.</h3>
 
       <div id="analysisSection" class="d-none justify-content-between align-items-center mb-3">
         <h2 class="mb-0 fw-semibold">Analysis Results</h2>
-        <button id="downloadBtn" type="button" class="btn btn-outline-primary btn-sm">
-          <i class="bi bi-box-arrow-up"></i> Export
+        <button id="downloadBtn" class="btn-export">
+              <i class="bi bi-download"></i>
+              Export
         </button>
       </div>
 
@@ -110,8 +112,9 @@ automatically screen abstracts and provide decision support.</h3>
   </main>
   
   <div id="footer-component"></div>
-  <link rel="stylesheet" href="components/footer/footer.css" />
   <script src="components/footer/footer.js"></script>
+
+  <script src="components/table/table.js"></script>
   <script src="js/criterios.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
