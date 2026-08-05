@@ -201,22 +201,16 @@ function escapeHtml(text) {
     window.citationsData = [];
     window.seedData = null;
 
-    const forwardPromise = fetch(buildSearchURL(inputValue, 'forward'))
+    const searchPromise = fetch(buildSearchURL(inputValue, 'forward'))
       .then(r => {
-        if (!r.ok) throw new Error('Forward search failed');
+        if (!r.ok) throw new Error('Search failed');
         return r.json();
       });
 
-    const backwardPromise = fetch(buildSearchURL(inputValue, 'backward'))
-      .then(r => {
-        if (!r.ok) throw new Error('Backward search failed');
-        return r.json();
-      });
-
-    // FORWARD
-    forwardPromise
+    searchPromise
       .then(fwd => {
         window.forwardData = fwd.citations || [];
+        window.backwardData = fwd.references || [];
         window.seedData = {
           ...fwd,
           abstractExpanded: false,
@@ -236,70 +230,19 @@ function escapeHtml(text) {
           ).value;
         mostrarResultado(window.seedData, currentMode);
 
-        if (currentMode === 'forward') {
-          trocarModo();
-        }
+        trocarModo();
 
         document.body.classList.add('busca-realizada');
       })
       .catch(err => {
         console.error(err);
         window.forwardData = [];
-        document.getElementById('resultado').innerHTML =
-          '<p class="text-danger">Forward search failed.</p>';
-      })
-      .finally(() => {
-        if (
-          window.forwardData !== null &&
-          window.backwardData !== null
-        ) {
-          document.getElementById('loadingSpinner').style.display = 'none';
-        }
-      });
-
-    // BACKWARD
-    backwardPromise
-      .then(bwd => {
-        window.backwardData = bwd.references || [];
-
-        // Caso forward falhe
-        if (!window.seedData) {
-          window.seedData = {
-            ...bwd,
-            abstractExpanded: false,
-            keywordsExpanded: false
-          };
-
-          localStorage.setItem(
-            'seedPaperData',
-            JSON.stringify(window.seedData)
-          );
-
-          mostrarResultado(window.seedData);
-        }
-
-        const currentMode =
-          document.querySelector(
-            'input[name="snowballMode"]:checked'
-          ).value;
-
-        if (currentMode === 'backward') {
-          trocarModo();
-        }
-
-        document.body.classList.add('busca-realizada');
-      })
-      .catch(err => {
-        console.error(err);
         window.backwardData = [];
+        document.getElementById('resultado').innerHTML =
+          '<p class="text-danger">Search failed.</p>';
       })
       .finally(() => {
-        if (
-          window.forwardData !== null &&
-          window.backwardData !== null
-        ) {
-          document.getElementById('loadingSpinner').style.display = 'none';
-        }
+        document.getElementById('loadingSpinner').style.display = 'none';
       });
   }
   

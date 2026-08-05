@@ -1,2 +1,5 @@
 .DS_Store
 correcoes.txt
+.claude/
+__pycache__/
+*.pyc

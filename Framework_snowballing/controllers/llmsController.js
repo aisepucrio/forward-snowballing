@@ -1,79 +1,37 @@
-const fs = require('fs');
-const path = require('path');
-const { spawn, execSync } = require('child_process');
+const { LlmAnalysisService } = require('../services/llmAnalysisService');
+const { handlePythonRunnerError } = require('./pythonRunnerErrorHandler');
 
-function tryCommand(command) {
-  try {
-    return execSync(command, { encoding: 'utf8' }).split(/\r?\n/)[0].trim();
-  } catch {
-    return null;
-  }
-}
-
-function findPythonExecutable() {
-  const projectRoot = path.join(__dirname, '..');
-  const venvCandidates = process.platform === 'win32'
-    ? [
-        path.join(projectRoot, '.venv', 'Scripts', 'python.exe'),
-        path.join(projectRoot, 'venv', 'Scripts', 'python.exe'),
-      ]
-    : [
-        path.join(projectRoot, '.venv', 'bin', 'python'),
-        path.join(projectRoot, 'venv', 'bin', 'python'),
-      ];
-
-  for (const candidate of venvCandidates) {
-    if (fs.existsSync(candidate)) {
-      return candidate;
-    }
+class LlmsController {
+  constructor({ llmAnalysisService = new LlmAnalysisService() } = {}) {
+    this.llmAnalysisService = llmAnalysisService;
+    this.analisar = this.analisar.bind(this);
   }
 
-  if (process.platform === 'win32') {
-    return tryCommand('where python') || tryCommand('where python3');
-  }
+  async analisar(req, res) {
+    const { artigos, model, ollamaUrl } = req.body;
+    console.log('Entrou no llmsController.analisar');
+    console.log('[DEBUG] ollamaUrl recebido:', ollamaUrl);
+    console.log('[DEBUG] model recebido:', model);
+    console.log('[DEBUG] artigos count:', artigos ? artigos.length : 0);
 
-  return tryCommand('which python3') || tryCommand('which python');
-}
-
-exports.analisar = (req, res) => {
-  const { criteriosInclusao, criteriosExclusao, artigos } = req.body;
-  console.log('Entrou no llmsController.analisar');
-  if (!artigos || artigos.length === 0) {
-    return res.status(400).json({ error: "Nenhum artigo enviado." });
-  }
-
-  const input = JSON.stringify({ criteriosInclusao, criteriosExclusao, artigos });
-
-  // Caminho absoluto para o script Python:
-  const scriptPath = path.join(__dirname, '..', 'scripts', 'analisys_LLM.py');
-  const pythonPath = findPythonExecutable();
-
-  if (!pythonPath) {
-    return res.status(500).json({ error: 'Python não encontrado no servidor.' });
-  }
-
-  const pythonProcess = spawn(pythonPath, [scriptPath]);
-
-  let output = '';
-  let errorOutput = '';
-
-  pythonProcess.stdout.on('data', (data) => { output += data.toString(); });
-  pythonProcess.stderr.on('data', (data) => { errorOutput += data.toString(); });
-
-  pythonProcess.on('close', (code) => {
-    if (code !== 0) {
-      console.error('Erro no script Python:', errorOutput);
-      return res.status(500).json({ error: 'Erro ao processar os artigos.' });
-    }
     try {
-      const resultados = JSON.parse(output);
+      const resultados = await this.llmAnalysisService.analyze(req.body, { abortEmitter: req });
       res.json(resultados);
     } catch (err) {
-      console.error('Erro ao parsear JSON do Python:', err);
-      res.status(500).json({ error: 'Resposta inválida do script Python.' });
-    }
-  });
+      if (err.statusCode !== 499 && err.message && err.message.includes('excedeu')) {
+        console.error('Erro na análise LLM:', err.stderr || err.stdout || err.message);
+        return res.status(504).json({
+          error: 'A análise demorou demais. Tente menos artigos ou um modelo mais rápido.',
+        });
+      }
 
-  pythonProcess.stdin.write(input);
-  pythonProcess.stdin.end();
-};
+      handlePythonRunnerError(err, res, {
+        logPrefix: 'Erro na análise LLM',
+        genericMessage: 'Erro ao processar os artigos.',
+      });
+    }
+  }
+}
+
+module.exports = new LlmsController();
+module.exports.LlmsController = LlmsController;
