@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -172,10 +173,57 @@ def _criterion_language(description):
     return None
 
 
+_YEAR_PATTERN = re.compile(r"(?:19|20)\d{2}")
+
+
+def _coerce_year(value):
+    if value in (None, "", "-"):
+        return None
+    match = _YEAR_PATTERN.search(str(value))
+    return int(match.group()) if match else None
+
+
+def _criterion_year_constraint(description):
+    normalized = _normalize_search_text(description)
+    match = _YEAR_PATTERN.search(normalized)
+    if not match:
+        return None
+
+    year = int(match.group())
+    before_ctx = normalized[max(0, match.start() - 20):match.start()]
+    after_ctx = normalized[match.end():match.end() + 20]
+
+    if "or later" in after_ctx or "or after" in after_ctx:
+        return (">=", year)
+    if "or earlier" in after_ctx or "or before" in after_ctx:
+        return ("<=", year)
+    if any(term in before_ctx for term in ("before", "prior to", "earlier than", "up to", "until")):
+        return ("<", year)
+    if "since" in before_ctx:
+        return (">=", year)
+    if any(term in before_ctx for term in ("after", "later than")):
+        return (">", year)
+
+    return ("==", year)
+
+
+def _year_matches(article_year, operator, year):
+    if operator == "==":
+        return article_year == year
+    if operator == "<":
+        return article_year < year
+    if operator == "<=":
+        return article_year <= year
+    if operator == ">":
+        return article_year > year
+    if operator == ">=":
+        return article_year >= year
+    return False
+
+
 def _apply_deterministic_metadata(article, results, criteria):
     article_language = _normalized_language(article.get("language"))
-    if not article_language:
-        return results
+    article_year = _coerce_year(article.get("year"))
 
     descriptions = {
         **criteria.get("Inclusion", {}),
@@ -183,8 +231,16 @@ def _apply_deterministic_metadata(article, results, criteria):
     }
     for criterion_id, description in descriptions.items():
         required_language = _criterion_language(description)
-        if required_language:
+        if required_language and article_language:
             results[criterion_id] = "Yes" if article_language == required_language else "No"
+            continue
+
+        if article_year is not None:
+            year_constraint = _criterion_year_constraint(description)
+            if year_constraint:
+                operator, year = year_constraint
+                results[criterion_id] = "Yes" if _year_matches(article_year, operator, year) else "No"
+
     return results
 
 
