@@ -70,7 +70,7 @@ def main():
             return
 
         # limpa cache das APIs
-        # clear_caches()
+        clear_caches()
 
         # chama APIs
         paper = search_combined(doi=doi, title=title)
@@ -118,12 +118,15 @@ def main():
             data=result
         )
 
-        # salva no BD novo
         try:
             ids = save_full_result(output_json=result, user_id=TEMP_USER_ID)
             result["search_id"] = ids["search_id"]
             result["seed_id"] = ids["seed_id"]
+            result["paper_id_map"] = ids["paper_id_map"]
         except Exception as db_err:
+            import traceback
+            print(f"[ERRO CRÍTICO BD] {db_err}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             result["search_id"] = None
             result["seed_id"] = None
 

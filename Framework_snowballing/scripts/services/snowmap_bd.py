@@ -232,7 +232,6 @@ def save_search_result(search_id, paper_id,
         cursor.close()
         conn.close()
 
-
 def update_result_flags(search_id, paper_id,
                         selected_first_page=None,
                         excluded_duplicate=None,
@@ -245,6 +244,20 @@ def update_result_flags(search_id, paper_id,
     cursor = conn.cursor()
 
     try:
+        try:
+            uuid.UUID(str(paper_id))
+        except ValueError:
+            cursor.execute("""
+                SELECT id FROM papers 
+                WHERE semantic_paper_id = %s OR doi = %s
+            """, (paper_id, paper_id))
+            row = cursor.fetchone()
+            if row:
+                paper_id = str(row[0])
+            else:
+                print(f"[DB WARN - update_result_flags] ID inválido e paper não encontrado: {paper_id}", file=sys.stderr)
+                return
+
         fields = []
         values = []
 
@@ -282,7 +295,6 @@ def update_result_flags(search_id, paper_id,
     finally:
         cursor.close()
         conn.close()
-
 
 def get_search_results(search_id, only_selected=False, exclude_duplicates=True):
     """
@@ -518,6 +530,8 @@ def save_full_result(output_json: dict, user_id: str):
     )
 
     # 3. salva cada citação/referência
+    paper_id_map = {}
+
     citations = output_json.get("citations", [])
     for item in citations:
         paper_id = save_paper(
@@ -540,10 +554,18 @@ def save_full_result(output_json: dict, user_id: str):
             excluded_duplicate=False,
         )
 
+        key = item.get("paperId") or item.get("doi")
+        if key:
+            paper_id_map[key] = paper_id
+
     print(
         f"[DB SAVE COMPLETO] seed={seed_id} | search={search_id} "
         f"| {len(citations)} resultados salvos",
         file=sys.stderr
     )
 
-    return {"seed_id": seed_id, "search_id": search_id}
+    return {
+        "seed_id": seed_id,
+        "search_id": search_id,
+        "paper_id_map": paper_id_map
+    }

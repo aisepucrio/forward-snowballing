@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from snowmap_bd import update_result_flags, get_paper_by_doi
+from snowmap_bd import update_result_flags
 
 def main():
     try:
@@ -12,8 +12,15 @@ def main():
 
         search_id = payload.get("search_id")
         paper_id = payload.get("paper_id")
+        
         selected = payload.get("selected_first_page")
+        if selected is not None:
+            selected = bool(selected)
+            
         excluded = payload.get("excluded_duplicate")
+        if excluded is not None:
+            excluded = bool(excluded)
+
         duplicate_of = payload.get("duplicate_of")
 
         if not search_id or not paper_id:

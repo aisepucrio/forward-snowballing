@@ -126,7 +126,7 @@ def main():
         print(json.dumps(cached, ensure_ascii=False, indent=2))
         return
 
-       #clear_caches()
+       clear_caches()
 
        # busca principal
        paper = search_combined(doi=doi, title=title)
@@ -179,6 +179,8 @@ def main():
             result["search_id"] = ids["search_id"]
             result["seed_id"] = ids["seed_id"]
        except Exception as db_err:
+            print(f"[ERRO CRÍTICO BD] {db_err}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             result["search_id"] = None
             result["seed_id"] = None
 
