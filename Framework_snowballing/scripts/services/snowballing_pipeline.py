@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
@@ -18,7 +19,29 @@ from services.search import (
 
 
 NULL_INPUTS = {None, "", "-", "null", "None"}
-RESULT_CACHE_VERSION = 2
+# Versão 3: o payload passou a carregar search_id / seed_id / paper_id_map.
+# Entradas antigas precisam ser refeitas, senão voltam sem os ids do banco.
+RESULT_CACHE_VERSION = 3
+
+# Usado enquanto não existe login. Quando houver autenticação, trocar pelo id do
+# usuário logado.
+DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000001"
+
+
+def _load_database_layer():
+    """
+    Importa a camada de banco sob demanda.
+
+    Mantém o Postgres opcional: quem só quer rodar o snowballing (o caso dos
+    artefatos de reprodução do paper) não precisa de psycopg2 nem de um banco
+    no ar. Levanta ImportError se a stack não estiver instalada.
+    """
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    from services.snowmap_bd import save_full_result
+
+    return save_full_result, os.getenv("TEMP_USER_ID", DEFAULT_USER_ID)
 
 
 class SearchInput:
@@ -236,7 +259,61 @@ class SnowballingPipeline:
         self._save(result, search_input.doi)
         return result
 
+    def _persist_to_database(self, result):
+        """
+        Grava o resultado no PostgreSQL como DUAS searches: uma 'forward' com as
+        citations e outra 'backward' com as references.
+
+        O schema guarda a direção em searches.direction, ou seja, por busca e não
+        por resultado — então cada lista precisa da sua própria linha. Falha aqui
+        nunca derruba a busca: o snowballing continua funcionando sem banco.
+        """
+        try:
+            save_full_result, user_id = _load_database_layer()
+        except ImportError as import_error:
+            print(f"[BD INDISPONIVEL] {import_error}", file=sys.stderr)
+            save_full_result = None
+
+        paper_id_map = {}
+
+        if save_full_result:
+            directions = (
+                ("forward", "search_id", result.get("citations") or []),
+                ("backward", "search_id_backward", result.get("references") or []),
+            )
+
+            for direction, result_key, papers in directions:
+                if not papers:
+                    result[result_key] = None
+                    continue
+
+                try:
+                    ids = save_full_result(
+                        output_json={**result, "mode": direction, "citations": papers},
+                        user_id=user_id,
+                    )
+                    result[result_key] = ids["search_id"]
+                    result["seed_id"] = ids["seed_id"]
+                    # save_paper deduplica por doi/semantic_paper_id/título, então
+                    # um paper presente nas duas listas devolve o mesmo uuid nos
+                    # dois mapas e a fusão não perde nada.
+                    paper_id_map.update(ids["paper_id_map"])
+                except Exception as db_error:
+                    print(f"[ERRO CRITICO BD - {direction}] {db_error}", file=sys.stderr)
+                    traceback.print_exc(file=sys.stderr)
+                    result[result_key] = None
+
+        result["paper_id_map"] = paper_id_map
+        result.setdefault("search_id", None)
+        result.setdefault("search_id_backward", None)
+        result.setdefault("seed_id", None)
+
     def _save(self, result, doi):
+        # Persiste ANTES de cachear: os ids do banco precisam entrar no payload
+        # cacheado, senão uma busca repetida volta sem search_id/paper_id_map e o
+        # frontend perde a capacidade de atualizar flags.
+        self._persist_to_database(result)
+
         print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
         save_to_cache(doi=doi, title=result.get("title"), data=result)
 

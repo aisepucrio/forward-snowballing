@@ -1,10 +1,10 @@
 import sys
 import json
-import os
+
 from dotenv import load_dotenv
 load_dotenv()
 
-from snowmap_bd import update_result_flags
+from services.snowmap_bd import update_result_flags
 
 def main():
     try:

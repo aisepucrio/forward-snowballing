@@ -1,6 +1,10 @@
 const { readOutput, writeOutput } = require('./sessionState');
 const { PythonRunner } = require('./pythonRunner');
 
+// A busca roda sem timeout (defaultTimeoutMs: 0), mas um update de flag é rápido
+// e não deve segurar a requisição indefinidamente se o banco não responder.
+const FLAG_UPDATE_TIMEOUT_MS = 30 * 1000;
+
 class ArticleSearchService {
   constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 0 }) } = {}) {
     this.pythonRunner = pythonRunner;
@@ -33,6 +37,27 @@ class ArticleSearchService {
 
     writeOutput(sessionId, data);
     return data;
+  }
+
+  async updateFlag({ searchId, paperId, selectedFirstPage, excludedDuplicate, duplicateOf }) {
+    if (!searchId || !paperId) {
+      const err = new Error('search_id e paper_id são obrigatórios');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const payload = JSON.stringify({
+      search_id: searchId,
+      paper_id: paperId,
+      selected_first_page: selectedFirstPage ?? null,
+      excluded_duplicate: excludedDuplicate ?? null,
+      duplicate_of: duplicateOf ?? null,
+    });
+
+    return this.pythonRunner.runJsonScript('update_flag.py', {
+      args: [payload],
+      timeoutMs: FLAG_UPDATE_TIMEOUT_MS,
+    });
   }
 
   markArticle(sessionId, paperId, status) {

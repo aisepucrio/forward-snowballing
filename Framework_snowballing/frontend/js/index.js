@@ -55,6 +55,18 @@ function escapeHtml(text) {
     return null;
   }
 
+  // O banco guarda a direção por busca (searches.direction), então cada modo tem
+  // seu próprio search_id. Resolver sempre pelo modo visível na tela, senão as
+  // flags das references acabariam gravadas na search de citations.
+  function obterSearchIdAtual() {
+    const radio = document.querySelector('input[name="snowballMode"]:checked');
+    const mode = radio ? radio.value : 'forward';
+
+    return mode === 'backward'
+      ? (window.currentSearchIdBackward || null)
+      : (window.currentSearchIdForward || null);
+  }
+
   async function toggleIncludeAll() {
     if (!window.citationsData || window.citationsData.length === 0) {
       alert('No citations available.');
@@ -71,7 +83,9 @@ function escapeHtml(text) {
 
     mostrarCitacoes(window.citationsData);
 
-    if (window.currentSearchId) {
+    const searchId = obterSearchIdAtual();
+
+    if (searchId) {
       const isSelected = (newState === 'incluir');
 
       console.log(`[DB] Enviando atualização em lote (${newState}) para ${window.citationsData.length} itens...`);
@@ -88,7 +102,7 @@ function escapeHtml(text) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            search_id: window.currentSearchId,
+            search_id: searchId,
             paper_id: paperIdBd,
             selected_first_page: isSelected
           })
@@ -284,9 +298,11 @@ function escapeHtml(text) {
 
     searchPromise
       .then(fwd => {
-        window.currentSearchId = fwd.search_id || null;
+        window.currentSearchIdForward = fwd.search_id || null;
+        window.currentSearchIdBackward = fwd.search_id_backward || null;
         window.paperIdMap = fwd.paper_id_map || {};
-        console.log('[DEBUG] search_id recebido:', window.currentSearchId);
+        console.log('[DEBUG] search_id forward:', window.currentSearchIdForward,
+                    '| backward:', window.currentSearchIdBackward);
         window.forwardData = fwd.citations || [];
         window.backwardData = fwd.references || [];
         window.seedData = {
@@ -592,14 +608,16 @@ function escapeHtml(text) {
 
         const paperIdBd = obterPaperIdBd(cit);
 
-        if (paperIdBd && window.currentSearchId) {
+        const searchId = obterSearchIdAtual();
+
+        if (paperIdBd && searchId) {
           const isSelected = (novoEstado === 'incluir');
 
           await fetch('/api/articles/flag', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              search_id: window.currentSearchId,
+              search_id: searchId,
               paper_id: paperIdBd,
               selected_first_page: isSelected
             })
@@ -617,14 +635,16 @@ function escapeHtml(text) {
 
         const paperIdBd = obterPaperIdBd(cit);
 
-        if (paperIdBd && window.currentSearchId) {
+        const searchId = obterSearchIdAtual();
+
+        if (paperIdBd && searchId) {
           const isSelected = (novoEstado === 'incluir');
 
           await fetch('/api/articles/flag', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              search_id: window.currentSearchId,
+              search_id: searchId,
               paper_id: paperIdBd,
               selected_first_page: isSelected
             })
@@ -829,7 +849,9 @@ function escapeHtml(text) {
 
     const itensParaRemover = (window.citationsData || []).filter(c => checked.has(c.paperId));
 
-    if (window.currentSearchId && itensParaRemover.length > 0) {
+    const searchId = obterSearchIdAtual();
+
+    if (searchId && itensParaRemover.length > 0) {
       console.log(`[DB] Marcando ${itensParaRemover.length} itens como excluded_duplicate no PostgreSQL...`);
 
       const updates = itensParaRemover.map(cit => {
@@ -844,7 +866,7 @@ function escapeHtml(text) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            search_id: window.currentSearchId,
+            search_id: searchId,
             paper_id: paperIdBd,
             excluded_duplicate: true
           })
