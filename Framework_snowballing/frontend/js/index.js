@@ -8,7 +8,54 @@ function escapeHtml(text) {
       .replace(/'/g, '&#039;');
   }
 
-  function toggleIncludeAll() {
+  function obterPaperIdBd(cit) {
+    if (!window.paperIdMap) return cit.paper_id || null;
+
+    if (cit.paper_id) return cit.paper_id;
+
+    const rawId = cit.paperId || '';
+    const paperIdSemSufixo = rawId.replace(/-\d+$/, '');
+
+    const titleNormalizado = cit.title 
+      ? cit.title.toLowerCase().replace(/[^\w\s]/g, '').trim() 
+      : '';
+
+    const candidatas = [
+      paperIdSemSufixo,
+      cit.doi,
+      cit.paperId
+    ].filter(Boolean);
+
+    for (const chave of candidatas) {
+      if (window.paperIdMap[chave]) {
+        return window.paperIdMap[chave];
+      }
+      const chaveLower = chave.toLowerCase();
+      const mapaEncontrado = Object.keys(window.paperIdMap).find(
+        k => k.toLowerCase() === chaveLower
+      );
+      if (mapaEncontrado) {
+        return window.paperIdMap[mapaEncontrado];
+      }
+    }
+
+    for (const [chaveMapa, uuidBd] of Object.entries(window.paperIdMap)) {
+      const chaveMapaLower = chaveMapa.toLowerCase();
+      const paperIdLower = paperIdSemSufixo.toLowerCase();
+
+      if (paperIdLower && (chaveMapaLower.startsWith(paperIdLower) || paperIdLower.startsWith(chaveMapaLower))) {
+        return uuidBd;
+      }
+
+      if (titleNormalizado && chaveMapaLower.replace(/[^\w\s]/g, '').trim() === titleNormalizado) {
+        return uuidBd;
+      }
+    }
+
+    return null;
+  }
+
+  async function toggleIncludeAll() {
     if (!window.citationsData || window.citationsData.length === 0) {
       alert('No citations available.');
       return;
@@ -23,6 +70,34 @@ function escapeHtml(text) {
     }));
 
     mostrarCitacoes(window.citationsData);
+
+    if (window.currentSearchId) {
+      const isSelected = (newState === 'incluir');
+
+      console.log(`[DB] Enviando atualização em lote (${newState}) para ${window.citationsData.length} itens...`);
+
+      const updates = window.citationsData.map((cit, index) => {
+        const paperIdBd = obterPaperIdBd(cit);
+
+        if (!paperIdBd) {
+          console.error(`[ERRO CRÍTICO] Falha ao mapear item ${index}:`, cit);
+          return Promise.resolve();
+        }
+
+        return fetch('/api/articles/flag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            search_id: window.currentSearchId,
+            paper_id: paperIdBd,
+            selected_first_page: isSelected
+          })
+        });
+      });
+
+      await Promise.all(updates);
+      console.log('[DB] Sucesso: Todas as flags da busca foram salvas como TRUE no PostgreSQL.');
+    }
   }
 
   function atualizarBotaoIncludeAll() {
@@ -209,6 +284,9 @@ function escapeHtml(text) {
 
     searchPromise
       .then(fwd => {
+        window.currentSearchId = fwd.search_id || null;
+        window.paperIdMap = fwd.paper_id_map || {};
+        console.log('[DEBUG] search_id recebido:', window.currentSearchId);
         window.forwardData = fwd.citations || [];
         window.backwardData = fwd.references || [];
         window.seedData = {
@@ -508,18 +586,53 @@ function escapeHtml(text) {
 
       // INCLUDE
       const includeBtn = tr.querySelector('.include-btn');
-      includeBtn.addEventListener('click', () => {
-        cit.selecionado = cit.selecionado === 'incluir' ? null : 'incluir';
+      includeBtn.addEventListener('click', async () => {
+        const novoEstado = cit.selecionado === 'incluir' ? null : 'incluir';
+        cit.selecionado = novoEstado;
+
+        const paperIdBd = obterPaperIdBd(cit);
+
+        if (paperIdBd && window.currentSearchId) {
+          const isSelected = (novoEstado === 'incluir');
+
+          await fetch('/api/articles/flag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              search_id: window.currentSearchId,
+              paper_id: paperIdBd,
+              selected_first_page: isSelected
+            })
+          });
+        }
+
         mostrarCitacoes(window.citationsData);
       });
 
       // EXCLUDE
       const excludeBtn = tr.querySelector('.exclude-btn');
-      excludeBtn.addEventListener('click', () => {
-        cit.selecionado = cit.selecionado === 'excluir' ? null : 'excluir';
+      excludeBtn.addEventListener('click', async () => {
+        const novoEstado = cit.selecionado === 'excluir' ? null : 'excluir';
+        cit.selecionado = novoEstado;
+
+        const paperIdBd = obterPaperIdBd(cit);
+
+        if (paperIdBd && window.currentSearchId) {
+          const isSelected = (novoEstado === 'incluir');
+
+          await fetch('/api/articles/flag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              search_id: window.currentSearchId,
+              paper_id: paperIdBd,
+              selected_first_page: isSelected
+            })
+          });
+        }
+
         mostrarCitacoes(window.citationsData);
       });
-
       return tr;
     }
 
@@ -586,9 +699,13 @@ function escapeHtml(text) {
     URL.revokeObjectURL(url);
   }
 
-
-  document.getElementById('downloadBtn').onclick = baixarCitationsCSV;
-  document.getElementById('includeAllBtn').onclick = toggleIncludeAll;
+  document.addEventListener('DOMContentLoaded', () => {
+    const downloadBtn = document.getElementById('downloadBtn');
+    const includeAllBtn = document.getElementById('includeAllBtn');
+    
+    if (downloadBtn) downloadBtn.onclick = baixarCitationsCSV;
+    if (includeAllBtn) includeAllBtn.onclick = toggleIncludeAll;
+  });
 
   function irParaTriagem() {
     if (!window.citationsData || window.citationsData.length === 0) {
@@ -703,25 +820,49 @@ function escapeHtml(text) {
     new bootstrap.Modal(document.getElementById('dedupModal')).show();
   }
 
-  function removeDedupSelected() {
+  async function removeDedupSelected() {
     const checked = new Set(
       [...document.querySelectorAll('.dedup-checkbox:checked')].map(cb => cb.value)
     );
+    
     if (checked.size === 0) return;
+
+    const itensParaRemover = (window.citationsData || []).filter(c => checked.has(c.paperId));
+
+    if (window.currentSearchId && itensParaRemover.length > 0) {
+      console.log(`[DB] Marcando ${itensParaRemover.length} itens como excluded_duplicate no PostgreSQL...`);
+
+      const updates = itensParaRemover.map(cit => {
+        const paperIdBd = obterPaperIdBd(cit);
+
+        if (!paperIdBd) {
+          console.error('[ERRO DB] Não foi possível obter UUID para a duplicata:', cit);
+          return Promise.resolve();
+        }
+
+        return fetch('/api/articles/flag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            search_id: window.currentSearchId,
+            paper_id: paperIdBd,
+            excluded_duplicate: true
+          })
+        });
+      });
+
+      await Promise.all(updates);
+      console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.');
+    }
+
     window.citationsData = (window.citationsData || []).filter(c => !checked.has(c.paperId));
+    
     mostrarCitacoes(window.citationsData);
     atualizarBotaoIncludeAll();
-    bootstrap.Modal.getInstance(document.getElementById('dedupModal')).hide();
+    
+    const modalElem = document.getElementById('dedupModal');
+    if (modalElem) {
+      const modalInstance = bootstrap.Modal.getInstance(modalElem);
+      if (modalInstance) modalInstance.hide();
+    }
   }
-
-  document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
-      if (navRadio) navRadio.checked = true;
-      if (window.forwardData !== null && window.backwardData !== null) trocarModo();
-    });
-  });
-
-document.addEventListener('DOMContentLoaded', () => {
-  atualizarBotaoIncludeAll();
-});

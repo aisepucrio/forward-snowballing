@@ -1,6 +1,3 @@
-#Variáveis de ambiente
-.env
-
 # Banco de dados
 *.db
 cache/
@@ -8,6 +5,7 @@ cache/
 # Arquivos gerados
 output.json
 app.log
+db_debug.log
 
 # Python
 __pycache__/
