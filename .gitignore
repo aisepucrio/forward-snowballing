@@ -1,3 +1,6 @@
+#Variáveis de ambiente
+.env
+
 .DS_Store
 correcoes.txt
 .claude/

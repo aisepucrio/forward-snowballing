@@ -8,6 +8,7 @@ class ArticlesController {
     this.searchByDOI = this.searchByDOI.bind(this);
     this.marcarArtigo = this.marcarArtigo.bind(this);
     this.getArtigosIncluidos = this.getArtigosIncluidos.bind(this);
+    this.updateFlag = this.updateFlag.bind(this);
   }
 
   getMockPapers(req, res) {
@@ -53,6 +54,27 @@ class ArticlesController {
       res.json(this.articleSearchService.getIncludedArticles(req.sessionId));
     } catch (err) {
       res.status(err.statusCode || 500).json({ error: err.message || 'Erro ao carregar as citações' });
+    }
+  }
+
+  // Atualiza as flags de um paper no PostgreSQL:
+  // selected_first_page, excluded_duplicate, duplicate_of
+  async updateFlag(req, res) {
+    try {
+      const result = await this.articleSearchService.updateFlag({
+        searchId: req.body.search_id,
+        paperId: req.body.paper_id,
+        selectedFirstPage: req.body.selected_first_page,
+        excludedDuplicate: req.body.excluded_duplicate,
+        duplicateOf: req.body.duplicate_of,
+      });
+
+      res.json(result);
+    } catch (err) {
+      handlePythonRunnerError(err, res, {
+        logPrefix: 'Erro ao atualizar flag',
+        genericMessage: 'Erro ao atualizar flag no banco.',
+      });
     }
   }
 }
