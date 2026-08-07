@@ -1,5 +1,14 @@
 let artigosIncluidos = [];
 
+const ANALYSIS_BATCH_SIZE = 40;
+const ANALYSIS_MAX_WORKERS = 1;
+const DEFAULT_LLM_SETTINGS = {
+  url: 'http://localhost:11434/api/chat',
+  model: 'llama3.2:3b',
+  temperature: 0.1,
+  tokens: 300,
+};
+
 function mostrarTabelaArtigos(artigos) {
   const tbody = document.getElementById('tabelaArtigosBody');
   if (!tbody) return;
@@ -39,9 +48,22 @@ function dividirEmLotes(array, tamanhoLote = 1) {
 }
 
 function prepararArtigosParaAnalise(artigos) {
+  const limitarTexto = (valor, limite) => {
+    const texto = String(valor || '');
+    return texto.length > limite ? `${texto.slice(0, limite)}...` : texto;
+  };
+
   return artigos.map(artigo => ({
-    title: artigo.title || '',
-    abstract: artigo.abstract || ''
+    title: limitarTexto(artigo.title, 300),
+    abstract: limitarTexto(artigo.abstract, 650),
+    language: artigo.language,
+    year: artigo.year,
+    venue: artigo.venue,
+    open_access: artigo.open_access,
+    keywords: artigo.keywords,
+    pages: artigo.pages,
+    numpages: artigo.numpages,
+    citationCount: artigo.citationCount ?? artigo.citations_count,
   }));
 }
 
@@ -118,7 +140,7 @@ function jsonParaCSV(resultados) {
 
 async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
   const artigosLimpos = prepararArtigosParaAnalise(artigos);
-  const tamanhoLote = 10;
+  const tamanhoLote = ANALYSIS_BATCH_SIZE;
   const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
   const resultadosFinais = [];
 
@@ -137,11 +159,23 @@ async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
 
   for (let i = 0; i < lotes.length; i++) {
     const lote = lotes[i];
+    let settings = {};
+    try {
+      settings = JSON.parse(localStorage.getItem('llmSettings') || '{}');
+    } catch {
+      settings = {};
+    }
 
     const payload = {
       criteriosInclusao: criteriosInclusao,
       criteriosExclusao: criteriosExclusao,
-      artigos: lote
+      artigos: lote,
+      model: settings.model ?? DEFAULT_LLM_SETTINGS.model,
+      temperature: settings.temperature ?? DEFAULT_LLM_SETTINGS.temperature,
+      tokens: settings.tokens ?? DEFAULT_LLM_SETTINGS.tokens,
+      ollamaUrl: settings.url ?? DEFAULT_LLM_SETTINGS.url,
+      extraPrompt: localStorage.getItem('llmPrompt') || '',
+      maxWorkers: ANALYSIS_MAX_WORKERS,
     };
 
     const res = await fetch('/api/articles/analisar', {
@@ -194,7 +228,6 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     exclusaoInput.value = '';
   }
 
-  // Obtém todas as tags
   const inclusao = obterTags('inclusaoBox')
     .map((c, i) => `${i + 1}. ${c}`)
     .join('\n');
@@ -217,7 +250,6 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     return;
   }
 
-  // Mostra loading
   btnTexto.classList.add('d-none');
   btnLoading.classList.remove('d-none');
   analisarBtn.disabled = true;

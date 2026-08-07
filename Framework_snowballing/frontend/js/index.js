@@ -1,3 +1,68 @@
+function escapeHtml(text) {
+  if (text === null || text === undefined) return '-';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function obterPaperIdBd(cit) {
+  if (!window.paperIdMap) return cit.paper_id || null;
+  if (cit.paper_id) return cit.paper_id;
+
+  const rawId = cit.paperId || '';
+  const paperIdSemSufixo = rawId.replace(/-\d+$/, '');
+
+  const titleNormalizado = cit.title 
+    ? cit.title.toLowerCase().replace(/[^\w\s]/g, '').trim() 
+    : '';
+
+  const candidatas = [
+    paperIdSemSufixo,
+    cit.doi,
+    cit.paperId
+  ].filter(Boolean);
+
+  for (const chave of candidatas) {
+    if (window.paperIdMap[chave]) {
+      return window.paperIdMap[chave];
+    }
+    const chaveLower = chave.toLowerCase();
+    const mapaEncontrado = Object.keys(window.paperIdMap).find(
+      k => k.toLowerCase() === chaveLower
+    );
+    if (mapaEncontrado) {
+      return window.paperIdMap[mapaEncontrado];
+    }
+  }
+
+  for (const [chaveMapa, uuidBd] of Object.entries(window.paperIdMap)) {
+    const chaveMapaLower = chaveMapa.toLowerCase();
+    const paperIdLower = paperIdSemSufixo.toLowerCase();
+
+    if (paperIdLower && (chaveMapaLower.startsWith(paperIdLower) || paperIdLower.startsWith(chaveMapaLower))) {
+      return uuidBd;
+    }
+
+    if (titleNormalizado && chaveMapaLower.replace(/[^\w\s]/g, '').trim() === titleNormalizado) {
+      return uuidBd;
+    }
+  }
+
+  return null;
+}
+
+function obterSearchIdAtual() {
+  const radio = document.querySelector('input[name="snowballMode"]:checked');
+  const mode = radio ? radio.value : 'forward';
+
+  return mode === 'backward'
+    ? (window.currentSearchIdBackward || null)
+    : (window.currentSearchIdForward || null);
+}
+
 function determinarAcaoIncludeAll(citationsData) {
   if (!citationsData || citationsData.length === 0) return 'incluir';
 
@@ -11,7 +76,7 @@ function determinarAcaoIncludeAll(citationsData) {
   return 'excluir';
 }
 
-function toggleIncludeAll() {
+async function toggleIncludeAll() {
   if (!window.citationsData || window.citationsData.length === 0) {
     alert('No citations available.');
     return;
@@ -26,6 +91,35 @@ function toggleIncludeAll() {
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
+
+  const searchId = obterSearchIdAtual();
+
+  if (searchId) {
+    const isSelected = (newState === 'incluir');
+    console.log(`[DB] Enviando atualização em lote (${newState}) para ${window.citationsData.length} itens...`);
+
+    const updates = window.citationsData.map((cit, index) => {
+      const paperIdBd = obterPaperIdBd(cit);
+
+      if (!paperIdBd) {
+        console.error(`[ERRO CRÍTICO] Falha ao mapear item ${index}:`, cit);
+        return Promise.resolve();
+      }
+
+      return fetch('/api/articles/flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          search_id: searchId,
+          paper_id: paperIdBd,
+          selected_first_page: isSelected
+        })
+      });
+    });
+
+    await Promise.all(updates);
+    console.log('[DB] Sucesso: Todas as flags da busca foram salvas no PostgreSQL.');
+  }
 }
 
 function atualizarBotaoIncludeAll() {
@@ -43,6 +137,24 @@ function atualizarBotaoIncludeAll() {
     btn.innerHTML = `<i class="bi bi-check2-square"></i> Include All`;
     btn.className = 'btn btn-outline-success btn-export';
   }
+}
+
+function formatAuthors(authors) {
+  if (!authors) return '-';
+  if (Array.isArray(authors)) {
+    if (authors.length === 0) return '-';
+    return authors.map(a => a?.name || a).join('; ');
+  }
+  if (typeof authors === 'string') return authors;
+  return '-';
+}
+
+function formatKeywords(keywords) {
+  if (!keywords) return '-';
+  if (Array.isArray(keywords)) {
+    return keywords.length ? keywords.join(', ') : '-';
+  }
+  return keywords || '-';
 }
 
 function getActionLabel(selecionado) {
@@ -132,22 +244,21 @@ async function buscarArtigo() {
     window.citationsData = [];
     window.seedData = null;
 
-    const forwardPromise = fetch(buildSearchURL(inputValue, 'forward'))
+    const searchPromise = fetch(buildSearchURL(inputValue, 'forward'))
       .then(r => {
-        if (!r.ok) throw new Error('Forward search failed');
+        if (!r.ok) throw new Error('Search failed');
         return r.json();
       });
 
-    const backwardPromise = fetch(buildSearchURL(inputValue, 'backward'))
-      .then(r => {
-        if (!r.ok) throw new Error('Backward search failed');
-        return r.json();
-      });
-
-    // FORWARD
-    forwardPromise
+    searchPromise
       .then(fwd => {
+        window.currentSearchIdForward = fwd.search_id || null;
+        window.currentSearchIdBackward = fwd.search_id_backward || null;
+        window.paperIdMap = fwd.paper_id_map || {};
+        console.log('[DEBUG] search_id forward:', window.currentSearchIdForward,
+                    '| backward:', window.currentSearchIdBackward);
         window.forwardData = fwd.citations || [];
+        window.backwardData = fwd.references || [];
         window.seedData = {
           ...fwd,
           abstractExpanded: false,
@@ -167,70 +278,19 @@ async function buscarArtigo() {
           ).value;
         mostrarResultado(window.seedData, currentMode);
 
-        if (currentMode === 'forward') {
-          trocarModo();
-        }
+        trocarModo();
 
         document.body.classList.add('busca-realizada');
       })
       .catch(err => {
         console.error(err);
         window.forwardData = [];
-        document.getElementById('resultado').innerHTML =
-          '<p class="text-danger">Forward search failed.</p>';
-      })
-      .finally(() => {
-        if (
-          window.forwardData !== null &&
-          window.backwardData !== null
-        ) {
-          document.getElementById('loadingSpinner').style.display = 'none';
-        }
-      });
-
-    // BACKWARD
-    backwardPromise
-      .then(bwd => {
-        window.backwardData = bwd.references || [];
-
-        // Caso forward falhe
-        if (!window.seedData) {
-          window.seedData = {
-            ...bwd,
-            abstractExpanded: false,
-            keywordsExpanded: false
-          };
-
-          localStorage.setItem(
-            'seedPaperData',
-            JSON.stringify(window.seedData)
-          );
-
-          mostrarResultado(window.seedData);
-        }
-
-        const currentMode =
-          document.querySelector(
-            'input[name="snowballMode"]:checked'
-          ).value;
-
-        if (currentMode === 'backward') {
-          trocarModo();
-        }
-
-        document.body.classList.add('busca-realizada');
-      })
-      .catch(err => {
-        console.error(err);
         window.backwardData = [];
+        document.getElementById('resultado').innerHTML =
+          '<p class="text-danger">Search failed.</p>';
       })
       .finally(() => {
-        if (
-          window.forwardData !== null &&
-          window.backwardData !== null
-        ) {
-          document.getElementById('loadingSpinner').style.display = 'none';
-        }
+        document.getElementById('loadingSpinner').style.display = 'none';
       });
   } catch (err) {
     console.error('buscarArtigo falhou antes de iniciar a busca:', err);
@@ -399,7 +459,23 @@ function mostrarCitacoes(citacoes) {
     target: tbody,
     data: citacoes,
     showActions: true,
-    onAction: () => {
+    onAction: async (item, acao) => {
+      const paperIdBd = obterPaperIdBd(item);
+      const searchId = obterSearchIdAtual();
+
+      if (paperIdBd && searchId) {
+        const isSelected = (acao === 'incluir');
+        await fetch('/api/articles/flag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            search_id: searchId,
+            paper_id: paperIdBd,
+            selected_first_page: isSelected
+          })
+        });
+      }
+
       if (typeof atualizarContadores === 'function') {
         atualizarContadores();
       }
@@ -468,9 +544,6 @@ function baixarCitationsCSV() {
   URL.revokeObjectURL(url);
 }
 
-document.getElementById('downloadBtn').onclick = baixarCitationsCSV;
-document.getElementById('includeAllBtn').onclick = toggleIncludeAll;
-
 function irParaTriagem() {
   if (!window.citationsData || window.citationsData.length === 0) {
     alert('No citations to send to screening.');
@@ -479,53 +552,6 @@ function irParaTriagem() {
   window.name = JSON.stringify(window.citationsData);
   window.location.href = 'analysis.html';
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  const linkAnalise = document.querySelector('a.nav-link[href="analysis.html"]');
-  if (linkAnalise) {
-    linkAnalise.addEventListener('click', e => {
-      e.preventDefault();
-      if (!window.citationsData || window.citationsData.length === 0) {
-        alert('No citations to send to screening.');
-        return;
-      }
-
-      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
-
-      if (incluidos.length === 0) {
-        alert('No article marked as "Include"');
-        return;
-      }
-
-      window.name = JSON.stringify(window.citationsData);
-      window.location.href = 'analysis.html';
-    });
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  const linkCriterios = document.querySelector('a.nav-link[href="criterios.html"]');
-  if (linkCriterios) {
-    linkCriterios.addEventListener('click', e => {
-      e.preventDefault();
-
-      if (!window.citationsData || window.citationsData.length === 0) {
-        alert('No citations to send.');
-        return;
-      }
-
-      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
-
-      if (incluidos.length === 0) {
-        alert('No article marked as "Include"');
-        return;
-      }
-
-      window.name = JSON.stringify(incluidos);
-      window.location.href = 'criterios.html';
-    });
-  }
-});
 
 function normalizeDoi(doi) {
   if (!doi || doi === '-') return null;
@@ -581,15 +607,52 @@ function openDedupModal() {
   new bootstrap.Modal(document.getElementById('dedupModal')).show();
 }
 
-function removeDedupSelected() {
+async function removeDedupSelected() {
   const checked = new Set(
     [...document.querySelectorAll('.dedup-checkbox:checked')].map(cb => cb.value)
   );
+
   if (checked.size === 0) return;
+
+  const itensParaRemover = (window.citationsData || []).filter(c => checked.has(c.paperId));
+  const searchId = obterSearchIdAtual();
+
+  if (searchId && itensParaRemover.length > 0) {
+    console.log(`[DB] Marcando ${itensParaRemover.length} itens como excluded_duplicate no PostgreSQL...`);
+
+    const updates = itensParaRemover.map(cit => {
+      const paperIdBd = obterPaperIdBd(cit);
+
+      if (!paperIdBd) {
+        console.error('[ERRO DB] Não foi possível obter UUID para a duplicata:', cit);
+        return Promise.resolve();
+      }
+
+      return fetch('/api/articles/flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          search_id: searchId,
+          paper_id: paperIdBd,
+          excluded_duplicate: true
+        })
+      });
+    });
+
+    await Promise.all(updates);
+    console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.');
+  }
+
   window.citationsData = (window.citationsData || []).filter(c => !checked.has(c.paperId));
+
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
-  bootstrap.Modal.getInstance(document.getElementById('dedupModal')).hide();
+
+  const modalElem = document.getElementById('dedupModal');
+  if (modalElem) {
+    const modalInstance = bootstrap.Modal.getInstance(modalElem);
+    if (modalInstance) modalInstance.hide();
+  }
 }
 
 document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
@@ -601,5 +664,54 @@ document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  const downloadBtn = document.getElementById('downloadBtn');
+  const includeAllBtn = document.getElementById('includeAllBtn');
+
+  if (downloadBtn) downloadBtn.onclick = baixarCitationsCSV;
+  if (includeAllBtn) includeAllBtn.onclick = toggleIncludeAll;
+
   atualizarBotaoIncludeAll();
+
+  const linkAnalise = document.querySelector('a.nav-link[href="analysis.html"]');
+  if (linkAnalise) {
+    linkAnalise.addEventListener('click', e => {
+      e.preventDefault();
+      if (!window.citationsData || window.citationsData.length === 0) {
+        alert('No citations to send to screening.');
+        return;
+      }
+
+      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
+
+      if (incluidos.length === 0) {
+        alert('No article marked as "Include"');
+        return;
+      }
+
+      window.name = JSON.stringify(window.citationsData);
+      window.location.href = 'analysis.html';
+    });
+  }
+
+  const linkCriterios = document.querySelector('a.nav-link[href="criterios.html"]');
+  if (linkCriterios) {
+    linkCriterios.addEventListener('click', e => {
+      e.preventDefault();
+
+      if (!window.citationsData || window.citationsData.length === 0) {
+        alert('No citations to send.');
+        return;
+      }
+
+      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
+
+      if (incluidos.length === 0) {
+        alert('No article marked as "Include"');
+        return;
+      }
+
+      window.name = JSON.stringify(incluidos);
+      window.location.href = 'criterios.html';
+    });
+  }
 });
