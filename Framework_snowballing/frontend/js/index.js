@@ -194,7 +194,7 @@ function trocarModo() {
   document.querySelector('#citationsList .table-title').textContent =
     mode === 'forward' ? 'Cited By' : 'References';
 
-  const citationsSectionEl = document.getElementById('citationsSection');
+  const citationsSectionEl = document.getElementById('citationsList');
   if (citationsSectionEl) citationsSectionEl.style.display = 'block';
 
   const mappedList = list.map((c, i) => ({
@@ -237,7 +237,9 @@ async function buscarArtigo() {
     if (navbarSearchInput) navbarSearchInput.value = inputValue;
     document.getElementById('loadingSpinner').style.display = 'block';
     document.getElementById('resultado').innerHTML = '';
-    document.getElementById('citationsSection').style.display = 'none';
+
+    const citationsSectionEl = document.getElementById('citationsList');
+    if (citationsSectionEl) citationsSectionEl.style.display = 'none';
 
     window.forwardData = null;
     window.backwardData = null;

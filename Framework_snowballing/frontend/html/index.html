@@ -27,19 +27,12 @@
       <h1 class="fw-semibold mb-4">SnowMap</h1>
       <p class="text-muted mb-2">The Academic Curator for deep citation mapping and research discovery</p>
 
-      <div class="d-flex justify-content-center mb-3">
-        <div class="btn-group" role="group">
-          <input type="radio" class="btn-check" name="snowballMode" id="modeForward" value="forward" checked>
-          <label class="btn btn-outline-success px-4" for="modeForward">
-            <i class="bi bi-arrow-up-right-circle me-1"></i> Citations (Forward)
-          </label>
-
-          <input type="radio" class="btn-check" name="snowballMode" id="modeBackward" value="backward">
-          <label class="btn btn-outline-success px-4" for="modeBackward">
-            <i class="bi bi-arrow-down-left-circle me-1"></i> References (Backward)
-          </label>
-        </div>
-      </div>
+      <!-- Seletor de modo: a UI visível fica na navbar, que só aparece depois da
+           busca (body.busca-realizada). Estes radios permanecem como o estado do
+           modo — trocarModo() e obterSearchIdAtual() leem daqui, e a navbar os
+           sincroniza. -->
+      <input type="radio" name="snowballMode" id="modeForward" value="forward" checked hidden>
+      <input type="radio" name="snowballMode" id="modeBackward" value="backward" hidden>
 
       <p class="text-black">Search by <b>DOI</b> or <b>Title</b></p>
     </div>
@@ -60,7 +53,43 @@
 
     <div id="resultado" class="mt-4"></div>
 
-    <div id="custom-table-component"></div>
+    <div id="citationsList" class="table-wrapper" style="display:none;">
+
+      <div class="table-topbar">
+        <div class="table-info">
+          <span class="table-title">Cited By</span>
+        </div>
+
+        <div class="table-actions">
+          <button id="dedupBtn" class="btn-export" onclick="openDedupModal()">
+            <i class="bi bi-copy"></i>
+            See Duplicates
+          </button>
+          <button id="downloadBtn" class="btn-export">
+            <i class="bi bi-download"></i>
+            Export
+          </button>
+          <button id="includeAllBtn" class="btn-export">
+            <i class="bi bi-check2-square"></i>
+            Include All
+          </button>
+        </div>
+      </div>
+
+      <table class="custom-table" id="tabela-triagem">
+        <thead>
+          <tr>
+            <th class="col-identity">Research Identity</th>
+            <th class="col-abstract">Abstract</th>
+            <th class="col-keywords">Keywords</th>
+            <th class="col-citations">Citations</th>
+            <th class="col-actions d-none">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaTriagemBody"></tbody>
+      </table>
+
+    </div>
   </main>
 
   <div id="footer-component"></div>
