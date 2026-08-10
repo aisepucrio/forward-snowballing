@@ -373,7 +373,7 @@ def _normalize_result_from_raw(article, raw_result, criteria):
     }
 
 
-def classificar_lote(articles, criteria, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt=""):
+def classificar_lote(articles, criteria, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt="", criteria_metadata=None):
     if not articles:
         return []
 
@@ -381,6 +381,7 @@ def classificar_lote(articles, criteria, model=None, temperature=0.1, tokens=600
         articles=articles,
         criteria=criteria,
         extra_prompt=extra_prompt,
+        criteria_metadata=criteria_metadata,
     )
 
     try:
@@ -443,7 +444,7 @@ def _chunked(items, size):
         yield items[index:index + size]
 
 
-def analisar(criterios_inclusao, criterios_exclusao, artigos, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt="", max_workers=None):
+def analisar(criterios_inclusao, criterios_exclusao, artigos, model=None, temperature=0.1, tokens=600, ollama_url=None, extra_prompt="", max_workers=None, criteria_metadata=None):
     criteria = criteria_from_text(criterios_inclusao, criterios_exclusao)
     batch_size = _coerce_positive_int(os.getenv("LLM_BATCH_SIZE"), DEFAULT_BATCH_SIZE)
     batches = list(_chunked(artigos, batch_size))
@@ -464,6 +465,7 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos, model=None, temper
                     tokens=tokens,
                     ollama_url=ollama_url,
                     extra_prompt=extra_prompt,
+                    criteria_metadata=criteria_metadata,
                 )
             )
         return results
@@ -479,6 +481,7 @@ def analisar(criterios_inclusao, criterios_exclusao, artigos, model=None, temper
             tokens=tokens,
             ollama_url=ollama_url,
             extra_prompt=extra_prompt,
+            criteria_metadata=criteria_metadata,
         )
 
     with ThreadPoolExecutor(max_workers=worker_count) as executor:
@@ -558,7 +561,8 @@ if __name__ == "__main__":
     ollama_url = data.get("ollamaUrl", OLLAMA_URL)
     extra_prompt = data.get("extraPrompt", "")
     max_workers = data.get("maxWorkers")
+    criteria_metadata = data.get("criteriaMetadata") or {}
 
-    results = analisar(criterios_inclusao, criterios_exclusao, artigos, model, temperature, tokens, ollama_url, extra_prompt, max_workers)
+    results = analisar(criterios_inclusao, criterios_exclusao, artigos, model, temperature, tokens, ollama_url, extra_prompt, max_workers, criteria_metadata)
 
     print(json.dumps(results, ensure_ascii=False))

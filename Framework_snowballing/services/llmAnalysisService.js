@@ -20,6 +20,7 @@ class LlmAnalysisService {
     const input = {
       criteriosInclusao: payload.criteriosInclusao,
       criteriosExclusao: payload.criteriosExclusao,
+      criteriaMetadata: payload.criteriaMetadata,
       artigos,
       model: payload.model,
       temperature: payload.temperature,

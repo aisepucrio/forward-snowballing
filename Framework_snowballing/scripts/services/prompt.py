@@ -122,6 +122,25 @@ def _format_article_metadata(article: dict[str, Any]) -> str:
     )
 
 
+def _resolve_allowed_optional_fields(
+    criteria: dict[str, dict[str, str]],
+    criteria_metadata: dict[str, list[str]] | None,
+    optional_fields: tuple[str, ...],
+) -> set[str]:
+    if not criteria_metadata:
+        return set(optional_fields)
+
+    known_fields = set(optional_fields)
+    allowed: set[str] = set()
+    for criterion_id in expected_criteria_ids(criteria):
+        requested = criteria_metadata.get(criterion_id)
+        if requested is None:
+            allowed |= known_fields
+            continue
+        allowed |= (set(requested) & known_fields)
+    return allowed
+
+
 def generate_prompt(
     article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
@@ -194,6 +213,7 @@ def generate_batch_prompt(
     articles: list[dict[str, Any]],
     criteria: dict[str, dict[str, str]],
     extra_prompt: str = "",
+    criteria_metadata: dict[str, list[str]] | None = None,
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
@@ -210,6 +230,7 @@ def generate_batch_prompt(
         "numpages",
         "citationCount",
     )
+    allowed_fields = _resolve_allowed_optional_fields(criteria, criteria_metadata, optional_fields)
     for index, article in enumerate(articles):
         payload = {
             "index": index,
@@ -217,6 +238,8 @@ def generate_batch_prompt(
             "abstract": _stringify_metadata_value(article.get("abstract")),
         }
         for field_name in optional_fields:
+            if field_name not in allowed_fields:
+                continue
             field_value = article.get(field_name)
             if field_value not in (None, "", "-"):
                 payload[field_name] = field_value
