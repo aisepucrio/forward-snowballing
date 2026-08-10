@@ -1,5 +1,18 @@
 let artigosIncluidos = [];
 
+const METADATA_FIELDS = [
+  { key: 'language', label: 'Language' },
+  { key: 'year', label: 'Year' },
+  { key: 'venue', label: 'Venue' },
+  { key: 'open_access', label: 'Open Access' },
+  { key: 'keywords', label: 'Keywords' },
+  { key: 'pages', label: 'Pages' },
+  { key: 'numpages', label: 'Number of Pages' },
+  { key: 'citationCount', label: 'Citation Count' },
+];
+
+let metadataUidCounter = 0;
+
 const ANALYSIS_BATCH_SIZE = 40;
 const ANALYSIS_MAX_WORKERS = 1;
 const DEFAULT_LLM_SETTINGS = {
@@ -138,7 +151,7 @@ function jsonParaCSV(resultados) {
   return linhas.join('\n');
 }
 
-async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
+async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao, criteriaMetadata = {}) {
   const artigosLimpos = prepararArtigosParaAnalise(artigos);
   const tamanhoLote = ANALYSIS_BATCH_SIZE;
   const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
@@ -169,6 +182,7 @@ async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao) {
     const payload = {
       criteriosInclusao: criteriosInclusao,
       criteriosExclusao: criteriosExclusao,
+      criteriaMetadata: criteriaMetadata,
       artigos: lote,
       model: settings.model ?? DEFAULT_LLM_SETTINGS.model,
       temperature: settings.temperature ?? DEFAULT_LLM_SETTINGS.temperature,
@@ -236,6 +250,11 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     .map((c, i) => `${i + 1}. ${c}`)
     .join('\n');
 
+  const criteriaMetadata = {
+    ...obterCriteriaMetadata('inclusaoBox'),
+    ...obterCriteriaMetadata('exclusaoBox'),
+  };
+
   const btnTexto = document.getElementById('btnTexto');
   const btnLoading = document.getElementById('btnLoading');
   const analisarBtn = document.getElementById('analisarBtn');
@@ -258,7 +277,8 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     const resultados = await analisarEmLotes(
       artigosIncluidos,
       inclusao,
-      exclusao
+      exclusao,
+      criteriaMetadata
     );
     const divResultado = document.getElementById('resultadoAnalise');
     divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
@@ -318,33 +338,82 @@ function obterTags(containerId) {
   const tags = container.querySelectorAll('.badge');
 
   return Array.from(tags).map(tag => {
-    return tag.firstChild.textContent.trim();
+    const textEl = tag.querySelector('.criterion-text');
+    return (textEl ? textEl.textContent : tag.textContent).trim();
   });
 }
 
+function obterCriteriaMetadata(containerId) {
+  const container = document.getElementById(containerId);
+  const tags = container.querySelectorAll('.badge');
+  const prefix = containerId === 'inclusaoBox' ? 'IC' : 'EC';
+
+  const result = {};
+  Array.from(tags).forEach((tag, i) => {
+    const criterionId = `${prefix}${i + 1}`;
+    let fields = [];
+    try {
+      fields = JSON.parse(tag.dataset.metadataFields || '[]');
+    } catch {
+      fields = [];
+    }
+    result[criterionId] = fields;
+  });
+  return result;
+}
+
 function criarTag(container, texto, cor) {
-  const input = container.querySelector('input');
+  const input = container.querySelector(':scope > input');
 
   const tagsAtuais = container.querySelectorAll('.badge');
   const indice = tagsAtuais.length + 1;
 
   const prefixo = container.id === 'inclusaoBox' ? `IC${indice}` : `EC${indice}`;
+  const tagUid = ++metadataUidCounter;
 
   const tag = document.createElement('span');
   tag.className = `badge d-flex align-items-center ${container.id === 'inclusaoBox' ? 'ic-tag' : 'ec-tag'}`;
 
   tag.innerHTML = `
-    ${prefixo}: ${texto}
-    <button type="button" class="btn-close btn-close-white ms-2" style="font-size:0.6rem;"></button>
+    <span class="criterion-text">${prefixo}: ${TableComponent.escapeHtml(texto)}</span>
+    <div class="dropdown d-inline-flex metadata-dropdown-wrapper">
+      <button type="button" class="metadata-toggle-btn" data-bs-toggle="dropdown"
+        data-bs-auto-close="outside" aria-expanded="false"
+        title="Choose metadata fields sent to the LLM for this criterion">
+        <i class="bi bi-sliders"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end p-2 metadata-menu">
+        ${METADATA_FIELDS.map(f => `
+          <li class="form-check">
+            <input class="form-check-input metadata-checkbox" type="checkbox"
+              value="${f.key}" id="meta-${tagUid}-${f.key}" checked>
+            <label class="form-check-label" for="meta-${tagUid}-${f.key}">${f.label}</label>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <button type="button" class="btn-close btn-close-white ms-2 remove-tag-btn" style="font-size:0.6rem;"></button>
   `;
 
-  tag.querySelector('button').addEventListener('click', () => {
+  const checkboxes = tag.querySelectorAll('.metadata-checkbox');
+  const syncMetadataDataset = () => {
+    const selected = Array.from(checkboxes)
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+    tag.dataset.metadataFields = JSON.stringify(selected);
+  };
+  checkboxes.forEach(cb => cb.addEventListener('change', syncMetadataDataset));
+  syncMetadataDataset();
+
+  tag.querySelector('.remove-tag-btn').addEventListener('click', () => {
     tag.remove();
 
     const restantes = container.querySelectorAll('.badge');
     restantes.forEach((t, i) => {
       const newPrefix = container.id === 'inclusaoBox' ? `IC${i + 1}` : `EC${i + 1}`;
-      t.childNodes[0].textContent = `${newPrefix}: ${t.textContent.split(': ')[1]}`;
+      const textEl = t.querySelector('.criterion-text');
+      const criterionBody = textEl.textContent.slice(textEl.textContent.indexOf(':') + 1).trim();
+      textEl.textContent = `${newPrefix}: ${criterionBody}`;
     });
 
     if (restantes.length === 0) {
