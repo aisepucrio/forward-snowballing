@@ -207,6 +207,7 @@ function trocarModo() {
   window.rawCitationsData = mappedList;
   window.citationsData = [...mappedList];
   window.dedupApplied = false;
+  window.dedupRemovedHistory = []; // reset on new search, so old removals don't bleed into a new dataset
   const dedupBtn = document.getElementById('dedupBtn');
   if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
 
@@ -579,44 +580,200 @@ function findDuplicateGroups(list) {
   return Object.values(groups).filter(g => g.length > 1);
 }
 
+// Duplicate review follows the "Visualiza duplicatas -> Compara 2 duplicatas ->
+// Existem novas duplicatas?" loop from process.bpmn: one pair is shown at a time,
+// instead of every duplicate group at once with bulk checkboxes.
 function openDedupModal() {
-  const groups = findDuplicateGroups(window.citationsData || []);
-  const body = document.getElementById('dedupModalBody');
+  const groups = findDuplicateGroups(window.citationsData || []).map(group => [...group]);
 
-  if (groups.length === 0) {
-    body.innerHTML = '<p class="text-muted">No duplicates found in the current list.</p>';
-  } else {
-    body.innerHTML = groups.map((group, gi) => `
-      <div class="mb-4">
-        <div class="fw-bold mb-2 text-secondary" style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em;">
-          Group ${gi + 1} — ${group.length} duplicates
-        </div>
-        ${group.map(item => `
-          <div class="d-flex align-items-start gap-2 p-2 mb-1 rounded" style="border:1px solid #e0e0e0; background:#fafafa;">
-            <input type="checkbox" class="dedup-checkbox form-check-input mt-1 flex-shrink-0" value="${TableComponent.escapeHtml(item.paperId)}" id="dedup-${TableComponent.escapeHtml(item.paperId)}">
-            <label for="dedup-${TableComponent.escapeHtml(item.paperId)}" class="mb-0" style="cursor:pointer; font-size:0.9rem;">
-              <div class="fw-semibold">${TableComponent.escapeHtml(item.title || '-')}</div>
-              <div class="text-muted" style="font-size:0.8rem;">
-                ${TableComponent.escapeHtml(String(item.year || '-'))} · ${TableComponent.escapeHtml(item.venue || '-')} · DOI: ${TableComponent.escapeHtml(item.doi || '-')}
-              </div>
-            </label>
-          </div>
-        `).join('')}
-      </div>
-    `).join('<hr>');
-  }
+  window.dedupState = {
+    groups,
+    groupIndex: 0,
+    toRemove: new Set() // paperId -> marked for removal once the review is confirmed
+  };
 
+  document.getElementById('dedupModalBody').innerHTML = `
+    <div id="dedupRemovedSection"></div>
+    <div id="dedupActiveSection"></div>
+  `;
+  renderDedupRemovedSection();
+  renderDedupStep();
   new bootstrap.Modal(document.getElementById('dedupModal')).show();
 }
 
-async function removeDedupSelected() {
-  const checked = new Set(
-    [...document.querySelectorAll('.dedup-checkbox:checked')].map(cb => cb.value)
-  );
+// Shows duplicates already removed in this session (across previous times the
+// modal was opened/closed), each with an "Desfazer" button, so reopening the
+// modal after a removal doesn't hide what was already decided.
+function renderDedupRemovedSection() {
+  const el = document.getElementById('dedupRemovedSection');
+  if (!el) return;
 
-  if (checked.size === 0) return;
+  const history = window.dedupRemovedHistory || [];
+  if (history.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
 
-  const itensParaRemover = (window.citationsData || []).filter(c => checked.has(c.paperId));
+  el.innerHTML = `
+    <div class="mb-3">
+      <div class="fw-bold mb-2 text-secondary" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
+        Duplicatas já removidas (${history.length})
+      </div>
+      ${history.map(entry => `
+        <div class="d-flex justify-content-between align-items-start gap-2 p-2 mb-1 rounded" style="border:1px solid #f0d0d0; background:#fff5f5;">
+          <div style="font-size:0.85rem; min-width:0;">
+            <div class="fw-semibold">${TableComponent.escapeHtml(entry.item.title || '-')}</div>
+            <div class="text-muted" style="font-size:0.78rem;">
+              ${TableComponent.escapeHtml(String(entry.item.year || '-'))} · DOI: ${TableComponent.escapeHtml(entry.item.doi || '-')}
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm flex-shrink-0" onclick="undoDedupRemoval('${TableComponent.escapeHtml(entry.item.paperId)}')">
+            Desfazer
+          </button>
+        </div>
+      `).join('')}
+    </div>
+    <hr>
+  `;
+}
+
+async function undoDedupRemoval(paperId) {
+  const history = window.dedupRemovedHistory || [];
+  const idx = history.findIndex(entry => entry.item.paperId === paperId);
+  if (idx === -1) return;
+
+  const [entry] = history.splice(idx, 1);
+  window.citationsData = [...(window.citationsData || []), entry.item];
+
+  const searchId = obterSearchIdAtual();
+  const paperIdBd = obterPaperIdBd(entry.item);
+  if (searchId && paperIdBd) {
+    try {
+      await fetch('/api/articles/flag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ search_id: searchId, paper_id: paperIdBd, excluded_duplicate: false })
+      });
+    } catch (err) {
+      console.error('[ERRO DB] Falha ao desfazer remoção de duplicata:', err);
+    }
+  }
+
+  mostrarCitacoes(window.citationsData);
+  atualizarBotaoIncludeAll();
+  renderDedupRemovedSection();
+}
+
+function currentDedupPair() {
+  const state = window.dedupState;
+  if (!state) return null;
+
+  while (state.groupIndex < state.groups.length) {
+    const group = state.groups[state.groupIndex];
+    if (group.length >= 2) {
+      return { left: group[0], right: group[1] };
+    }
+    state.groupIndex++;
+  }
+  return null;
+}
+
+function countRemainingDedupPairs() {
+  const state = window.dedupState;
+  if (!state) return 0;
+  return state.groups
+    .slice(state.groupIndex)
+    .reduce((total, group) => total + Math.max(group.length - 1, 0), 0);
+}
+
+function renderDedupCard(item, keepAction) {
+  const abstract = item.abstract && item.abstract !== '-' ? item.abstract : '';
+  const snippet = abstract.length > 220 ? `${abstract.slice(0, 220)}…` : abstract;
+
+  return `
+    <div class="flex-fill p-3 rounded" style="border:1px solid #e0e0e0; background:#fafafa; min-width:0;">
+      <div class="fw-semibold mb-1">${TableComponent.escapeHtml(item.title || '-')}</div>
+      <div class="text-muted mb-2" style="font-size:0.8rem;">
+        ${TableComponent.escapeHtml(String(item.year || '-'))} · ${TableComponent.escapeHtml(item.venue || '-')}<br>
+        DOI: ${TableComponent.escapeHtml(item.doi || '-')}
+      </div>
+      ${snippet ? `<p class="mb-3" style="font-size:0.82rem;">${TableComponent.escapeHtml(snippet)}</p>` : ''}
+      <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="resolveDedupPair('${keepAction}')">
+        Manter este, remover o outro
+      </button>
+    </div>
+  `;
+}
+
+function renderDedupStep() {
+  const body = document.getElementById('dedupActiveSection') || document.getElementById('dedupModalBody');
+  const state = window.dedupState;
+  const pair = currentDedupPair();
+
+  if (!pair) {
+    const reviewed = state && state.toRemove.size > 0;
+    const hadGroups = state && state.groups.length > 0;
+    body.innerHTML = `<p class="text-muted mb-0">${
+      reviewed
+        ? 'Revisão concluída. Feche para aplicar as remoções.'
+        : hadGroups
+          ? 'Nenhuma duplicata pendente — todos os grupos já foram revisados.'
+          : 'Nenhuma duplicata encontrada na lista atual.'
+    }</p>`;
+    return;
+  }
+
+  const remaining = countRemainingDedupPairs();
+  const groupNumber = state.groupIndex + 1;
+  const totalGroups = state.groups.length;
+  body.innerHTML = `
+    <p class="text-muted small mb-3">
+      Grupo ${groupNumber} de ${totalGroups} — restam ${remaining} ${remaining === 1 ? 'comparação' : 'comparações'} no total.
+    </p>
+    <div class="d-flex gap-3 flex-column flex-md-row">
+      ${renderDedupCard(pair.left, 'keep-left')}
+      ${renderDedupCard(pair.right, 'keep-right')}
+    </div>
+    <div class="text-center mt-3">
+      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resolveDedupPair('keep-both')">
+        Não são duplicatas — manter os dois
+      </button>
+    </div>
+  `;
+}
+
+function resolveDedupPair(decision) {
+  const state = window.dedupState;
+  if (!state) return;
+
+  const group = state.groups[state.groupIndex];
+  if (!group || group.length < 2) return;
+
+  if (decision === 'keep-left') {
+    state.toRemove.add(group[1].paperId);
+    group.splice(1, 1);
+  } else if (decision === 'keep-right') {
+    state.toRemove.add(group[0].paperId);
+    group.shift();
+  } else {
+    // keep-both: not duplicates, stop comparing this pair but keep both articles
+    group.splice(1, 1);
+  }
+
+  renderDedupStep();
+}
+
+// Triggered by the modal's own 'hidden.bs.modal' event, so any way of closing it
+// (X button, backdrop click, Escape, or the Close button) applies whatever
+// duplicate decisions were made so far — matching the BPMN's "Existem novas
+// duplicatas? -> Não -> Seleciona artigos" transition.
+async function finishDedupReview() {
+  const state = window.dedupState;
+  window.dedupState = null;
+
+  if (!state || state.toRemove.size === 0) return;
+
+  const itensParaRemover = (window.citationsData || []).filter(c => state.toRemove.has(c.paperId));
   const searchId = obterSearchIdAtual();
 
   if (searchId && itensParaRemover.length > 0) {
@@ -645,16 +802,19 @@ async function removeDedupSelected() {
     console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.');
   }
 
-  window.citationsData = (window.citationsData || []).filter(c => !checked.has(c.paperId));
+  window.citationsData = (window.citationsData || []).filter(c => !state.toRemove.has(c.paperId));
+  window.dedupRemovedHistory = [
+    ...(window.dedupRemovedHistory || []),
+    ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
+  ];
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
+}
 
-  const modalElem = document.getElementById('dedupModal');
-  if (modalElem) {
-    const modalInstance = bootstrap.Modal.getInstance(modalElem);
-    if (modalInstance) modalInstance.hide();
-  }
+const dedupModalElem = document.getElementById('dedupModal');
+if (dedupModalElem) {
+  dedupModalElem.addEventListener('hidden.bs.modal', finishDedupReview);
 }
 
 document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
