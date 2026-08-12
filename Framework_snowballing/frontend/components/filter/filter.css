@@ -1,0 +1,119 @@
+.filter-wrapper {
+  display: inline-block;
+  position: relative;
+  font-family: sans-serif;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.filter-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  white-space: nowrap;
+}
+
+/* YEAR RANGE FILTER */
+
+.decade-submenu.hidden {
+  display: none;
+}
+
+.decade-submenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(80vw, 460px);
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.submenu-title {
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  color: #666;
+}
+
+.decade-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: max-content;
+  max-width: 100%;
+}
+
+.btn-decade {
+  padding: 4px 8px;
+  border: 1px solid #007bff;
+  background-color: #fff;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.btn-decade:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-decade.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.decade-submenu.hidden {
+  display: none;
+}
+
+/* VENUE FILTER */
+/*
+.venue-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-venue {
+  padding: 4px 8px;
+  border: 1px solid #007bff;
+  background-color: #fff;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.btn-venue:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-venue.active {
+  background-color: #007bff;
+  color: #fff;
+}*/
+
+/* Order By Button */
+
+.btn-orderBy {
+  border: none;
+  background: #bcbdbc;
+  color: rgb(26, 25, 25);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  transition: 0.2s;
+}
+

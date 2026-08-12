@@ -195,20 +195,6 @@ body:not(.busca-realizada) .main-brand {
   gap: 10px;
 }
 
-.btn-filter {
-  border: none;
-  background: #f3f4f6;
-  color: #374151;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 14px;
-  transition: 0.2s;
-}
-
-.btn-filter:hover {
-  background: #e5e7eb;
-}
-
 .btn-export {
   border: none;
   background: #0b6b43;
@@ -218,6 +204,17 @@ body:not(.busca-realizada) .main-brand {
   font-size: 14px;
   transition: 0.2s;
 }
+
+.btn-filter {
+  border: none;
+  background: #bcbdbc;
+  color: rgb(26, 25, 25);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
 
 .btn-export:hover {
   background: #095735;

@@ -206,8 +206,20 @@ function trocarModo() {
   }));
   window.rawCitationsData = mappedList;
   window.citationsData = [...mappedList];
+  window.allCitationsData = window.citationsData;
   window.dedupApplied = false;
   window.dedupRemovedHistory = []; // reset on new search, so old removals don't bleed into a new dataset
+
+  const statusSelect = document.getElementById('status');
+  if (statusSelect && statusSelect.value === 'year-range' && window.FilterComponent) {
+    const submenu = document.getElementById('decadeSubMenu');
+    if (submenu) {
+      submenu.classList.remove('hidden');
+    }
+    if (typeof window.FilterComponent.renderYearRangeButtons === 'function') {
+      window.FilterComponent.renderYearRangeButtons();
+    }
+  }
   const dedupBtn = document.getElementById('dedupBtn');
   if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
 
@@ -875,5 +887,10 @@ document.addEventListener('DOMContentLoaded', () => {
       window.name = JSON.stringify(incluidos);
       window.location.href = 'criterios.html';
     });
+  }
+
+  // Inicializa o componente de filtro, se disponível
+  if (window.FilterComponent && typeof FilterComponent.init === 'function') {
+    try { FilterComponent.init(); } catch (err) { console.warn('Falha ao inicializar FilterComponent:', err); }
   }
 });
