@@ -19,11 +19,11 @@
 
 /* YEAR RANGE FILTER */
 
-.decade-submenu.hidden {
+.submenu.hidden {
   display: none;
 }
 
-.decade-submenu {
+.submenu {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
@@ -72,7 +72,7 @@
   color: #fff;
 }
 
-.decade-submenu.hidden {
+.submenu.hidden {
   display: none;
 }
 
@@ -115,5 +115,73 @@
   padding: 8px 16px;
   font-size: 14px;
   transition: 0.2s;
+}
+
+/* AUTHOR LIST */
+.author-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: max-content;
+  max-width: 100%;
+}
+
+.btn-author {
+  padding: 4px 8px;
+  border: 1px solid #007bff;
+  background-color: #fff;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.btn-author:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-author.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* VENUE BUTTONS */
+.venue-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: max-content;
+  max-width: 100%;
+}
+
+.btn-venue {
+  padding: 4px 8px;
+  border: 1px solid #007bff;
+  background-color: #fff;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.btn-venue:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-venue.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.filter-collapse-btn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
 }
 

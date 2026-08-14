@@ -1,8 +1,6 @@
 const FilterComponent = (function () {
   function getBaseData() {
-    const activeData = window.citationsData || window.allCitationsData || [];
-    window.allCitationsData = activeData;
-    return activeData;
+    return window.allCitationsData || window.citationsData || [];
   }
 
   function getAvailableYearRanges(baseDados = getBaseData()) {
@@ -27,6 +25,52 @@ const FilterComponent = (function () {
     }
 
     return ranges;
+  }
+
+  const activeFilters = {
+    years: [],
+    authors: [], 
+    venues: [],
+    citationCount: null
+  };
+
+  function applyCombinedFilters() {
+    const baseDados = getBaseData() || [];
+    let result = baseDados.slice();
+
+    // Filtro por anos
+    if (activeFilters.years && activeFilters.years.length) {
+      result = result.filter(c => {
+        const year = parseInt(c.year, 10);
+        if (isNaN(year)) return false;
+        return activeFilters.years.some(r => year >= r.start && year <= r.end);
+      });
+    }
+
+    // Filtro por autores
+    if (activeFilters.authors && activeFilters.authors.length) {
+      const lowered = activeFilters.authors.map(a => a.toLowerCase());
+      result = result.filter(c => {
+        const authors = c.authors || c.author || [];
+        let list = [];
+        if (Array.isArray(authors)) list = authors.map(a => (a && a.name) ? a.name : String(a));
+        else if (typeof authors === 'string') list = authors.split(/;|,|\sand\s/).map(s => s.trim()).filter(Boolean);
+        return lowered.some(sel => list.some(name => name.toLowerCase().includes(sel)));
+      });
+    }
+
+    // Filtro por venues
+    if (activeFilters.venues && activeFilters.venues.length) {
+      const lowered = activeFilters.venues.map(v => v.toLowerCase());
+      result = result.filter(c => {
+        const venue = (c.venue || c.journal || c.conference || '').toLowerCase();
+        return lowered.some(sel => venue.includes(sel));
+      });
+    } 
+
+    try { window.citationsData = result; } catch (err) {}
+    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(result);
+    else console.warn('mostrarCitacoes não encontrada para renderizar resultados');
   }
 
   function renderYearRangeButtons() {
@@ -54,22 +98,29 @@ const FilterComponent = (function () {
     `;
 
     const decadeButtons = buttonsContainer.querySelectorAll('.btn-decade');
+    
+    // Remarca os botões ativos
+    if (activeFilters.years && activeFilters.years.length) {
+      decadeButtons.forEach(btn => {
+        const s = parseInt(btn.getAttribute('data-start'), 10);
+        const e = parseInt(btn.getAttribute('data-end'), 10);
+        const match = activeFilters.years.some(r => r.start === s && r.end === e);
+        if (match) btn.classList.add('active');
+      });
+    }
+
     decadeButtons.forEach(button => {
       button.addEventListener('click', () => {
-        const nowActive = button.classList.toggle('active');
+        button.classList.toggle('active');
 
-        const activeBtns = Array.from(document.querySelectorAll('.btn-decade.active'));
-        if (!activeBtns.length) {
-          resetFilters();
-          return;
-        }
-
-        const ranges = activeBtns.map(btn => ({
+        const activeBtns = Array.from(buttonsContainer.querySelectorAll('.btn-decade.active'));
+        const selectedRanges = activeBtns.map(btn => ({
           start: parseInt(btn.getAttribute('data-start'), 10),
           end: parseInt(btn.getAttribute('data-end'), 10)
         })).filter(r => !isNaN(r.start) && !isNaN(r.end));
 
-        if (ranges.length) aplicarFiltroRanges(ranges);
+        activeFilters.years = selectedRanges;
+        applyCombinedFilters();
       });
     });
 
@@ -82,7 +133,8 @@ const FilterComponent = (function () {
         const s = parseInt(startInput.value, 10);
         if (isNaN(s)) return;
 
-        aplicarFiltroAno(s, s);
+        activeFilters.years = [{ start: s, end: s }];
+        applyCombinedFilters();
       });
 
       const startInputEl = document.getElementById('startYear');
@@ -97,74 +149,159 @@ const FilterComponent = (function () {
     }
   }
 
+  function getAuthorsFromData(baseDados = getBaseData()) {
+    const counter = Object.create(null);
+
+    (baseDados || []).forEach(item => {
+      const authors = item.authors || item.author || item.Author || [];
+
+      let list = [];
+      if (Array.isArray(authors)) list = authors.map(a => (a && a.name) ? a.name : String(a));
+      else if (typeof authors === 'string') list = authors.split(/;|,|\sand\s/).map(s => s.trim()).filter(Boolean);
+
+      list.forEach(name => {
+        const key = (name || '').trim();
+        if (!key) return;
+        const lower = key.toLowerCase();
+        counter[lower] = counter[lower] || { name: key, count: 0 };
+        counter[lower].count += 1;
+      });
+    });
+
+    return Object.values(counter).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  function renderAuthorList() {
+    const submenu = document.getElementById('authorSubMenu');
+    if (!submenu) return;
+    const container = submenu.querySelector('.author-list');
+    if (!container) return;
+
+    const authors = getAuthorsFromData();
+    if (!authors.length) {
+      submenu.classList.add('hidden');
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = authors.map(a => `
+      <button type="button" class="btn-author" data-author="${a.name.replace(/"/g, '&quot;')}">${a.name} (${a.count})</button>
+    `).join('');
+
+    const authorButtons = container.querySelectorAll('.btn-author');
+    
+    if (activeFilters.authors && activeFilters.authors.length) {
+      authorButtons.forEach(btn => {
+        const name = (btn.getAttribute('data-author') || '').toLowerCase();
+        if (activeFilters.authors.some(a => (a || '').toLowerCase() === name)) btn.classList.add('active');
+      });
+    }
+
+    authorButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+
+        const activeBtns = Array.from(container.querySelectorAll('.btn-author.active'));
+        const selectedAuthors = activeBtns.map(b => b.getAttribute('data-author'));
+
+        activeFilters.authors = selectedAuthors;
+        applyCombinedFilters();
+      });
+    });
+  }
+
+  function getVenuesFromData(baseDados = getBaseData()) {
+    const counter = Object.create(null);
+    (baseDados || []).forEach(item => {
+      const raw = (item.venue || item.journal || item['container-title'] || item.publisher || '') || '';
+      const name = String(raw).trim();
+      if (!name) return;
+      const lower = name.toLowerCase();
+      counter[lower] = counter[lower] || { name, count: 0 };
+      counter[lower].count += 1;
+    });
+    return Object.values(counter).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  function renderVenueList() {
+    const submenu = document.getElementById('venueSubMenu');
+    if (!submenu) return;
+    const container = submenu.querySelector('.venue-list');
+    if (!container) return;
+
+    const venues = getVenuesFromData();
+    if (!venues.length) {
+      submenu.classList.add('hidden');
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = venues.map(v => `
+      <button type="button" class="btn-venue" data-venue="${v.name.replace(/"/g, '&quot;')}">${v.name} (${v.count})</button>
+    `).join('');
+
+    const venueButtons = container.querySelectorAll('.btn-venue');
+    if (activeFilters.venues && activeFilters.venues.length) {
+      venueButtons.forEach(btn => {
+        const name = (btn.getAttribute('data-venue') || '').toLowerCase();
+        if (activeFilters.venues.some(a => (a || '').toLowerCase() === name)) btn.classList.add('active');
+      });
+    }
+
+    venueButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const activeBtns = Array.from(container.querySelectorAll('.btn-venue.active'));
+        const selected = activeBtns.map(b => b.getAttribute('data-venue'));
+        activeFilters.venues = selected;
+        applyCombinedFilters();
+      });
+    });
+  }
+
   function ensureMarkup() {
     if (document.getElementById('status')) return; 
     const wrapper = document.getElementById('filterWrapper');
     if (!wrapper) return;
-
     wrapper.insertAdjacentHTML('afterbegin', `
-      <div class="filter-dropdown">
-        <i class="bi bi-filter"></i>
-        <span>Filter By</span>
-        <select id="status" name="status">
-          <option value="">Todos</option>
-          <option value="year-range">Year Range</option>
-          <option value="author">Author</option>
-          <option value="openAccess">OpenAccess</option>
-          <option value="citation-count">Citation Count</option>
-          <option value="keyword">Keyword</option>
-        </select>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="filter-dropdown">
+          <i class="bi bi-filter"></i>
+          <span>Filter By</span>
+          <select id="status" name="status">
+            <option value="todos">Todos</option>
+            <option value="year-range">Year Range</option>
+            <option value="author">Author</option>
+            <option value="venue">Venue</option>
+            <option value="citation-count">Citation Count</option>
+            <option value="keyword">Keyword</option>
+          </select>
+        </div>
       </div>
 
-      <div id="decadeSubMenu" class="decade-submenu hidden">
+      <div id="decadeSubMenu" class="submenu hidden">
         <div class="decade-buttons"></div>
+      </div>
+      <div id="authorSubMenu" class="submenu hidden">
+        <div class="author-list"></div>
+      </div>
+      <div id="venueSubMenu" class="submenu hidden">
+        <div class="venue-list"></div>
       </div>
     `);
   }
 
-  function aplicarFiltroAno(startYear, endYear) {
-    const baseDados = getBaseData();
-    if (!baseDados || !baseDados.length) return;
-
-    const filtered = baseDados.filter(c => {
-      const year = parseInt(c.year, 10);
-      return !isNaN(year) && year >= startYear && year <= endYear;
-    });
-
-    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(filtered);
-    else console.warn('mostrarCitacoes não encontrada para renderizar resultados');
-  }
-
-  function aplicarFiltroRanges(ranges) {
-    const baseDados = getBaseData();
-    if (!baseDados || !baseDados.length) return;
-
-    const filtered = baseDados.filter(c => {
-      const year = parseInt(c.year, 10);
-      if (isNaN(year)) return false;
-      return ranges.some(r => year >= r.start && year <= r.end);
-    });
-
-    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(filtered);
-    else console.warn('mostrarCitacoes não encontrada para renderizar resultados');
-  }
-
-  function aplicarFiltroAutor(authorName) {
-    const baseDados = getBaseData();
-    if (!baseDados || !baseDados.length) return;  
-    
-    const filtered = baseDados.filter(c => {
-      return c.authors && c.authors.some(a => a.toLowerCase().includes(authorName.toLowerCase()));
-    });
-
-    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(filtered);
-    else console.warn('mostrarCitacoes não encontrada para renderizar resultados'); 
-  }
-
-
   function resetFilters() {
-    const baseDados = getBaseData();
-    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(baseDados);
+    activeFilters.years = [];
+    activeFilters.authors = [];
+    activeFilters.venues = [];
+    activeFilters.keywords = [];
+    activeFilters.openAccess = null;
+    activeFilters.citationCount = null;
+
+    const full = window.allCitationsData || [];
+    try { window.citationsData = full; } catch (err) {}
+    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(full);
   }
 
   function setupUiListeners(options = {}) {
@@ -173,64 +310,66 @@ const FilterComponent = (function () {
     const selectors = Object.assign({
       status: 'status',
       decadeSubMenu: 'decadeSubMenu',
-      decadeButtonClass: '.btn-decade',
       filterBtn: 'filterBtn',
       orderByBtn: 'orderByBtn'
     }, options);
 
     const statusSelect = document.getElementById(selectors.status);
     const decadeSubMenu = document.getElementById(selectors.decadeSubMenu);
-    const decadeButtons = document.querySelectorAll(selectors.decadeButtonClass);
+    const authorSubMenu = document.getElementById('authorSubMenu');
+    const venueSubMenu = document.getElementById('venueSubMenu');
+    const collapseBtn = document.getElementById('filterCollapseBtn');
+
+    function hideAllSubmenus() {
+      decadeSubMenu && decadeSubMenu.classList.add('hidden');
+      authorSubMenu && authorSubMenu.classList.add('hidden');
+      venueSubMenu && venueSubMenu.classList.add('hidden');
+    }
 
     if (statusSelect) {
       statusSelect.addEventListener('change', (event) => {
-        const selectedOption = event.target.value;
+        const selectedOption = (event.target.value || '').toString();
+
+        hideAllSubmenus();
+
+        if (selectedOption === 'todos' || selectedOption === '') {
+          try { resetFilters(); } catch (err) {}
+          return;
+        }
 
         if (selectedOption === 'year-range') {
           renderYearRangeButtons();
-          if (document.querySelector('.btn-decade')) {
-            decadeSubMenu && decadeSubMenu.classList.remove('hidden');
-          } else {
-            decadeSubMenu && decadeSubMenu.classList.add('hidden');
-          }
+          const hasDecades = decadeSubMenu && decadeSubMenu.querySelector('.btn-decade');
+          if (hasDecades) decadeSubMenu.classList.remove('hidden');
+
+        } else if (selectedOption === 'author') {
+          renderAuthorList();
+          const hasAuthors = authorSubMenu && authorSubMenu.querySelector('.btn-author');
+          if (hasAuthors) authorSubMenu.classList.remove('hidden');
+
+        } else if (selectedOption === 'venue') {
+          renderVenueList();
+          const hasVenues = venueSubMenu && venueSubMenu.querySelector('.btn-venue');
+          if (hasVenues) venueSubMenu.classList.remove('hidden');
+        }
+      });
+    }
+
+    let collapsed = false;
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        collapsed = !collapsed;
+        if (collapsed) {
+          hideAllSubmenus();
+          collapseBtn.textContent = '▸';
         } else {
-          decadeSubMenu && decadeSubMenu.classList.add('hidden');
-          document.querySelectorAll('.btn-decade').forEach(btn => btn.classList.remove('active'));
+          collapseBtn.textContent = '▾';
         }
       });
     }
 
     renderYearRangeButtons();
-
-    const filterBtn = document.getElementById(selectors.filterBtn);
-    if (filterBtn) {
-      filterBtn.addEventListener('click', () => {
-        const startInput = document.getElementById('startYear');
-        if (!startInput) return;
-
-        const s = parseInt(startInput.value, 10);
-        if (isNaN(s)) return;
-
-        aplicarFiltroAno(s, s);
-      });
-
-      const startInputEl = document.getElementById('startYear');
-      if (startInputEl) {
-        startInputEl.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter') {
-            ev.preventDefault();
-            filterBtn.click();
-          }
-        });
-      }
-    }
-
-    const orderByBtn = document.getElementById(selectors.orderByBtn);
-    if (orderByBtn) {
-      orderByBtn.addEventListener('click', () => {
-        console.log('orderByBtn clicked — implementar ordenação aqui se necessário');
-      });
-    }
   }
 
   let initialized = false;
@@ -244,35 +383,11 @@ const FilterComponent = (function () {
   return {
     init,
     renderYearRangeButtons,
-    applyYearRange: aplicarFiltroAno,
+    applyCombinedFilters,
     reset: resetFilters
   };
 })();
 
 try {
   if (typeof window !== 'undefined') window.FilterComponent = FilterComponent;
-} catch (err) {
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} catch (err) {}
