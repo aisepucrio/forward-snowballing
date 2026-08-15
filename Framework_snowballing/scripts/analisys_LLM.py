@@ -15,7 +15,7 @@ from services.prompt import (
 )
 
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://11.0.0.35:11434/api/chat")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/chat")
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 MODEL_FALLBACKS = ["mistral:latest", "gemma4:31b"]
 FAILED_MODELS = set()
