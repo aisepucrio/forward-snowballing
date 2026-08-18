@@ -1,115 +1,114 @@
-# 🧠 Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal
+# SnowMap: A Tool to Support the Snowballing Process in Literature Reviews
 
+SnowMap is a tool designed to support the snowballing process in secondary studies by assisting researchers in performing both backward and forward snowballing. This repository contains the SnowMap framework, the datasets collected from different academic sources, and the scripts used to reproduce the analyses reported in the associated publication.
 
-This repository brings together two main components:
+The repository aims to promote transparency, reproducibility, and reuse of the experimental artifacts generated during the evaluation of SnowMap and its comparison with other tools available in the literature.
 
-🔎 1. Comparative study of forward snowballing tools
-  - Data and scripts used in a comparative analysis of different tools that implement forward 
-    snowballing.
-  - The results of this analysis are described in the article referenced in this repository.
-  - This analysis served as the basis for the development of the automated tool also included 
-    in  this repository.
-  - The step-by-step guide for reproducing the analysis is available in the tools_analysis directory.
+## Publication
 
-🛠️ 2. Automated tool with web interface
-  - Developed to assist researchers in the following tasks:
-    - Automatic article retrieval via forward snowballing;
-    - Initial analysis of the retrieved articles;
-    - Article screening based on inclusion and exclusion criteria, with support from LLMs.
+The full paper describing SnowMap and the conducted experiments is available in this repository:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16755858.svg)](https://doi.org/10.5281/zenodo.16755858)
+* [SnowMap: A Tool to Support the Snowballing Process in Literature Reviews](28231_Paper_.pdf)
 
-Access the full paper [here](SBES_IIER_2025___Snowballing.pdf)
+## Evaluated Tools
 
-## 📚 Citation
+The experiments and analyses included in this repository were conducted using data collected from the following academic indexing and snowballing tools:
 
-If you use this work, please cite the following paper:
+* Google Scholar
+* OpenAlex
+* Lens
+* Semantic Scholar
+* OpenCitations
+* Litmaps
+* ResearchRabbit
+* SnowMap
 
-```bibtex
-@Inproceedings{januario2025:SBES,
-  author = {Januário, Jailma and Nicolau, Maria Isabel and Felizardo, Katia Romero and Pereira, Juliana Alves},
-  title     = {Toward Reliable Forward Snowballing in Systematic Literature Reviews: A Comparative Study and Framework Proposal},
-  year      = {2025},
-  pages     = {1–7},
-  booktitle = {Brazilian Symposium on Software Engineering, Insightful Ideas and Emerging Results Track (SBES IIER)},  
-  publisher = {SOL}
-}
+These tools were evaluated and compared regarding metadata extraction, coverage, graph generation capabilities, and support for the snowballing process.
+
+## Repository Structure
+
+The repository is organized into three main directories:
+
+```text
+.
+├── Backward_Analysis/
+├── Forward_Analysis/
+├── Framework_snowballing/
+├── LICENSE
+└── README.md
 ```
----
 
+### Backward_Analysis
 
-## ✨ Main Features
+Contains datasets, scripts, notebooks, and experimental artifacts related to the evaluation of **backward snowballing**. This directory includes analyses performed using data collected from multiple academic indexing and snowballing tools.
 
-- 🔍 **Automatic import of articles** via the Semantic Scholar API, using the DOI of a seed article, for example: `10.1016/j.jss.2021.111044`.  
-  It is also possible to **export these articles in CSV format**.
+Detailed instructions for reproducing the experiments are available in:
 
-- ✅ **Manual screening** of articles, marking them as "**Include**" or "**Exclude**" for subsequent application of inclusion and exclusion criteria.
+```text
+Backward_Analysis/README.md
+```
 
-- 📝 **Insertion of inclusion and exclusion criteria** directly in the interface.
+### Forward_Analysis
 
-- 📊 **Initial analysis** of articles marked as "Include".
+Contains datasets, scripts, notebooks, and experimental artifacts related to the evaluation of **forward snowballing**. The analyses in this directory focus on the studies retrieved through forward citation tracking and their comparison across different tools.
 
-- 🤖 **Automated application** of inclusion and exclusion criteria with support from LLMs (language models).
+Detailed instructions for reproducing the experiments are available in:
 
-- 📄 **Export of the final screening results** in CSV format.
+```text
+Forward_Analysis/README.md
+```
 
----
+### Framework_snowballing
 
-## 🗂️ A. Repository Organization
-**1. `tools_analisys` (Analysis of 5 tools):**
-    The structure and description of this directory are provided in its own README file.
+Contains the source code and scripts that implement the SnowMap framework.
 
-**2. `Framework_Snowballing` (Prototype):**
-- `controllers/`: application logic.
-- `frontend/`: web interface.
-- `routes/`: application routes.
-- `scripts/`: auxiliary scripts.
-- `arquivo.json`: structured data.
-- `app.js`: main application file.
+Detailed instructions for reproducing the experiments are available in:
 
----
+```text
+Framework_snowballing/README.md
+```
 
-## ▶️ B. How to Run the Code
-The project was developed and validated on **Linux** environments.  
-Users operating on different systems may need to adjust certain commands or dependencies accordingly.
+## Getting Started
 
-1. Download the repository and unzip the files.
-2. To use the inclusion and exclusion criteria analysis feature with LLM support, you must add your Gemini API key to the analisa.js file.
-  - Navigate to the file:
-  ```bash
-    cd ./Framework_snowballing/scripts/
-  ```
-  - Open the analisa.js file and set your API key:
-  ```bash
-    API_KEY = 'YOUR_API_KEY'
-  ```
+Clone the repository:
 
-⚠️ Note: Only the LLM-based screening feature requires a Gemini API key. All other functionalities of the tool can be used without it.
-
-3. Install the required libraries (Node.js and Python).
-
-- Dependencies are listed in the `package.json` file.
-- Required libraries are listed in the `requirements.txt` .
 ```bash
-  cd ./Framework_snowballing
-  ```
-- To install, run:
-  ```bash
-  cd ./Framework_snowballing
-  npm install
-  pip install -r requirements.txt
-  ```
-- In the terminal, run:
-   ```bash
-   node app.js
-  ```
-- In your browser, go to: 
-  ```bash
-  `http://localhost:3000`
-  ```
-- Enter the DOI of the seed article and click **Search**.
-- A tutorial on how to use the tool and the expected outputs on each screen is available [here](<Tool Usage Tutorial.pdf>).
+git clone https://github.com/aisepucrio/forward-snowballing/tree/main
+cd forward-snowballing
+```
 
-## 📄 License
+Navigate to the directory of interest and follow the instructions provided in its corresponding `README.md` file.
 
-This project is licensed under the terms of the [MIT License](LICENSE).
+## Reproducibility
+
+This repository provides the datasets, scripts, and notebooks required to reproduce the analyses presented in the paper.
+
+The experimental workflow is divided according to the snowballing strategy being evaluated:
+
+* **Backward snowballing experiments:** `Backward_Analysis/`
+* **Forward snowballing experiments:** `Forward_Analysis/`
+* **Framework implementation:** `Framework_snowballing/`
+
+Each directory contains detailed documentation describing the required dependencies, execution steps, and expected outputs.
+
+## Requirements
+
+The dependencies required for each experiment are documented within the corresponding subdirectories.
+
+When available, install the required packages using:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Data Availability
+
+All datasets and experimental artifacts used in the study are provided within the repository unless otherwise stated in the corresponding documentation.
+
+The repository includes data collected from multiple academic indexing and snowballing tools, supporting the reproducibility of the analyses presented in the publication.
+
+
+
+## License
+
+This project is licensed under the terms described in the `LICENSE` file.

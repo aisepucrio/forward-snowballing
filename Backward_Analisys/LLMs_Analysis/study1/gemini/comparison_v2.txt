@@ -1,0 +1,104 @@
+Total: N=363
+
+- Precision: 0.3714
+- Recall: 0.4815
+- F1-score: 0.4194
+
+- True positives: 13
+- False positives: 22
+- False negatives: 14
+- True negatives: 314
+
+LLM = Inclusion ^ GT = Exclusion:
+- A Study on Software Metric Selection for Software Fault Prediction
+- A dynamical quality model to continuously monitor software maintenance
+- An investigation of cross-project learning in online just-in-time sotfware defect prediction
+- Automated defect prioritization based on defects resolved at various project periods
+- Automatically identifying code features for software defect prediction: Using AST N-grams
+- Buffer overflow detection for c programs is hard to learn
+- Classification based software defect prediction model for finance software system - An industry study
+- Cost Effectiveness of Software Defect Prediction in an
+Industrial Project
+- Domain Adaptation for Test Report Classification in Crowdsourced Testing
+- Fault Prediction for Large Scale Projects Using Deep Learning Techniques
+- Getting Defect Prediction Into Industrial Practice: the ELFF Tool
+- Improved approach for software defect prediction using artificial neural networks
+- Incorporating fault-proneness estimations into coverage-based test case prioritization methods
+- LTRWES: A new framework for security bug report detection
+- Learning Feature Representations from Change Dependency Graphs for Defect Prediction
+- Local-based active classification of test report to assist crowdsourced testing
+- On the Defect Prediction for Large Scale Software Systems â€“ From Defect Density to Machine Learning
+- Predicting Node failure in cloud service systems
+- Research on defect detection technology of trusted behavior decision tree based on intelligent data semantic analysis of massive data
+- Singling the odd ones out: A novelty detection approach to find defects in infrastructure-as-code
+- Software fault prediction based on one-class SVM
+- Textout: Detecting Text-Layout Bugs in Mobile Apps via Visualization-Oriented Learning
+
+LLM = Exclusion ^ GT = Inclusion:
+- A practical guide to support change-proneness prediction
+- Analyzing machine learning techniques for fault prediction using web applications
+- Conpredictor: Concurrency defect prediction in real-world applications
+- Convolutional Neural Networks over Control Flow Graphs for Software Defect Prediction
+- DeepBugs: a learning approach to name-based bug detection
+- DeepWukong: Statically Detecting Software Vulnerabilities Using Deep Graph Neural Network
+- Leopard: identifying vulnerable code for vulnerability assessment through program metrics
+- MTFuzz: Fuzzing with a multi-task neural network
+- OffSide: Learning to Identify Mistakes in Boundary Conditions
+- On the prediction of long-lived bugs: An analysis and comparative study using FLOSS projects
+- Precise learn-to-rank fault localization using dynamic and static features of target programs
+- Real-time incident prediction for online service systems
+- The importance of accounting for real-world labelling when predicting software vulnerabilities
+- Transductive Instance Transfer Learning for Cross-Language Defect Prediction
+
+
+Prompt---------------------------------------------------
+- title: Machine learning based defect prediction using industrial software metrics
+- abstract: This empirical study evaluates machine learning classifiers for predicting defective modules in an industrial software system. The study uses historical defect data and software metrics collected from a real company project, compares prediction performance, and discusses practical implications for software quality assurance.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "Machine learning based defect prediction using industrial software metrics",
+  "selected": 1
+}}
+
+ARTICLE TO ANALYZE:
+- title: A literature review of software defect prediction techniques
+- abstract: This paper reviews and summarizes existing software defect prediction approaches published in the literature. It compares prior studies, organizes machine learning techniques used in defect prediction, and identifies open research challenges.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "A literature review of software defect prediction techniques",
+  "selected": 0
+}}
+
+ARTICLE TO ANALYZE:
+- title: Deep learning for image classification in medical diagnosis
+- abstract: This paper proposes a convolutional neural network for classifying medical images. Experiments are performed on a public image dataset and results show improved diagnostic accuracy compared with previous image classification approaches.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "Deep learning for image classification in medical diagnosis",
+  "selected": 0
+}}
+
+
+ARTICLE TO ANALYZE:
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+EXACT OUTPUT FORMAT (JSON):
+{{
+  "title": "<repeat the article title>",
+  "selected": 0|1
+}}
+
+
+Rules:
+- Use only 0 or 1 in "selected".
+- Use selected 1 only if all inclusion criteria are satisfied and no exclusion criterion is satisfied.
+- Use selected 0 if any inclusion criterion is not satisfied.
+- Use selected 0 if any exclusion criterion is satisfied.
+- Prefer selected 0 when the abstract does not provide enough evidence to satisfy all inclusion criteria.
+- Do not include explanations, criterion labels, confidence, markdown, or extra keys.
+- Return only the JSON object.
+"""

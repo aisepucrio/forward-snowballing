@@ -10,6 +10,9 @@ router.get('/search', articlesController.searchByDOI);
 router.post('/marcar', articlesController.marcarArtigo);
 router.get('/artigos/incluidos', articlesController.getArtigosIncluidos);
 
+// atualizando flags do BD
+router.post('/flag', articlesController.updateFlag);
+
 // Rota que recebe os critérios e os artigos
 router.post('/', llmsController.analisar); // nome corrigido aqui também
 router.post('/analisar', llmsController.analisar);

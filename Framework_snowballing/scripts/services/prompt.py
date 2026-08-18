@@ -122,16 +122,37 @@ def _format_article_metadata(article: dict[str, Any]) -> str:
     )
 
 
+def _resolve_allowed_optional_fields(
+    criteria: dict[str, dict[str, str]],
+    criteria_metadata: dict[str, list[str]] | None,
+    optional_fields: tuple[str, ...],
+) -> set[str]:
+    if not criteria_metadata:
+        return set(optional_fields)
+
+    known_fields = set(optional_fields)
+    allowed: set[str] = set()
+    for criterion_id in expected_criteria_ids(criteria):
+        requested = criteria_metadata.get(criterion_id)
+        if requested is None:
+            allowed |= known_fields
+            continue
+        allowed |= (set(requested) & known_fields)
+    return allowed
+
+
 def generate_prompt(
     article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
+    extra_prompt: str = "",
 ) -> str:
     inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
     exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
     criteria_schema = _format_criteria_schema(criteria)
     article_metadata = _format_article_metadata(article)
+    extra_section = _format_extra_prompt(extra_prompt)
 
-    return f"""You are an expert researcher conducting a Systematic Review.
+    return f"""{extra_section}You are an expert researcher conducting a Systematic Review.
 Your task is to classify the article against each inclusion and exclusion criterion.
 
 Think through the criteria carefully before answering, but do not include your reasoning in the output.
@@ -183,9 +204,60 @@ CLASSIFICATION RULES:
 OUTPUT:
 - Return only valid compact JSON.
 - The JSON must contain exactly one top-level key: "criteria".
-- The "criteria" object must contain exactly these criterion keys and values "Yes" or "No":
+- The "criteria" object must contain exactly these criterion keys and values "Yes", "No", or "Unsure":
 {criteria_schema}
 - Do not include explanations, reasoning, confidence, markdown, or extra text.
+"""
+
+
+def generate_batch_prompt(
+    articles: list[dict[str, Any]],
+    criteria: dict[str, dict[str, str]],
+    extra_prompt: str = "",
+    criteria_metadata: dict[str, list[str]] | None = None,
+) -> str:
+    inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
+    exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
+    criteria_schema = _format_criteria_schema(criteria)
+    extra_section = _format_extra_prompt(extra_prompt)
+    articles_payload = []
+    optional_fields = (
+        "language",
+        "year",
+        "venue",
+        "open_access",
+        "keywords",
+        "pages",
+        "numpages",
+        "citationCount",
+    )
+    allowed_fields = _resolve_allowed_optional_fields(criteria, criteria_metadata, optional_fields)
+    for index, article in enumerate(articles):
+        payload = {
+            "index": index,
+            "title": _stringify_metadata_value(article.get("title")),
+            "abstract": _stringify_metadata_value(article.get("abstract")),
+        }
+        for field_name in optional_fields:
+            if field_name not in allowed_fields:
+                continue
+            field_value = article.get(field_name)
+            if field_value not in (None, "", "-"):
+                payload[field_name] = field_value
+        articles_payload.append(payload)
+
+    return f"""{extra_section}Screen each article for a systematic review.
+INCLUSION:
+{inclusion_criteria}
+EXCLUSION:
+{exclusion_criteria}
+ARTICLES:
+{json.dumps(articles_payload, ensure_ascii=False, separators=(",", ":"))}
+Return only compact JSON: {{"articles":[{{"index":0,"criteria":{criteria_schema}}}]}}
+Include every article in input order. Use "Yes", "No", or "Unsure" for every criterion.
+Use explicit metadata as evidence. Use "Unsure" only when the required information is absent.
+When language, year, venue, open_access, pages, or citationCount is present and the criterion asks about it, answer "Yes" or "No", never "Unsure".
+Language codes are explicit evidence: "en" means English, "pt" means Portuguese, and "es" means Spanish.
 """
 
 
@@ -245,4 +317,11 @@ def _format_criteria_schema(criteria: dict[str, dict[str, str]]) -> str:
     if not ids:
         return "{}"
 
-    return json.dumps({criterion_id: "Yes or No" for criterion_id in ids})
+    return json.dumps({criterion_id: "Yes, No, or Unsure" for criterion_id in ids})
+
+
+def _format_extra_prompt(extra_prompt: str) -> str:
+    cleaned = normalize_text(extra_prompt)
+    if not cleaned:
+        return ""
+    return f"ADDITIONAL INSTRUCTIONS\n{cleaned}\n\n"
