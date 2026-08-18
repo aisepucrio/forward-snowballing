@@ -13,6 +13,7 @@ from services.search import (
     build_pages,
     enrich_incomplete_citations,
     extract_npages,
+    fallback_openalex_by_title,
     reconstruct_abstract_from_inverted_index,
     search_combined,
 )
@@ -87,11 +88,17 @@ class CitationNormalizer:
 
 
 class OpenAlexReferenceProvider:
-    def get_references(self, doi):
+    def get_references(self, doi=None, openalex_id=None):
         try:
-            clean_doi = normalize_doi(doi)
-            url = f"https://api.openalex.org/works/https://doi.org/{clean_doi}"
-            resp = requests.get(url, timeout=30)
+            # As referências vêm do campo referenced_works do work no OpenAlex.
+            # O work pode ser localizado pelo DOI OU pelo openalex_id — este
+            # último é essencial para artigos sem DOI, que senão ficariam sem
+            # referências mesmo o OpenAlex tendo-as.
+            work_url = self._work_url(doi, openalex_id)
+            if not work_url:
+                return []
+
+            resp = requests.get(work_url, timeout=30)
             if resp.status_code != 200:
                 return []
 
@@ -103,7 +110,12 @@ class OpenAlexReferenceProvider:
             chunk_size = 50
             for index in range(0, len(refs_ids), chunk_size):
                 chunk = refs_ids[index:index + chunk_size]
-                batch_url = f"https://api.openalex.org/works?filter=openalex_id:{'|'.join(chunk)}"
+                # per-page é obrigatório: sem ele o OpenAlex devolve apenas 25
+                # resultados por página, truncando lotes maiores em silêncio.
+                batch_url = (
+                    f"https://api.openalex.org/works"
+                    f"?filter=openalex_id:{'|'.join(chunk)}&per-page={chunk_size}"
+                )
                 resp_batch = requests.get(batch_url, timeout=30)
                 if resp_batch.status_code != 200:
                     continue
@@ -115,6 +127,19 @@ class OpenAlexReferenceProvider:
         except Exception as exc:
             print(f"[ERROR OPENALEX] {exc}", file=sys.stderr)
             return []
+
+    def _work_url(self, doi, openalex_id):
+        if openalex_id:
+            # aceita tanto a URL completa quanto só o id (W123...)
+            short_id = str(openalex_id).rstrip("/").rsplit("/", 1)[-1]
+            if short_id:
+                return f"https://api.openalex.org/works/{short_id}"
+
+        clean_doi = normalize_doi(doi)
+        if clean_doi:
+            return f"https://api.openalex.org/works/https://doi.org/{clean_doi}"
+
+        return None
 
     def _map_reference(self, ref):
         primary_loc = ref.get("primary_location") or {}
@@ -215,11 +240,33 @@ class SnowballingPipeline:
         ):
             return cached
 
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            fut_paper = executor.submit(search_combined, search_input.doi, search_input.title)
-            fut_refs = executor.submit(self.reference_provider.get_references, search_input.doi) if search_input.doi else None
-            paper = fut_paper.result()
-            references = fut_refs.result() if fut_refs else []
+        if search_input.doi:
+            # DOI conhecido de início: busca o paper e as referências em paralelo.
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                fut_paper = executor.submit(search_combined, search_input.doi, search_input.title)
+                fut_refs = executor.submit(self.reference_provider.get_references, search_input.doi)
+                paper = fut_paper.result()
+                references = fut_refs.result()
+        else:
+            # Busca por título: os identificadores só são conhecidos depois de
+            # resolver o paper. Sem isso as referências sairiam sempre vazias.
+            paper = search_combined(search_input.doi, search_input.title)
+            resolved_doi = normalize_doi(paper.get("doi"))
+            openalex_id = paper.get("openalex_id")
+
+            # Artigos sem DOI (comuns em anais e periódicos regionais) ainda têm
+            # referências no OpenAlex, acessíveis pelo openalex_id. Se o paper
+            # resolvido não trouxe nenhum identificador, resolve o openalex_id
+            # pelo título antes de desistir das referências.
+            if not resolved_doi and not openalex_id:
+                openalex_match = fallback_openalex_by_title(search_input.title)
+                if openalex_match:
+                    openalex_id = openalex_match.get("openalex_id")
+                    resolved_doi = normalize_doi(openalex_match.get("doi")) or resolved_doi
+
+            references = self.reference_provider.get_references(
+                doi=resolved_doi, openalex_id=openalex_id
+            )
 
         citations = CitationNormalizer.normalize_counts(
             enrich_incomplete_citations(

@@ -18,6 +18,9 @@ from services.matching import merge_prefer_filled
 
 REQUEST_TIMEOUT = 12
 USER_AGENT = "forward-snowballing-app/1.0"
+# Teto de páginas ao paginar citações no OpenAlex (200 por página).
+# Evita que um artigo com dezenas de milhares de citações trave a busca.
+MAX_CITATION_PAGES = 10
 OPENALEX_CACHE = {}
 CROSSREF_CACHE = {}
 SEMANTIC_CACHE = {}
@@ -393,13 +396,32 @@ def get_openalex_citations(openalex_id):
         return []
 
 
-    url = f"https://api.openalex.org/works?filter=cites:{openalex_id}&per-page=200"
-    data = safe_get(url)
+    # O OpenAlex devolve no máximo 200 itens por página. Sem paginar, artigos
+    # com mais citações eram truncados silenciosamente em 200.
+    results = []
+    cursor = "*"
 
+    for _ in range(MAX_CITATION_PAGES):
+        url = (
+            f"https://api.openalex.org/works?filter=cites:{openalex_id}"
+            f"&per-page=200&cursor={cursor}"
+        )
+        data = safe_get(url)
 
-    if not data:
+        if not data:
+            break
+
+        page_results = data.get("results", [])
+        results.extend(page_results)
+
+        cursor = (data.get("meta") or {}).get("next_cursor")
+        if not cursor or not page_results:
+            break
+
+    if not results:
         return []
 
+    data = {"results": results}
 
     citations = []
 
@@ -847,8 +869,10 @@ def search_combined(doi=None, title=None):
             cached["from_cache"] = True
             return cached
 
-        paper_data = fallback_via_requests(cleaned_doi)
+        # OpenAlex primeiro: é a fonte com melhor cobertura e a que serve de base
+        # na fusão. O Semantic Scholar entra em seguida para complementar.
         openalex_data = fallback_openalex_by_doi(cleaned_doi)
+        paper_data = fallback_via_requests(cleaned_doi)
 
         if paper_data:
             semantic_doi = None
@@ -899,6 +923,16 @@ def search_combined(doi=None, title=None):
 
 
     if cleaned_title and not openalex_data and not paper_data and not crossref_data:
+        # OpenAlex primeiro. Se ele resolver um DOI, a busca recomeça pelo ramo de
+        # DOI, onde as duas fontes são consultadas e fundidas.
+        openalex_data = fallback_openalex_by_title(title)
+
+
+        openalex_doi = normalize_doi(openalex_data.get("doi")) if openalex_data else None
+        if openalex_doi:
+            return search_combined(doi=openalex_doi, title=None)
+
+
         paper_data = fallback_semantic_by_title(title)
 
 
@@ -915,20 +949,15 @@ def search_combined(doi=None, title=None):
                 return search_combined(doi=resolved_doi, title=None)
 
 
-            paper_data["citationCount"] = len(paper_data.get("citations", []))
-            return paper_data
-
-
-        openalex_data = fallback_openalex_by_title(title)
-
-
-        openalex_doi = normalize_doi(openalex_data.get("doi")) if openalex_data else None
-        if openalex_doi:
-            return search_combined(doi=openalex_doi, title=None)
-
-
+        # Nenhuma das duas resolveu DOI. Prefere o OpenAlex, que traz o
+        # openalex_id — sem ele as referências ficariam inacessíveis.
         if openalex_data:
             return attach_openalex_citations(openalex_data)
+
+
+        if paper_data:
+            paper_data["citationCount"] = len(paper_data.get("citations", []))
+            return paper_data
 
 
         crossref_data = fallback_crossref(title=title)
