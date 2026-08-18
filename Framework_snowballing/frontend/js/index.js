@@ -54,6 +54,73 @@ function obterPaperIdBd(cit) {
   return null;
 }
 
+// Mudanças de flag marcadas na tela mas ainda não gravadas no banco.
+// Chave: "search_id:paper_id" -> { search_id, paper_id, selected_first_page?, excluded_duplicate? }
+// Só viram UPDATE de fato quando o usuário clica em "Save Research State",
+// pra não abrir uma conexão com o Postgres a cada clique de include/exclude.
+window.pendingFlagChanges = window.pendingFlagChanges || {};
+
+function queueFlagChange({ searchId, paperId, selectedFirstPage, excludedDuplicate }) {
+  if (!searchId || !paperId) return;
+
+  const key = `${searchId}:${paperId}`;
+  const existing = window.pendingFlagChanges[key] || { search_id: searchId, paper_id: paperId };
+
+  if (selectedFirstPage !== undefined) existing.selected_first_page = selectedFirstPage;
+  if (excludedDuplicate !== undefined) existing.excluded_duplicate = excludedDuplicate;
+
+  window.pendingFlagChanges[key] = existing;
+  atualizarBotaoSalvar();
+}
+
+function atualizarBotaoSalvar() {
+  const btn = document.getElementById('saveStateBtn');
+  if (!btn) return;
+
+  const count = Object.keys(window.pendingFlagChanges || {}).length;
+  btn.disabled = count === 0;
+  btn.innerHTML = count > 0
+    ? `<i class="bi bi-cloud-arrow-up"></i> Save Research State (${count})`
+    : `<i class="bi bi-cloud-check"></i> Save Research State`;
+}
+
+async function salvarEstadoPesquisa() {
+  const updates = Object.values(window.pendingFlagChanges || {});
+  if (updates.length === 0) return;
+
+  const btn = document.getElementById('saveStateBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch('/api/articles/flag/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates })
+    });
+
+    if (!res.ok) throw new Error('Save failed');
+
+    window.pendingFlagChanges = {};
+    console.log(`[DB] Sucesso: ${updates.length} mudança(s) gravada(s) no PostgreSQL.`);
+
+    if (btn) {
+      btn.innerHTML = '<i class="bi bi-check2"></i> Saved!';
+      setTimeout(atualizarBotaoSalvar, 1500);
+    }
+  } catch (err) {
+    console.error('[ERRO DB] Falha ao salvar estado da pesquisa:', err);
+    alert('Failed to save research state. Your selections are kept locally — please try again.');
+    atualizarBotaoSalvar();
+  }
+}
+
+function haPendenciasNaoSalvas() {
+  return Object.keys(window.pendingFlagChanges || {}).length > 0;
+}
+
 function obterSearchIdAtual() {
   const radio = document.querySelector('input[name="snowballMode"]:checked');
   const mode = radio ? radio.value : 'forward';
@@ -96,29 +163,17 @@ async function toggleIncludeAll() {
 
   if (searchId) {
     const isSelected = (newState === 'incluir');
-    console.log(`[DB] Enviando atualização em lote (${newState}) para ${window.citationsData.length} itens...`);
 
-    const updates = window.citationsData.map((cit, index) => {
+    window.citationsData.forEach((cit, index) => {
       const paperIdBd = obterPaperIdBd(cit);
 
       if (!paperIdBd) {
         console.error(`[ERRO CRÍTICO] Falha ao mapear item ${index}:`, cit);
-        return Promise.resolve();
+        return;
       }
 
-      return fetch('/api/articles/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          search_id: searchId,
-          paper_id: paperIdBd,
-          selected_first_page: isSelected
-        })
-      });
+      queueFlagChange({ searchId, paperId: paperIdBd, selectedFirstPage: isSelected });
     });
-
-    await Promise.all(updates);
-    console.log('[DB] Sucesso: Todas as flags da busca foram salvas no PostgreSQL.');
   }
 }
 
@@ -246,6 +301,8 @@ async function buscarArtigo() {
     window.backwardData = null;
     window.citationsData = [];
     window.seedData = null;
+    window.pendingFlagChanges = {}; // nova busca, nova search_id: descarta pendências da busca anterior
+    atualizarBotaoSalvar();
 
     const searchPromise = fetch(buildSearchURL(inputValue, 'forward'))
       .then(r => {
@@ -462,21 +519,13 @@ function mostrarCitacoes(citacoes) {
     target: tbody,
     data: citacoes,
     showActions: true,
-    onAction: async (item, acao) => {
+    onAction: (item, acao) => {
       const paperIdBd = obterPaperIdBd(item);
       const searchId = obterSearchIdAtual();
 
       if (paperIdBd && searchId) {
         const isSelected = (acao === 'incluir');
-        await fetch('/api/articles/flag', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            search_id: searchId,
-            paper_id: paperIdBd,
-            selected_first_page: isSelected
-          })
-        });
+        queueFlagChange({ searchId, paperId: paperIdBd, selectedFirstPage: isSelected });
       }
 
       if (typeof atualizarContadores === 'function') {
@@ -637,7 +686,7 @@ function renderDedupRemovedSection() {
   `;
 }
 
-async function undoDedupRemoval(paperId) {
+function undoDedupRemoval(paperId) {
   const history = window.dedupRemovedHistory || [];
   const idx = history.findIndex(entry => entry.item.paperId === paperId);
   if (idx === -1) return;
@@ -648,15 +697,7 @@ async function undoDedupRemoval(paperId) {
   const searchId = obterSearchIdAtual();
   const paperIdBd = obterPaperIdBd(entry.item);
   if (searchId && paperIdBd) {
-    try {
-      await fetch('/api/articles/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ search_id: searchId, paper_id: paperIdBd, excluded_duplicate: false })
-      });
-    } catch (err) {
-      console.error('[ERRO DB] Falha ao desfazer remoção de duplicata:', err);
-    }
+    queueFlagChange({ searchId, paperId: paperIdBd, excludedDuplicate: false });
   }
 
   mostrarCitacoes(window.citationsData);
@@ -767,7 +808,7 @@ function resolveDedupPair(decision) {
 // (X button, backdrop click, Escape, or the Close button) applies whatever
 // duplicate decisions were made so far — matching the BPMN's "Existem novas
 // duplicatas? -> Não -> Seleciona artigos" transition.
-async function finishDedupReview() {
+function finishDedupReview() {
   const state = window.dedupState;
   window.dedupState = null;
 
@@ -777,29 +818,16 @@ async function finishDedupReview() {
   const searchId = obterSearchIdAtual();
 
   if (searchId && itensParaRemover.length > 0) {
-    console.log(`[DB] Marcando ${itensParaRemover.length} itens como excluded_duplicate no PostgreSQL...`);
-
-    const updates = itensParaRemover.map(cit => {
+    itensParaRemover.forEach(cit => {
       const paperIdBd = obterPaperIdBd(cit);
 
       if (!paperIdBd) {
         console.error('[ERRO DB] Não foi possível obter UUID para a duplicata:', cit);
-        return Promise.resolve();
+        return;
       }
 
-      return fetch('/api/articles/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          search_id: searchId,
-          paper_id: paperIdBd,
-          excluded_duplicate: true
-        })
-      });
+      queueFlagChange({ searchId, paperId: paperIdBd, excludedDuplicate: true });
     });
-
-    await Promise.all(updates);
-    console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.');
   }
 
   window.citationsData = (window.citationsData || []).filter(c => !state.toRemove.has(c.paperId));
@@ -817,6 +845,15 @@ if (dedupModalElem) {
   dedupModalElem.addEventListener('hidden.bs.modal', finishDedupReview);
 }
 
+// Avisa antes de fechar/recarregar a aba se houver marcações ainda não
+// gravadas no banco (o usuário precisa clicar em "Save Research State").
+window.addEventListener('beforeunload', (e) => {
+  if (haPendenciasNaoSalvas()) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
 document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
   radio.addEventListener('change', () => {
     const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
@@ -828,11 +865,14 @@ document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
 document.addEventListener('DOMContentLoaded', () => {
   const downloadBtn = document.getElementById('downloadBtn');
   const includeAllBtn = document.getElementById('includeAllBtn');
+  const saveStateBtn = document.getElementById('saveStateBtn');
 
   if (downloadBtn) downloadBtn.onclick = baixarCitationsCSV;
   if (includeAllBtn) includeAllBtn.onclick = toggleIncludeAll;
+  if (saveStateBtn) saveStateBtn.onclick = salvarEstadoPesquisa;
 
   atualizarBotaoIncludeAll();
+  atualizarBotaoSalvar();
 
   const linkAnalise = document.querySelector('a.nav-link[href="analysis.html"]');
   if (linkAnalise) {
@@ -849,6 +889,15 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('No article marked as "Include"');
         return;
       }
+
+      if (haPendenciasNaoSalvas() && !confirm('You have unsaved changes to the research state. Leave this page and discard them?')) {
+        return;
+      }
+
+      // guarda o search_id ativo pra sobreviver à navegação (analysis.html
+      // e, a partir dela, criterios.html precisam dele pra gravar criteria/
+      // criteria_logs, mas window.currentSearchId* só existe em memória aqui)
+      localStorage.setItem('currentSearchId', obterSearchIdAtual() || '');
 
       window.name = JSON.stringify(window.citationsData);
       window.location.href = 'analysis.html';
@@ -871,6 +920,14 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('No article marked as "Include"');
         return;
       }
+
+      if (haPendenciasNaoSalvas() && !confirm('You have unsaved changes to the research state. Leave this page and discard them?')) {
+        return;
+      }
+
+      // idem: criterios.js lê isso do localStorage pra saber a qual search_id
+      // gravar os critérios/vereditos da LLM
+      localStorage.setItem('currentSearchId', obterSearchIdAtual() || '');
 
       window.name = JSON.stringify(incluidos);
       window.location.href = 'criterios.html';
