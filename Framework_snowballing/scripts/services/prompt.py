@@ -196,9 +196,10 @@ REAL ARTICLE
 {article_metadata}
 
 CLASSIFICATION RULES:
-- For every criterion, answer "Yes", "No", or "Unsure".
-- Use explicit title, abstract, and metadata as evidence.
-- Answer "Unsure" only when the information required by the criterion is absent.
+- Consider each key in data to decide whether the article satisfies each criterion.
+- For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
+- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Yes" for ambiguous inclusion criteria and "No" for ambiguous exclusion criteria.
 
 OUTPUT:
 - Return only valid compact JSON.
