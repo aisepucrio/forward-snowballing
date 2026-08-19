@@ -267,14 +267,12 @@ const FilterComponent = (function () {
       <div style="display:flex;align-items:center;gap:8px;">
         <div class="filter-dropdown">
           <i class="bi bi-filter"></i>
-          <span>Filter By</span>
+          <span style="font-family: 'Poppins', sans-serif;">Filter By</span>
           <select id="status" name="status">
             <option value="todos">Todos</option>
             <option value="year-range">Year Range</option>
             <option value="author">Author</option>
             <option value="venue">Venue</option>
-            <option value="citation-count">Citation Count</option>
-            <option value="keyword">Keyword</option>
           </select>
         </div>
       </div>
@@ -295,9 +293,6 @@ const FilterComponent = (function () {
     activeFilters.years = [];
     activeFilters.authors = [];
     activeFilters.venues = [];
-    activeFilters.keywords = [];
-    activeFilters.openAccess = null;
-    activeFilters.citationCount = null;
 
     const full = window.allCitationsData || [];
     try { window.citationsData = full; } catch (err) {}

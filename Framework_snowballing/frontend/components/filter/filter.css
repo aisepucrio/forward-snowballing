@@ -1,7 +1,7 @@
 .filter-wrapper {
   display: inline-block;
   position: relative;
-  font-family: sans-serif;
+  font-family: 'Poppins', sans-serif;
   flex-shrink: 0;
   min-width: 0;
 }
