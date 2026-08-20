@@ -213,7 +213,16 @@ def semantic_fields():
         "citations.externalIds",
         "citations.abstract",
         "citations.citationCount",
-        "citations.referenceCount"
+        "citations.referenceCount",
+        "references",
+        "references.title",
+        "references.authors",
+        "references.year",
+        "references.venue",
+        "references.externalIds",
+        "references.abstract",
+        "references.citationCount",
+        "references.referenceCount"
     ])
 
 
@@ -905,6 +914,11 @@ def search_combined(doi=None, title=None):
 
             merged["doi"] = semantic_doi or cleaned_doi
             merged["citations"] = all_citations
+            # merge_prefer_filled não propaga "references" (só cuida dos campos
+            # escalares da whitelist) — sem isso, o Semantic Scholar nunca
+            # contribuía com referências pro backward snowballing, mesmo quando
+            # tinha a lista completa e o OpenAlex não.
+            merged["references"] = paper_data.get("references", []) or []
             merged["api"] = "semantic+openalex"
             merged["partial_result"] = False
 
@@ -1042,6 +1056,9 @@ def search_combined(doi=None, title=None):
 
 
         merged["citations"] = all_citations
+        # ver comentário equivalente acima: merge_prefer_filled não propaga
+        # "references" sozinho.
+        merged["references"] = paper_data.get("references", []) if paper_data else []
 
         merged["api"] = f'{openalex_data.get("api", "openalex")}+{paper_data.get("api", "semantic")}'
 
