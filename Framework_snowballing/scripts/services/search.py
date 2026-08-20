@@ -828,6 +828,9 @@ def cache_path_for_doi(doi):
     return cache_dir / f"cache_complete_{safe_doi}.json"
 
 def load_complete_cache(doi):
+    if os.getenv("SNOWMAP_DISABLE_CACHE"):
+        return None
+
     path = cache_path_for_doi(doi)
     if not path.exists():
         return None

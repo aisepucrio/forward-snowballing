@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from pathlib import Path
 import json
@@ -76,6 +77,9 @@ def save_to_cache(doi, title, data):
 
 
 def get_cached(doi=None, title=None, mode=None):
+    if os.getenv("SNOWMAP_DISABLE_CACHE"):
+        return None
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
