@@ -291,32 +291,43 @@ class SnowballingPipeline:
             print("[CACHE HIT - BACKWARD]", file=sys.stderr)
             return cached
 
-        paper = search_combined(doi=search_input.doi, title=search_input.title)
-
         # Semantic Scholar contribui direto (paper.get("references")) e o
         # OpenAlex é sempre buscado também, não só como fallback quando o S2
         # vem vazio: uma fonte sozinha raramente é completa (o S2 às vezes tem
         # a lista de referências bloqueada pela editora; o OpenAlex às vezes
         # extrai poucas do PDF) — mesmo padrão que citations já usa em
         # run_forward, combinando as duas fontes em vez de escolher uma.
+        if search_input.doi:
+            # DOI já conhecido: não precisa esperar o search_combined resolver
+            # nada pra consultar o OpenAlex, então as duas buscas rodam em
+            # paralelo — mesmo padrão do DOI branch de run_forward.
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                fut_paper = executor.submit(search_combined, search_input.doi, search_input.title)
+                fut_refs = executor.submit(self.reference_provider.get_references, search_input.doi)
+                paper = fut_paper.result()
+                openalex_references = fut_refs.result()
+        else:
+            # Busca por título: os identificadores só são conhecidos depois de
+            # resolver o paper, então aqui não dá pra paralelizar.
+            paper = search_combined(doi=search_input.doi, title=search_input.title)
+
+            resolved_doi = normalize_doi(paper.get("doi"))
+            openalex_id = paper.get("openalex_id")
+
+            # Artigos sem DOI (comuns em anais e periódicos regionais) ainda
+            # podem ter referências no OpenAlex, acessíveis pelo openalex_id.
+            if not resolved_doi and not openalex_id:
+                openalex_match = fallback_openalex_by_title(search_input.title)
+                if openalex_match:
+                    openalex_id = openalex_match.get("openalex_id")
+                    resolved_doi = normalize_doi(openalex_match.get("doi")) or resolved_doi
+
+            openalex_references = (
+                self.reference_provider.get_references(doi=resolved_doi, openalex_id=openalex_id)
+                if (resolved_doi or openalex_id) else []
+            )
+
         semantic_references = paper.get("references", []) or []
-
-        resolved_doi = normalize_doi(paper.get("doi")) or search_input.doi
-        openalex_id = paper.get("openalex_id")
-
-        # Artigos sem DOI (comuns em anais e periódicos regionais) ainda podem
-        # ter referências no OpenAlex, acessíveis pelo openalex_id.
-        if not resolved_doi and not openalex_id and search_input.title:
-            openalex_match = fallback_openalex_by_title(search_input.title)
-            if openalex_match:
-                openalex_id = openalex_match.get("openalex_id")
-                resolved_doi = normalize_doi(openalex_match.get("doi")) or resolved_doi
-
-        openalex_references = (
-            self.reference_provider.get_references(doi=resolved_doi, openalex_id=openalex_id)
-            if (resolved_doi or openalex_id) else []
-        )
-
         references = deduplicate_citations(semantic_references + openalex_references)
         references = enrich_incomplete_citations(references)
         references = CitationNormalizer.normalize_counts(references)
