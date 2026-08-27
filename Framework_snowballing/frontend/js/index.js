@@ -185,6 +185,28 @@ function buildSearchURL(inputValue, type) {
   return `/api/articles/search?${params.toString()}`;
 }
 
+// O card do seed article ("Seed Paper Analysis") mostra Citations/References
+// a partir de window.seedData.citations_retrieved / references_retrieved —
+// um snapshot estático tirado direto da busca original. Remover duplicatas
+// no popup só mexe em window.citationsData (a lista da tabela abaixo); sem
+// isso aqui, o card do seed nunca refletia a remoção, mesmo com a tabela já
+// atualizada.
+function sincronizarContagemSeed() {
+  if (!window.seedData) return;
+
+  const modeInput = document.querySelector('input[name="snowballMode"]:checked');
+  const mode = modeInput ? modeInput.value : 'forward';
+  const count = (window.citationsData || []).length;
+
+  if (mode === 'forward') {
+    window.seedData.citations_retrieved = count;
+  } else {
+    window.seedData.references_retrieved = count;
+  }
+
+  mostrarResultado(window.seedData, mode);
+}
+
 function trocarModo() {
   const mode = document.querySelector('input[name="snowballMode"]:checked').value;
   const list = mode === 'forward'
@@ -568,14 +590,50 @@ function normalizeTitleJs(title) {
   return title.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
 }
 
+// A busca já funde automaticamente quando o DOI bate exato (ver
+// build_dedup_key no backend) — o que sobra pra revisão manual é sobretudo
+// o caso em que só um dos dois lados tem DOI (ou nenhum), mas o título é
+// idêntico. Um dicionário com uma chave só (doi OU título, com prioridade)
+// não pega esse caso, porque os dois itens caem em chaves diferentes
+// ("doi:X" vs "title:Y") mesmo sendo o mesmo artigo. Por isso agrupa por
+// união: dois itens ficam no mesmo grupo se compartilham DOI OU título
+// idêntico (normalizado, sem fuzzy match).
 function findDuplicateGroups(list) {
-  const groups = {};
-  list.forEach(item => {
+  const parent = list.map((_, i) => i);
+  function find(i) {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  }
+  function union(a, b) {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[ra] = rb;
+  }
+
+  const byDoi = {};
+  const byTitle = {};
+  list.forEach((item, i) => {
     const doi = normalizeDoi(item.doi);
-    const key = doi ? `doi:${doi}` : `title:${normalizeTitleJs(item.title)}`;
-    if (!key || key === 'doi:null' || key === 'title:') return;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
+    if (doi) {
+      if (byDoi[doi] !== undefined) union(i, byDoi[doi]);
+      else byDoi[doi] = i;
+    }
+
+    const title = normalizeTitleJs(item.title);
+    if (title) {
+      if (byTitle[title] !== undefined) union(i, byTitle[title]);
+      else byTitle[title] = i;
+    }
+  });
+
+  const groups = {};
+  list.forEach((item, i) => {
+    const root = find(i);
+    if (!groups[root]) groups[root] = [];
+    groups[root].push(item);
   });
   return Object.values(groups).filter(g => g.length > 1);
 }
@@ -661,6 +719,7 @@ async function undoDedupRemoval(paperId) {
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
+  sincronizarContagemSeed();
   renderDedupRemovedSection();
 }
 
@@ -767,15 +826,30 @@ function resolveDedupPair(decision) {
 // (X button, backdrop click, Escape, or the Close button) applies whatever
 // duplicate decisions were made so far — matching the BPMN's "Existem novas
 // duplicatas? -> Não -> Seleciona artigos" transition.
-async function finishDedupReview() {
+function finishDedupReview() {
   const state = window.dedupState;
   window.dedupState = null;
 
   if (!state || state.toRemove.size === 0) return;
 
   const itensParaRemover = (window.citationsData || []).filter(c => state.toRemove.has(c.paperId));
-  const searchId = obterSearchIdAtual();
 
+  // A tabela atualiza já, na hora — não espera o POST no banco. Antes disso
+  // vinha depois de um `await Promise.all(updates)` sem try/catch: se
+  // qualquer POST falhasse (rede, banco fora do ar), a exceção não tratada
+  // abortava a função e as duplicatas nunca saíam da tabela, mesmo com o
+  // popup já fechado.
+  window.citationsData = (window.citationsData || []).filter(c => !state.toRemove.has(c.paperId));
+  window.dedupRemovedHistory = [
+    ...(window.dedupRemovedHistory || []),
+    ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
+  ];
+
+  mostrarCitacoes(window.citationsData);
+  atualizarBotaoIncludeAll();
+  sincronizarContagemSeed();
+
+  const searchId = obterSearchIdAtual();
   if (searchId && itensParaRemover.length > 0) {
     console.log(`[DB] Marcando ${itensParaRemover.length} itens como excluded_duplicate no PostgreSQL...`);
 
@@ -798,18 +872,10 @@ async function finishDedupReview() {
       });
     });
 
-    await Promise.all(updates);
-    console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.');
+    Promise.all(updates)
+      .then(() => console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.'))
+      .catch(err => console.error('[ERRO DB] Falha ao gravar excluded_duplicate:', err));
   }
-
-  window.citationsData = (window.citationsData || []).filter(c => !state.toRemove.has(c.paperId));
-  window.dedupRemovedHistory = [
-    ...(window.dedupRemovedHistory || []),
-    ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
-  ];
-
-  mostrarCitacoes(window.citationsData);
-  atualizarBotaoIncludeAll();
 }
 
 const dedupModalElem = document.getElementById('dedupModal');
