@@ -73,7 +73,18 @@ def safe_get(url, headers=None):
     headers.update({"User-Agent": USER_AGENT})
 
 
-    for attempt in range(2):
+    # Sem SEMANTIC_API_KEY, 429 é o caso comum (rate limit não-autenticado da
+    # Semantic Scholar), não uma falha excepcional — por isso ele leva mais
+    # tentativas e espera de verdade o Retry-After, ao contrário de erro de
+    # rede/5xx, que é retry curto, e 4xx que não é 429, que não é retryable.
+    max_attempts_429 = 3
+    max_attempts_other = 2
+    max_wait_seconds = 8
+
+    attempt_429 = 0
+    attempt_other = 0
+
+    while attempt_429 < max_attempts_429 and attempt_other < max_attempts_other:
         try:
             response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
 
@@ -90,14 +101,29 @@ def safe_get(url, headers=None):
 
             if response.status_code == 429:
                 retry_after = response.headers.get("Retry-After")
-                wait_time = min(int(retry_after), 2) if retry_after else attempt + 1
+                try:
+                    wait_time = min(int(retry_after), max_wait_seconds) if retry_after else min(2 ** attempt_429, max_wait_seconds)
+                except (TypeError, ValueError):
+                    # Retry-After às vezes vem como data HTTP em vez de segundos.
+                    wait_time = min(2 ** attempt_429, max_wait_seconds)
+                attempt_429 += 1
                 time.sleep(wait_time)
                 continue
 
+            if response.status_code >= 500:
+                # Erro do lado do servidor: pode ser transitório, vale tentar
+                # de novo (mesmo orçamento de tentativas do erro de rede).
+                attempt_other += 1
+                time.sleep(attempt_other)
+                continue
+
+            # 4xx que não é 429 (401/403/404/...) não é retryable: a resposta
+            # não muda tentando de novo.
             return None
-            
+
         except Exception:
-            time.sleep(attempt + 1)
+            attempt_other += 1
+            time.sleep(attempt_other)
             continue
 
 
@@ -716,6 +742,30 @@ def fallback_crossref_batch_by_doi(dois, batch_size=20):
 
 
 
+def semantic_references_blocked_warning(paper_data):
+    """
+    A Semantic Scholar às vezes sabe QUANTAS referências um paper tem
+    (referenceCount, metadado público) mas não libera a LISTA em si
+    (references vem null) — bloqueio da editora, não erro de request.
+    Sem isso sinalizado, o backward parecia ter perdido dado silenciosamente
+    quando na real não havia nada a mais pra recuperar da S2 nesse paper.
+    """
+    if not paper_data:
+        return None
+
+    has_reference_list = bool(paper_data.get("references"))
+    reported_count = paper_data.get("referenceCount")
+
+    if not has_reference_list and reported_count:
+        return (
+            f"Semantic Scholar reporta {reported_count} referências para este "
+            "paper, mas não disponibiliza a lista (bloqueio da editora). "
+            "Contagem final usa apenas o que a OpenAlex conseguiu recuperar."
+        )
+
+    return None
+
+
 def get_citation_doi(citation):
     doi = normalize_doi(citation.get("doi"))
     if doi:
@@ -922,6 +972,11 @@ def search_combined(doi=None, title=None):
             merged["api"] = "semantic+openalex"
             merged["partial_result"] = False
 
+            semantic_block_warning = semantic_references_blocked_warning(paper_data)
+            if semantic_block_warning:
+                merged["warning"] = semantic_block_warning
+                merged["partial_result"] = True
+
             save_complete_cache(cleaned_doi, merged)
 
             return merged
@@ -1061,6 +1116,12 @@ def search_combined(doi=None, title=None):
         merged["references"] = paper_data.get("references", []) if paper_data else []
 
         merged["api"] = f'{openalex_data.get("api", "openalex")}+{paper_data.get("api", "semantic")}'
+
+        if paper_data:
+            semantic_block_warning = semantic_references_blocked_warning(paper_data)
+            if semantic_block_warning:
+                merged["warning"] = semantic_block_warning
+                merged["partial_result"] = True
 
 
 
