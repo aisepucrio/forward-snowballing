@@ -252,6 +252,49 @@ def semantic_fields():
     ])
 
 
+def enrich_semantic_records(data):
+    if not data:
+        return data
+
+    for relation in ("citations", "references"):
+        records = data.get(relation) or []
+        for index, record in enumerate(records):
+            if not isinstance(record, dict):
+                continue
+
+            record["source"] = "semantic"
+            has_title = not is_missing(record.get("title"))
+            has_doi = bool(get_citation_doi(record))
+            if has_title or has_doi or not record.get("paperId"):
+                continue
+
+            paper_url = (
+                f"https://api.semanticscholar.org/graph/v1/paper/"
+                f"{record['paperId']}?fields="
+                "paperId,title,externalIds,year,venue,abstract,authors,"
+                "citationCount,referenceCount"
+            )
+            detailed = safe_get(paper_url, headers=semantic_headers())
+            if detailed:
+                for field, value in detailed.items():
+                    if is_missing(record.get(field)) and not is_missing(value):
+                        record[field] = value
+                record["source"] = "semantic"
+
+            records[index] = record
+
+    return data
+
+
+def tag_source(records, source):
+    tagged = []
+    for record in records or []:
+        item = dict(record)
+        item["source"] = item.get("source") or source
+        tagged.append(item)
+    return tagged
+
+
 def fallback_via_requests(doi):
     normalized_doi = normalize_doi(doi)
     if not normalized_doi:
@@ -268,6 +311,7 @@ def fallback_via_requests(doi):
     if not data:
         return None
 
+    data = enrich_semantic_records(data)
     data["api"] = "semantic_doi_lookup"
 
     return data
@@ -340,6 +384,7 @@ def fallback_semantic_by_title(title):
         return None
 
 
+    data = enrich_semantic_records(data)
     data["api"] = "semantic_title_paperid_fallback"
 
     SEMANTIC_CACHE[cache_key] = data
@@ -766,6 +811,71 @@ def semantic_references_blocked_warning(paper_data):
     return None
 
 
+def merge_semantic_with_openalex(semantic_data, openalex_data):
+    semantic_data = semantic_data or {}
+    openalex_data = openalex_data or {}
+
+    merged = semantic_data.copy()
+    merged = merge_prefer_filled(merged, openalex_data)
+
+    semantic_citations = tag_source(semantic_data.get("citations"), "semantic")
+    openalex_citations = tag_source(openalex_data.get("citations"), "openalex")
+    merged["citations"] = merge_records_across_sources(
+        semantic_citations,
+        openalex_citations,
+    )
+
+    semantic_references = tag_source(semantic_data.get("references"), "semantic")
+    openalex_references = tag_source(openalex_data.get("references"), "openalex")
+    merged["references"] = merge_records_across_sources(
+        semantic_references,
+        openalex_references,
+    )
+
+    merged["api"] = "semantic+openalex"
+    merged["partial_result"] = False
+    merged["semantic_citation_count"] = semantic_data.get("citationCount")
+    merged["semantic_reference_count"] = semantic_data.get("referenceCount")
+    merged["openalex_citation_count"] = openalex_data.get("citations_count")
+    return merged
+
+
+def merge_records_across_sources(primary_records, secondary_records):
+    """Remove only records that overlap between two different sources."""
+    primary_records = [dict(record) for record in (primary_records or [])]
+    secondary_records = [dict(record) for record in (secondary_records or [])]
+
+    primary_by_key = {}
+    for record in primary_records:
+        key = get_record_key(record)
+        if key and key not in primary_by_key:
+            primary_by_key[key] = record
+
+    merged = primary_records[:]
+    for record in secondary_records:
+        key = get_record_key(record)
+        if key and key in primary_by_key:
+            primary_by_key[key].update({
+                field: value
+                for field, value in record.items()
+                if field_missing(primary_by_key[key].get(field))
+                and not field_missing(value)
+            })
+            continue
+        merged.append(record)
+
+    return merged
+
+
+def get_record_key(record):
+    doi = get_citation_doi(record)
+    if doi:
+        return f"doi:{doi}"
+
+    title = normalize_title(record.get("title"))
+    return f"title:{title}" if title else None
+
+
 def get_citation_doi(citation):
     doi = normalize_doi(citation.get("doi"))
     if doi:
@@ -931,10 +1041,9 @@ def search_combined(doi=None, title=None):
             cached["from_cache"] = True
             return cached
 
-        # OpenAlex primeiro: é a fonte com melhor cobertura e a que serve de base
-        # na fusão. O Semantic Scholar entra em seguida para complementar.
-        openalex_data = fallback_openalex_by_doi(cleaned_doi)
+        # Semantic Scholar é a fonte prioritária; OpenAlex complementa a resposta.
         paper_data = fallback_via_requests(cleaned_doi)
+        openalex_data = fallback_openalex_by_doi(cleaned_doi)
 
         if paper_data:
             semantic_doi = None
@@ -945,33 +1054,23 @@ def search_combined(doi=None, title=None):
             paper_data["doi"] = semantic_doi or cleaned_doi
 
 
-            semantic_citations = paper_data.get("citations", []) or []
-
-
-            openalex_citations = []
             if openalex_data and openalex_data.get("openalex_id"):
-                openalex_citations = get_openalex_citations(openalex_data["openalex_id"])
+                openalex_data["citations"] = get_openalex_citations(
+                    openalex_data["openalex_id"]
+                )
 
-
-            all_citations = deduplicate_citations(
-                semantic_citations + openalex_citations
+            print(
+                f"[SOURCE COUNTS] Semantic: citations={len(paper_data.get('citations', []) or [])}, "
+                f"references={len(paper_data.get('references', []) or [])}; "
+                f"OpenAlex: citations={len(openalex_data.get('citations', []) or []) if openalex_data else 0}, "
+                f"references={len(openalex_data.get('references', []) or []) if openalex_data else 0}",
+                file=sys.stderr,
             )
 
-
-            merged = openalex_data.copy() if openalex_data else {}
-            merged = merge_prefer_filled(merged, paper_data)
+            merged = merge_semantic_with_openalex(paper_data, openalex_data)
 
 
             merged["doi"] = semantic_doi or cleaned_doi
-            merged["citations"] = all_citations
-            # merge_prefer_filled não propaga "references" (só cuida dos campos
-            # escalares da whitelist) — sem isso, o Semantic Scholar nunca
-            # contribuía com referências pro backward snowballing, mesmo quando
-            # tinha a lista completa e o OpenAlex não.
-            merged["references"] = paper_data.get("references", []) or []
-            merged["api"] = "semantic+openalex"
-            merged["partial_result"] = False
-
             semantic_block_warning = semantic_references_blocked_warning(paper_data)
             if semantic_block_warning:
                 merged["warning"] = semantic_block_warning
@@ -995,16 +1094,8 @@ def search_combined(doi=None, title=None):
 
 
     if cleaned_title and not openalex_data and not paper_data and not crossref_data:
-        # OpenAlex primeiro. Se ele resolver um DOI, a busca recomeça pelo ramo de
-        # DOI, onde as duas fontes são consultadas e fundidas.
-        openalex_data = fallback_openalex_by_title(title)
-
-
-        openalex_doi = normalize_doi(openalex_data.get("doi")) if openalex_data else None
-        if openalex_doi:
-            return search_combined(doi=openalex_doi, title=None)
-
-
+        # Semantic Scholar é tentado primeiro. Se resolver um DOI, o ramo de DOI
+        # consulta as duas fontes e faz a fusão.
         paper_data = fallback_semantic_by_title(title)
 
 
@@ -1020,9 +1111,15 @@ def search_combined(doi=None, title=None):
             if resolved_doi:
                 return search_combined(doi=resolved_doi, title=None)
 
+        openalex_data = fallback_openalex_by_title(title)
 
-        # Nenhuma das duas resolveu DOI. Prefere o OpenAlex, que traz o
-        # openalex_id — sem ele as referências ficariam inacessíveis.
+        openalex_doi = normalize_doi(openalex_data.get("doi")) if openalex_data else None
+        if openalex_doi:
+            return search_combined(doi=openalex_doi, title=None)
+
+
+        # Nenhuma das duas resolveu DOI. O OpenAlex ainda é preferido por trazer
+        # o openalex_id, que permite recuperar citações adicionais.
         if openalex_data:
             return attach_openalex_citations(openalex_data)
 
@@ -1113,7 +1210,10 @@ def search_combined(doi=None, title=None):
         merged["citations"] = all_citations
         # ver comentário equivalente acima: merge_prefer_filled não propaga
         # "references" sozinho.
-        merged["references"] = paper_data.get("references", []) if paper_data else []
+        merged["references"] = merge_records_across_sources(
+            paper_data.get("references", []) if paper_data else [],
+            openalex_data.get("references", []) if openalex_data else [],
+        )
 
         merged["api"] = f'{openalex_data.get("api", "openalex")}+{paper_data.get("api", "semantic")}'
 
