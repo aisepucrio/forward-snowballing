@@ -12,6 +12,9 @@ from services.normalize import normalize_doi
 from services.search import (
     build_pages,
     enrich_incomplete_citations,
+    get_record_key,
+    merge_records_across_sources,
+    tag_source,
     extract_npages,
     fallback_openalex_by_title,
     reconstruct_abstract_from_inverted_index,
@@ -117,7 +120,9 @@ class OpenAlexReferenceProvider:
                 return []
 
             references = []
+            resolved_ids = set()
             chunk_size = 50
+            failed_batches = 0
             for index in range(0, len(refs_ids), chunk_size):
                 chunk = refs_ids[index:index + chunk_size]
                 # per-page é obrigatório: sem ele o OpenAlex devolve apenas 25
@@ -128,9 +133,38 @@ class OpenAlexReferenceProvider:
                 )
                 resp_batch = requests.get(batch_url, timeout=30)
                 if resp_batch.status_code != 200:
+                    failed_batches += 1
                     continue
 
-                references.extend(self._map_reference(ref) for ref in resp_batch.json().get("results", []))
+                batch_results = resp_batch.json().get("results", [])
+                references.extend(self._map_reference(ref) for ref in batch_results)
+                resolved_ids.update(
+                    str(ref.get("id", "")).rstrip("/").rsplit("/", 1)[-1]
+                    for ref in batch_results
+                    if ref.get("id")
+                )
+
+            # Alguns IDs não aparecem no filtro em lote, embora ainda possam
+            # retornar metadados quando consultados individualmente.
+            recovered_individually = 0
+            for reference_id in refs_ids:
+                short_id = str(reference_id).rstrip("/").rsplit("/", 1)[-1]
+                if short_id in resolved_ids:
+                    continue
+
+                individual = requests.get(
+                    f"https://api.openalex.org/works/{short_id}",
+                    timeout=30,
+                )
+                if individual.status_code != 200:
+                    continue
+
+                reference_data = individual.json()
+                if reference_data.get("title") or reference_data.get("doi"):
+                    mapped_reference = self._map_reference(reference_data)
+                    mapped_reference["openalex_id"] = reference_data.get("id")
+                    references.append(mapped_reference)
+                    recovered_individually += 1
 
             # O OpenAlex às vezes lista, no work original, referenced_works que
             # não resolvem mais em /works (work deletado/mesclado do lado
@@ -139,6 +173,13 @@ class OpenAlexReferenceProvider:
             # perda de dado nossa. Não tem como recuperar isso; só dá pra
             # avisar.
             missing = len(refs_ids) - len(references)
+            print(
+                f"[OPENALEX REFERENCES] listed={len(refs_ids)}, "
+                f"resolved={len(references)}, missing={missing}, "
+                f"recovered_individually={recovered_individually}, "
+                f"failed_batches={failed_batches}",
+                file=sys.stderr,
+            )
             if missing > 0:
                 self.last_warning = (
                     f"OpenAlex lista {len(refs_ids)} referências para este paper, mas "
@@ -226,6 +267,9 @@ class SnowballingResultBuilder:
             # referências/citações sai menor e nada no resultado explica por quê.
             "warning": paper.get("warning"),
             "partial_result": paper.get("partial_result", False),
+            "semantic_citation_count": paper.get("semantic_citation_count"),
+            "semantic_reference_count": paper.get("semantic_reference_count"),
+            "openalex_citation_count": paper.get("openalex_citation_count"),
         }
 
     def build_forward(self, search_input, paper, citations, references):
@@ -304,17 +348,57 @@ class SnowballingPipeline:
         # duas fontes aqui, o forward ficava com o "References" contando só o
         # que o OpenAlex resolveu, bem menor do que a busca backward do mesmo
         # paper (que já fazia o merge desde o commit anterior).
-        semantic_references = paper.get("references", []) or []
+        semantic_references = tag_source(paper.get("references"), "semantic")
+        paper["citations"] = tag_source(paper.get("citations"), "semantic")
+        semantic_citations = paper.get("citations", []) or []
+
+        print(
+            f"[SOURCE COUNTS] Semantic: references={len(semantic_references)}; "
+            f"OpenAlex: references={len(openalex_references)}",
+            file=sys.stderr,
+        )
+        print(
+            f"[SEED COUNTS] Semantic: citations={paper.get('semantic_citation_count')}, "
+            f"references={paper.get('semantic_reference_count')}; "
+            f"OpenAlex: citations={paper.get('openalex_citation_count')}, "
+            f"references_listed={len(openalex_references)}",
+            file=sys.stderr,
+        )
 
         citations = CitationNormalizer.normalize_counts(
             enrich_incomplete_citations(
-                deduplicate_citations(paper.get("citations", []))
+                paper.get("citations", [])
             )
         )
         references = CitationNormalizer.normalize_counts(
             enrich_incomplete_citations(
-                deduplicate_citations(semantic_references + openalex_references)
+                merge_records_across_sources(
+                    semantic_references,
+                    openalex_references,
+                )
             )
+        )
+
+        semantic_reference_keys = {
+            get_record_key(item) for item in semantic_references
+        }
+        cross_source_matches = sum(
+            1 for record in openalex_references
+            if get_record_key(record) in semantic_reference_keys
+        )
+
+        print(
+            f"[DEDUP COUNTS] References: semantic={len(semantic_references)}, "
+            f"openalex={len(openalex_references)}, "
+            f"cross_source_matches={cross_source_matches}, "
+            f"final_after_merge={len(references)}",
+            file=sys.stderr,
+        )
+
+        print(
+            f"[SOURCE COUNTS] Final forward: citations={len(citations)}, "
+            f"references={len(references)}",
+            file=sys.stderr,
         )
 
         openalex_warning = self.reference_provider.last_warning
@@ -374,10 +458,24 @@ class SnowballingPipeline:
                 if (resolved_doi or openalex_id) else []
             )
 
-        semantic_references = paper.get("references", []) or []
-        references = deduplicate_citations(semantic_references + openalex_references)
+        semantic_references = tag_source(paper.get("references"), "semantic")
+        paper["citations"] = tag_source(paper.get("citations"), "semantic")
+        print(
+            f"[SOURCE COUNTS] Semantic: references={len(semantic_references)}; "
+            f"OpenAlex: references={len(openalex_references)}",
+            file=sys.stderr,
+        )
+        references = merge_records_across_sources(
+            semantic_references,
+            openalex_references,
+        )
         references = enrich_incomplete_citations(references)
         references = CitationNormalizer.normalize_counts(references)
+
+        print(
+            f"[SOURCE COUNTS] Final backward: references={len(references)}",
+            file=sys.stderr,
+        )
 
         openalex_warning = self.reference_provider.last_warning
         if openalex_warning:
