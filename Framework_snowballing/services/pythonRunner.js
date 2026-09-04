@@ -114,9 +114,7 @@ class PythonRunner {
       });
 
       pythonProcess.stderr.on('data', (data) => {
-        const errorChunk = data.toString();
-        errorOutput += errorChunk;
-        process.stderr.write(errorChunk);
+        errorOutput += data.toString();
         if (errorOutput.length > MAX_OUTPUT_BYTES) {
           onMaxBufferExceeded();
         }
