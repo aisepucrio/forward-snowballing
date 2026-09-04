@@ -50,7 +50,7 @@ const TableComponent = (function () {
 
     const pagesValue = item.numpages != null ? item.numpages : item.pages;
     if (pagesValue != null && pagesValue !== '-') {
-      tags.push(`<span class="paper-tag pages-tag">Pages: ${escapeHtml(String(pagesValue))}</span>`);
+      tags.push(`<span class="paper-tag pages-tag">Pg. ${escapeHtml(String(pagesValue))}</span>`);
     }
 
     if (isOpenAccess(item.open_access)) {
@@ -58,7 +58,7 @@ const TableComponent = (function () {
     }
 
     if (item.language && item.language !== '-') {
-      tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language)}</span>`);
+      tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language.toUpperCase())}</span>`);
     }
 
     return tags.join('');

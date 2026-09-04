@@ -151,10 +151,14 @@ async function toggleIncludeAll() {
 
   const newState = determinarAcaoIncludeAll(window.citationsData);
 
-  window.citationsData = window.citationsData.map(c => ({
-    ...c,
-    selecionado: newState
-  }));
+  // Mutação in-place, e não .map criando objetos novos: citationsData e
+  // allCitationsData compartilham os mesmos objetos, então recriá-los aqui
+  // fazia a marcação sumir assim que qualquer filtro fosse aplicado (o filtro
+  // parte de allCitationsData, que ficava com os objetos antigos). É também o
+  // que o toggle individual já faz.
+  window.citationsData.forEach(c => {
+    c.selecionado = newState;
+  });
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
@@ -283,8 +287,23 @@ function trocarModo() {
   }));
   window.rawCitationsData = mappedList;
   window.citationsData = [...mappedList];
+  window.allCitationsData = window.citationsData;
   window.dedupApplied = false;
   window.dedupRemovedHistory = []; // reset on new search, so old removals don't bleed into a new dataset
+
+  // Citations e References são populações diferentes: os autores, venues e anos
+  // de uma não valem para a outra. Zerar os filtros e reconstruir a lista aberta
+  // com os dados novos evita dois problemas — a tabela voltar sem filtro
+  // enquanto os botões seguem marcados, e as listas de autor/venue continuarem
+  // mostrando o dataset anterior com contagens erradas.
+  if (window.FilterComponent) {
+    if (typeof window.FilterComponent.clearActiveFilters === 'function') {
+      window.FilterComponent.clearActiveFilters();
+    }
+    if (typeof window.FilterComponent.refreshOpenSubmenu === 'function') {
+      window.FilterComponent.refreshOpenSubmenu();
+    }
+  }
   const dedupBtn = document.getElementById('dedupBtn');
   if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
 
@@ -750,7 +769,10 @@ function undoDedupRemoval(paperId) {
   if (idx === -1) return;
 
   const [entry] = history.splice(idx, 1);
+  // Restaurado nas duas listas, pelo mesmo motivo da remoção: allCitationsData
+  // é a base que os filtros leem.
   window.citationsData = [...(window.citationsData || []), entry.item];
+  window.allCitationsData = [...(window.allCitationsData || []), entry.item];
 
   const searchId = obterSearchIdAtual();
   const paperIdBd = obterPaperIdBd(entry.item);
@@ -907,6 +929,20 @@ function finishDedupReview() {
       .then(() => console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.'))
       .catch(err => console.error('[ERRO DB] Falha ao gravar excluded_duplicate:', err));
   }
+
+  // A remoção precisa valer também na base que o filtro usa. Sem isso, aplicar
+  // qualquer filtro depois partia de allCitationsData — que ainda continha as
+  // duplicatas — e elas reapareciam na tabela.
+  const semRemovidos = (itens) => (itens || []).filter(c => !state.toRemove.has(c.paperId));
+  window.citationsData = semRemovidos(window.citationsData);
+  window.allCitationsData = semRemovidos(window.allCitationsData);
+  window.dedupRemovedHistory = [
+    ...(window.dedupRemovedHistory || []),
+    ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
+  ];
+
+  mostrarCitacoes(window.citationsData);
+  atualizarBotaoIncludeAll();
 }
 
 const dedupModalElem = document.getElementById('dedupModal');
@@ -1001,5 +1037,10 @@ document.addEventListener('DOMContentLoaded', () => {
       window.name = JSON.stringify(incluidos);
       window.location.href = 'criterios.html';
     });
+  }
+
+  // Inicializa o componente de filtro, se disponível
+  if (window.FilterComponent && typeof FilterComponent.init === 'function') {
+    try { FilterComponent.init(); } catch (err) { console.warn('Falha ao inicializar FilterComponent:', err); }
   }
 });
