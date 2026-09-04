@@ -2,7 +2,7 @@
 # Install with: pip install -r requirements.txt
 
 # API Communication
-requests==2.32.3
+requests>=2.33.0
 semanticscholar==0.10.0
 
 # Data Processing

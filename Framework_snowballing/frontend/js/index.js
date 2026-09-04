@@ -409,6 +409,34 @@ function buscarArtigoNavbar() {
   buscarArtigo();
 }
 
+// O pipeline já calcula `warning` e `partial_result` quando uma das fontes
+// falha (Semantic Scholar fora do ar, editora bloqueando a lista de
+// referências, work IDs que o OpenAlex não resolve mais), mas até aqui esses
+// campos morriam no JSON: a tela mostrava só os números. O efeito era o pior
+// possível numa revisão sistemática — a mesma busca devolvia 19 ou 132
+// citações dependendo do dia, sem nada na interface indicando que o resultado
+// tinha vindo de uma fonte só.
+function construirAvisoResultadoParcial(artigo) {
+  if (!artigo || (!artigo.partial_result && !artigo.warning)) return '';
+
+  const mensagens = String(artigo.warning || 'Partial result: not every source answered this search.')
+    .split('|')
+    .map(trecho => trecho.trim())
+    .filter(Boolean);
+
+  return `
+    <div class="alert alert-warning d-flex gap-2 mb-3 py-2 px-3" role="alert" style="font-size:0.85rem;">
+      <i class="bi bi-exclamation-triangle-fill flex-shrink-0" style="line-height:1.4;"></i>
+      <div>
+        <strong>Incomplete result — counts below may understate the real numbers.</strong>
+        <ul class="mb-0 mt-1 ps-3">
+          ${mensagens.map(m => `<li>${TableComponent.escapeHtml(m)}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
 function mostrarResultado(artigo, modo = 'forward') {
   if (!artigo || !artigo.title) {
     document.getElementById('resultado').innerHTML = '<p>Article not found.</p>';
@@ -422,9 +450,11 @@ function mostrarResultado(artigo, modo = 'forward') {
   const contagemReferences = artigo.references_retrieved ?? artigo.references_count ?? '-';
   const keywordsToShow = artigo.keywords || [];
   const keywordsText = TableComponent.formatKeywords(keywordsToShow);
+  const avisoResultadoParcial = construirAvisoResultadoParcial(artigo);
   const abstractText = artigo.abstract || '-';
 
   const cardHTML = `
+  ${avisoResultadoParcial}
   <div class="table-wrapper mb-4">
     <div class="table-topbar">
       <div class="table-info">

@@ -3,6 +3,7 @@ import re
 import sys
 import time
 import json
+import threading
 import requests
 from pathlib import Path
 
@@ -21,6 +22,50 @@ USER_AGENT = "forward-snowballing-app/1.0"
 # Teto de páginas ao paginar citações no OpenAlex (200 por página).
 # Evita que um artigo com dezenas de milhares de citações trave a busca.
 MAX_CITATION_PAGES = 10
+# Similaridade mínima para aceitar um match do Crossref resolvido por título.
+# Alinhado com fallback_semantic_by_title (0.85); fallback_openalex_by_title
+# usa 0.80 porque só escolhe o paper-semente, não escreve metadado em cima
+# de referências já coletadas.
+CROSSREF_TITLE_MATCH_THRESHOLD = 0.85
+
+# A chave da Semantic Scholar permite 1 requisição por segundo. Estourar isso
+# devolve 429 e o pipeline degrada para OpenAlex-only, o que fazia a MESMA
+# busca devolver contagens diferentes a cada execução. O intervalo é aplicado
+# por processo e vale para todas as threads: run_forward/run_backward disparam
+# search_combined e a busca de referências em paralelo, e enrich_semantic_records
+# faz uma chamada por registro incompleto — sem serializar, essas chamadas
+# competem entre si e estouram o limite sozinhas.
+SEMANTIC_HOST = "api.semanticscholar.org"
+SEMANTIC_MIN_INTERVAL_SECONDS = 1.0
+_semantic_rate_lock = threading.Lock()
+_semantic_last_request_at = 0.0
+
+
+def _throttle_semantic_scholar(url):
+    """
+    Segura a thread até que tenha se passado 1s desde a última chamada à
+    Semantic Scholar. Só afeta a S2 — OpenAlex e Crossref têm limites bem mais
+    folgados e serializá-los deixaria a busca ordens de grandeza mais lenta
+    sem necessidade.
+
+    O sleep acontece DENTRO do lock de propósito: se cada thread apenas
+    consultasse o relógio e dormisse por fora, duas delas poderiam ler o mesmo
+    "última chamada" e acordar juntas, disparando duas requisições no mesmo
+    instante. Segurando o lock, as threads formam fila e cada uma só marca o
+    relógio quando de fato vai emitir a sua.
+    """
+    if SEMANTIC_HOST not in url:
+        return
+
+    global _semantic_last_request_at
+
+    with _semantic_rate_lock:
+        espera = SEMANTIC_MIN_INTERVAL_SECONDS - (time.monotonic() - _semantic_last_request_at)
+        if espera > 0:
+            time.sleep(espera)
+        _semantic_last_request_at = time.monotonic()
+
+
 OPENALEX_CACHE = {}
 CROSSREF_CACHE = {}
 SEMANTIC_CACHE = {}
@@ -84,8 +129,21 @@ def safe_get(url, headers=None):
     attempt_429 = 0
     attempt_other = 0
 
-    while attempt_429 < max_attempts_429 and attempt_other < max_attempts_other:
+    # Laço incondicional, com cada orçamento checado no ponto em que é
+    # consumido. A condição anterior era `attempt_429 < max_429 AND
+    # attempt_other < max_other`, que encerrava o laço assim que QUALQUER um
+    # dos dois se esgotasse: dois erros de rede descartavam as três tentativas
+    # de 429 ainda não usadas, e vice-versa. Trocar o AND por OR não resolve —
+    # com 429 contínuo, attempt_other ficaria parado em 0 e o laço nunca
+    # terminaria. Os orçamentos só são independentes de verdade se cada
+    # categoria decidir a própria parada.
+    while True:
         try:
+            # Dentro do laço, não antes dele: cada nova tentativa também é uma
+            # requisição e precisa respeitar o mesmo 1 req/s. O cache-hit lá em
+            # cima já retornou sem passar por aqui, então requisição servida do
+            # cache não consome o intervalo.
+            _throttle_semantic_scholar(url)
             response = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
 
 
@@ -107,6 +165,10 @@ def safe_get(url, headers=None):
                     # Retry-After às vezes vem como data HTTP em vez de segundos.
                     wait_time = min(2 ** attempt_429, max_wait_seconds)
                 attempt_429 += 1
+                if attempt_429 >= max_attempts_429:
+                    # Desiste sem dormir: a espera antes de sair só atrasava a
+                    # busca inteira sem nunca ser aproveitada por uma tentativa.
+                    return None
                 time.sleep(wait_time)
                 continue
 
@@ -114,6 +176,8 @@ def safe_get(url, headers=None):
                 # Erro do lado do servidor: pode ser transitório, vale tentar
                 # de novo (mesmo orçamento de tentativas do erro de rede).
                 attempt_other += 1
+                if attempt_other >= max_attempts_other:
+                    return None
                 time.sleep(attempt_other)
                 continue
 
@@ -123,11 +187,10 @@ def safe_get(url, headers=None):
 
         except Exception:
             attempt_other += 1
+            if attempt_other >= max_attempts_other:
+                return None
             time.sleep(attempt_other)
             continue
-
-
-    return None
 
 
 def extract_npages(pages):
@@ -686,7 +749,17 @@ def fallback_crossref(doi=None, title=None):
                 item = candidate
 
 
-        if not item:
+        # Sem limiar, o "melhor" candidato do Crossref era aceito mesmo com
+        # similaridade baixíssima — a busca por título devolve 10 itens e
+        # sempre havia um com score > 0. Isso colava DOI/ano/venue de um
+        # artigo alheio na referência (ex.: "ε-PAL: An Active Learning
+        # Approach..." de 2013 recebia o DOI de "A Neurodynamic Approach to
+        # Multi-Objective Fuzzy Optimization Problem" de 2025, score 0.727).
+        # Metadado errado numa revisão sistemática é pior que metadado
+        # ausente, e o ano contaminado ainda alimenta o filtro determinístico
+        # de ano da triagem por LLM. Mesmo limiar do fallback do Semantic
+        # Scholar, que também resolve identidade por título.
+        if not item or best_score < CROSSREF_TITLE_MATCH_THRESHOLD:
             CROSSREF_CACHE[cache_key] = None
             return None
     else:
@@ -865,6 +938,53 @@ def merge_records_across_sources(primary_records, secondary_records):
         merged.append(record)
 
     return merged
+
+
+def collapse_duplicates_by_key(records):
+    """
+    Funde, dentro de uma mesma lista, registros que compartilham a chave de
+    identidade (DOI, ou título normalizado quando não há DOI).
+
+    Existe por causa da ordem do pipeline: merge_records_across_sources roda
+    ANTES de enrich_incomplete_citations, então um registro cujo DOI só
+    aparece no enriquecimento via Crossref nunca chega a ser comparado por
+    DOI com o seu par da outra fonte — os dois sobrevivem como se fossem
+    referências distintas e a contagem final sai inflada. Rodar esta passada
+    depois do enriquecimento fecha essa janela sem refazer requisição alguma.
+
+    Preserva a ordem de primeira ocorrência e só preenche campo vazio com
+    valor da duplicata, nunca sobrescreve valor já presente — mesma política
+    de merge_records_across_sources.
+    """
+    collapsed = []
+    by_key = {}
+
+    for record in records or []:
+        item = dict(record)
+        key = get_record_key(item)
+
+        if not key or key not in by_key:
+            if key:
+                by_key[key] = item
+            collapsed.append(item)
+            continue
+
+        existing = by_key[key]
+        existing.update({
+            field: value
+            for field, value in item.items()
+            if field_missing(existing.get(field)) and not field_missing(value)
+        })
+
+        sources = {
+            source
+            for source in (existing.get("source"), item.get("source"))
+            if source
+        }
+        if sources:
+            existing["sources"] = sorted(sources)
+
+    return collapsed
 
 
 def get_record_key(record):
