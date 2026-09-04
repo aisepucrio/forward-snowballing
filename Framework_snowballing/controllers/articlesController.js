@@ -9,6 +9,7 @@ class ArticlesController {
     this.marcarArtigo = this.marcarArtigo.bind(this);
     this.getArtigosIncluidos = this.getArtigosIncluidos.bind(this);
     this.updateFlag = this.updateFlag.bind(this);
+    this.updateFlagBatch = this.updateFlagBatch.bind(this);
   }
 
   getMockPapers(req, res) {
@@ -74,6 +75,20 @@ class ArticlesController {
       handlePythonRunnerError(err, res, {
         logPrefix: 'Erro ao atualizar flag',
         genericMessage: 'Erro ao atualizar flag no banco.',
+      });
+    }
+  }
+
+  // Grava várias flags de uma vez (botão "Save Research State" da triagem),
+  // numa única conexão com o banco em vez de uma por item.
+  async updateFlagBatch(req, res) {
+    try {
+      const result = await this.articleSearchService.updateFlagBatch(req.body.updates);
+      res.json(result);
+    } catch (err) {
+      handlePythonRunnerError(err, res, {
+        logPrefix: 'Erro ao atualizar flags em lote',
+        genericMessage: 'Erro ao atualizar flags no banco.',
       });
     }
   }

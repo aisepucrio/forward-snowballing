@@ -54,6 +54,73 @@ function obterPaperIdBd(cit) {
   return null;
 }
 
+// Mudanças de flag marcadas na tela mas ainda não gravadas no banco.
+// Chave: "search_id:paper_id" -> { search_id, paper_id, selected_first_page?, excluded_duplicate? }
+// Só viram UPDATE de fato quando o usuário clica em "Save Research State",
+// pra não abrir uma conexão com o Postgres a cada clique de include/exclude.
+window.pendingFlagChanges = window.pendingFlagChanges || {};
+
+function queueFlagChange({ searchId, paperId, selectedFirstPage, excludedDuplicate }) {
+  if (!searchId || !paperId) return;
+
+  const key = `${searchId}:${paperId}`;
+  const existing = window.pendingFlagChanges[key] || { search_id: searchId, paper_id: paperId };
+
+  if (selectedFirstPage !== undefined) existing.selected_first_page = selectedFirstPage;
+  if (excludedDuplicate !== undefined) existing.excluded_duplicate = excludedDuplicate;
+
+  window.pendingFlagChanges[key] = existing;
+  atualizarBotaoSalvar();
+}
+
+function atualizarBotaoSalvar() {
+  const btn = document.getElementById('saveStateBtn');
+  if (!btn) return;
+
+  const count = Object.keys(window.pendingFlagChanges || {}).length;
+  btn.disabled = count === 0;
+  btn.innerHTML = count > 0
+    ? `<i class="bi bi-cloud-arrow-up"></i> Save Research State (${count})`
+    : `<i class="bi bi-cloud-check"></i> Save Research State`;
+}
+
+async function salvarEstadoPesquisa() {
+  const updates = Object.values(window.pendingFlagChanges || {});
+  if (updates.length === 0) return;
+
+  const btn = document.getElementById('saveStateBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+  }
+
+  try {
+    const res = await fetch('/api/articles/flag/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates })
+    });
+
+    if (!res.ok) throw new Error('Save failed');
+
+    window.pendingFlagChanges = {};
+    console.log(`[DB] Sucesso: ${updates.length} mudança(s) gravada(s) no PostgreSQL.`);
+
+    if (btn) {
+      btn.innerHTML = '<i class="bi bi-check2"></i> Saved!';
+      setTimeout(atualizarBotaoSalvar, 1500);
+    }
+  } catch (err) {
+    console.error('[ERRO DB] Falha ao salvar estado da pesquisa:', err);
+    alert('Failed to save research state. Your selections are kept locally — please try again.');
+    atualizarBotaoSalvar();
+  }
+}
+
+function haPendenciasNaoSalvas() {
+  return Object.keys(window.pendingFlagChanges || {}).length > 0;
+}
+
 function obterSearchIdAtual() {
   const radio = document.querySelector('input[name="snowballMode"]:checked');
   const mode = radio ? radio.value : 'forward';
@@ -100,29 +167,17 @@ async function toggleIncludeAll() {
 
   if (searchId) {
     const isSelected = (newState === 'incluir');
-    console.log(`[DB] Enviando atualização em lote (${newState}) para ${window.citationsData.length} itens...`);
 
-    const updates = window.citationsData.map((cit, index) => {
+    window.citationsData.forEach((cit, index) => {
       const paperIdBd = obterPaperIdBd(cit);
 
       if (!paperIdBd) {
         console.error(`[ERRO CRÍTICO] Falha ao mapear item ${index}:`, cit);
-        return Promise.resolve();
+        return;
       }
 
-      return fetch('/api/articles/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          search_id: searchId,
-          paper_id: paperIdBd,
-          selected_first_page: isSelected
-        })
-      });
+      queueFlagChange({ searchId, paperId: paperIdBd, selectedFirstPage: isSelected });
     });
-
-    await Promise.all(updates);
-    console.log('[DB] Sucesso: Todas as flags da busca foram salvas no PostgreSQL.');
   }
 }
 
@@ -187,6 +242,28 @@ function buildSearchURL(inputValue, type) {
 
   params.set('type', type);
   return `/api/articles/search?${params.toString()}`;
+}
+
+// O card do seed article ("Seed Paper Analysis") mostra Citations/References
+// a partir de window.seedData.citations_retrieved / references_retrieved —
+// um snapshot estático tirado direto da busca original. Remover duplicatas
+// no popup só mexe em window.citationsData (a lista da tabela abaixo); sem
+// isso aqui, o card do seed nunca refletia a remoção, mesmo com a tabela já
+// atualizada.
+function sincronizarContagemSeed() {
+  if (!window.seedData) return;
+
+  const modeInput = document.querySelector('input[name="snowballMode"]:checked');
+  const mode = modeInput ? modeInput.value : 'forward';
+  const count = (window.citationsData || []).length;
+
+  if (mode === 'forward') {
+    window.seedData.citations_retrieved = count;
+  } else {
+    window.seedData.references_retrieved = count;
+  }
+
+  mostrarResultado(window.seedData, mode);
 }
 
 function trocarModo() {
@@ -265,6 +342,8 @@ async function buscarArtigo() {
     window.backwardData = null;
     window.citationsData = [];
     window.seedData = null;
+    window.pendingFlagChanges = {}; // nova busca, nova search_id: descarta pendências da busca anterior
+    atualizarBotaoSalvar();
 
     const searchPromise = fetch(buildSearchURL(inputValue, 'forward'))
       .then(r => {
@@ -481,21 +560,13 @@ function mostrarCitacoes(citacoes) {
     target: tbody,
     data: citacoes,
     showActions: true,
-    onAction: async (item, acao) => {
+    onAction: (item, acao) => {
       const paperIdBd = obterPaperIdBd(item);
       const searchId = obterSearchIdAtual();
 
       if (paperIdBd && searchId) {
         const isSelected = (acao === 'incluir');
-        await fetch('/api/articles/flag', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            search_id: searchId,
-            paper_id: paperIdBd,
-            selected_first_page: isSelected
-          })
-        });
+        queueFlagChange({ searchId, paperId: paperIdBd, selectedFirstPage: isSelected });
       }
 
       if (typeof atualizarContadores === 'function') {
@@ -587,14 +658,50 @@ function normalizeTitleJs(title) {
   return title.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
 }
 
+// A busca já funde automaticamente quando o DOI bate exato (ver
+// build_dedup_key no backend) — o que sobra pra revisão manual é sobretudo
+// o caso em que só um dos dois lados tem DOI (ou nenhum), mas o título é
+// idêntico. Um dicionário com uma chave só (doi OU título, com prioridade)
+// não pega esse caso, porque os dois itens caem em chaves diferentes
+// ("doi:X" vs "title:Y") mesmo sendo o mesmo artigo. Por isso agrupa por
+// união: dois itens ficam no mesmo grupo se compartilham DOI OU título
+// idêntico (normalizado, sem fuzzy match).
 function findDuplicateGroups(list) {
-  const groups = {};
-  list.forEach(item => {
+  const parent = list.map((_, i) => i);
+  function find(i) {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]];
+      i = parent[i];
+    }
+    return i;
+  }
+  function union(a, b) {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[ra] = rb;
+  }
+
+  const byDoi = {};
+  const byTitle = {};
+  list.forEach((item, i) => {
     const doi = normalizeDoi(item.doi);
-    const key = doi ? `doi:${doi}` : `title:${normalizeTitleJs(item.title)}`;
-    if (!key || key === 'doi:null' || key === 'title:') return;
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
+    if (doi) {
+      if (byDoi[doi] !== undefined) union(i, byDoi[doi]);
+      else byDoi[doi] = i;
+    }
+
+    const title = normalizeTitleJs(item.title);
+    if (title) {
+      if (byTitle[title] !== undefined) union(i, byTitle[title]);
+      else byTitle[title] = i;
+    }
+  });
+
+  const groups = {};
+  list.forEach((item, i) => {
+    const root = find(i);
+    if (!groups[root]) groups[root] = [];
+    groups[root].push(item);
   });
   return Object.values(groups).filter(g => g.length > 1);
 }
@@ -656,7 +763,7 @@ function renderDedupRemovedSection() {
   `;
 }
 
-async function undoDedupRemoval(paperId) {
+function undoDedupRemoval(paperId) {
   const history = window.dedupRemovedHistory || [];
   const idx = history.findIndex(entry => entry.item.paperId === paperId);
   if (idx === -1) return;
@@ -670,19 +777,12 @@ async function undoDedupRemoval(paperId) {
   const searchId = obterSearchIdAtual();
   const paperIdBd = obterPaperIdBd(entry.item);
   if (searchId && paperIdBd) {
-    try {
-      await fetch('/api/articles/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ search_id: searchId, paper_id: paperIdBd, excluded_duplicate: false })
-      });
-    } catch (err) {
-      console.error('[ERRO DB] Falha ao desfazer remoção de duplicata:', err);
-    }
+    queueFlagChange({ searchId, paperId: paperIdBd, excludedDuplicate: false });
   }
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
+  sincronizarContagemSeed();
   renderDedupRemovedSection();
 }
 
@@ -789,39 +889,45 @@ function resolveDedupPair(decision) {
 // (X button, backdrop click, Escape, or the Close button) applies whatever
 // duplicate decisions were made so far — matching the BPMN's "Existem novas
 // duplicatas? -> Não -> Seleciona artigos" transition.
-async function finishDedupReview() {
+function finishDedupReview() {
   const state = window.dedupState;
   window.dedupState = null;
 
   if (!state || state.toRemove.size === 0) return;
 
   const itensParaRemover = (window.citationsData || []).filter(c => state.toRemove.has(c.paperId));
+
+  // A tabela atualiza já, na hora — não espera o POST no banco. Antes disso
+  // vinha depois de um `await Promise.all(updates)` sem try/catch: se
+  // qualquer POST falhasse (rede, banco fora do ar), a exceção não tratada
+  // abortava a função e as duplicatas nunca saíam da tabela, mesmo com o
+  // popup já fechado.
+  window.citationsData = (window.citationsData || []).filter(c => !state.toRemove.has(c.paperId));
+  window.dedupRemovedHistory = [
+    ...(window.dedupRemovedHistory || []),
+    ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
+  ];
+
+  mostrarCitacoes(window.citationsData);
+  atualizarBotaoIncludeAll();
+  sincronizarContagemSeed();
+
   const searchId = obterSearchIdAtual();
-
   if (searchId && itensParaRemover.length > 0) {
-    console.log(`[DB] Marcando ${itensParaRemover.length} itens como excluded_duplicate no PostgreSQL...`);
-
-    const updates = itensParaRemover.map(cit => {
+    itensParaRemover.forEach(cit => {
       const paperIdBd = obterPaperIdBd(cit);
 
       if (!paperIdBd) {
         console.error('[ERRO DB] Não foi possível obter UUID para a duplicata:', cit);
-        return Promise.resolve();
+        return;
       }
 
-      return fetch('/api/articles/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          search_id: searchId,
-          paper_id: paperIdBd,
-          excluded_duplicate: true
-        })
-      });
+      queueFlagChange({ searchId, paperId: paperIdBd, excludedDuplicate: true });
     });
 
-    await Promise.all(updates);
-    console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.');
+    Promise.all(updates)
+      .then(() => console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.'))
+      .catch(err => console.error('[ERRO DB] Falha ao gravar excluded_duplicate:', err));
   }
 
   // A remoção precisa valer também na base que o filtro usa. Sem isso, aplicar
@@ -844,6 +950,15 @@ if (dedupModalElem) {
   dedupModalElem.addEventListener('hidden.bs.modal', finishDedupReview);
 }
 
+// Avisa antes de fechar/recarregar a aba se houver marcações ainda não
+// gravadas no banco (o usuário precisa clicar em "Save Research State").
+window.addEventListener('beforeunload', (e) => {
+  if (haPendenciasNaoSalvas()) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
 document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
   radio.addEventListener('change', () => {
     const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
@@ -855,11 +970,14 @@ document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
 document.addEventListener('DOMContentLoaded', () => {
   const downloadBtn = document.getElementById('downloadBtn');
   const includeAllBtn = document.getElementById('includeAllBtn');
+  const saveStateBtn = document.getElementById('saveStateBtn');
 
   if (downloadBtn) downloadBtn.onclick = baixarCitationsCSV;
   if (includeAllBtn) includeAllBtn.onclick = toggleIncludeAll;
+  if (saveStateBtn) saveStateBtn.onclick = salvarEstadoPesquisa;
 
   atualizarBotaoIncludeAll();
+  atualizarBotaoSalvar();
 
   const linkAnalise = document.querySelector('a.nav-link[href="analysis.html"]');
   if (linkAnalise) {
@@ -876,6 +994,15 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('No article marked as "Include"');
         return;
       }
+
+      if (haPendenciasNaoSalvas() && !confirm('You have unsaved changes to the research state. Leave this page and discard them?')) {
+        return;
+      }
+
+      // guarda o search_id ativo pra sobreviver à navegação (analysis.html
+      // e, a partir dela, criterios.html precisam dele pra gravar criteria/
+      // criteria_logs, mas window.currentSearchId* só existe em memória aqui)
+      localStorage.setItem('currentSearchId', obterSearchIdAtual() || '');
 
       window.name = JSON.stringify(window.citationsData);
       window.location.href = 'analysis.html';
@@ -898,6 +1025,14 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('No article marked as "Include"');
         return;
       }
+
+      if (haPendenciasNaoSalvas() && !confirm('You have unsaved changes to the research state. Leave this page and discard them?')) {
+        return;
+      }
+
+      // idem: criterios.js lê isso do localStorage pra saber a qual search_id
+      // gravar os critérios/vereditos da LLM
+      localStorage.setItem('currentSearchId', obterSearchIdAtual() || '');
 
       window.name = JSON.stringify(incluidos);
       window.location.href = 'criterios.html';

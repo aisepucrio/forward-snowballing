@@ -49,8 +49,52 @@ window.addEventListener('load', () => {
     artigosIncluidos = [];
   }
 
+  // search_id não vem no window.name (não quisemos mudar esse formato, que
+  // analysis.html também lê) — index.js grava ele à parte no localStorage
+  // antes de navegar pra cá, então lemos de lá.
+  window.currentSearchId = localStorage.getItem('currentSearchId') || null;
+
   mostrarTabelaArtigos(artigosIncluidos);
 });
+
+// Grava os critérios de inclusão/exclusão + o veredito da LLM por artigo no
+// banco, numa única chamada em lote — não bloqueia nem afeta a tela de
+// resultados se falhar (ex.: sem search_id, ou banco fora do ar).
+async function salvarCriteriosNoBanco(resultados) {
+  if (!window.currentSearchId) {
+    console.warn('[DB] Sem search_id disponível — critérios não serão salvos no banco.');
+    return;
+  }
+
+  const criteria = {
+    Inclusion: Object.fromEntries(obterTags('inclusaoBox').map((desc, i) => [`IC${i + 1}`, desc])),
+    Exclusion: Object.fromEntries(obterTags('exclusaoBox').map((desc, i) => [`EC${i + 1}`, desc])),
+  };
+
+  const results = artigosIncluidos.map((artigo, i) => ({
+    doi: artigo.doi,
+    title: artigo.title,
+    results: resultados[i]?.results || {}
+  }));
+
+  try {
+    const res = await fetch('/api/articles/criteria', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ search_id: window.currentSearchId, criteria, results })
+    });
+
+    if (!res.ok) throw new Error('Failed to save criteria to database');
+
+    const data = await res.json();
+    console.log(
+      `[DB] Critérios salvos: ${data.criteria_saved} critérios, ${data.logs_saved} vereditos` +
+      `, ${data.skipped_papers?.length || 0} artigo(s) sem paper correspondente no banco.`
+    );
+  } catch (err) {
+    console.error('[ERRO DB] Falha ao salvar critérios/resultados:', err);
+  }
+}
 
 function dividirEmLotes(array, tamanhoLote = 1) {
   const lotes = [];
@@ -289,6 +333,7 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     document.getElementById('analysisSection').classList.add('d-flex');
 
     mostrarTabelaComResultados(artigosIncluidos, resultados);
+    await salvarCriteriosNoBanco(resultados);
   } catch (err) {
     alert('Error: ' + err.message);
     const divResultado = document.getElementById('resultadoAnalise');

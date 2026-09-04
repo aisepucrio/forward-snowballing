@@ -20,6 +20,26 @@ def get_connection():
 
 # ---------------------------------- PAPERS ----------------------------------
 
+def _coerce_year(value):
+    """
+    Converte year pra int ou None.
+
+    Os provedores de busca (services/search.py) usam "-" como placeholder
+    quando o ano de publicação não é conhecido — bem comum em dados reais de
+    citação. year é uma coluna `integer` em papers, então inserir a string
+    "-" direto quebra o INSERT (invalid input syntax for type integer).
+    """
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.isdigit():
+            return int(stripped)
+    return None
+
+
 def save_paper(doi=None, title=None, year=None, abstract=None,
                citation_count=0, semantic_paper_id=None,
                openalex_id=None, venue_id=None):
@@ -28,6 +48,8 @@ def save_paper(doi=None, title=None, year=None, abstract=None,
     Verifica duplicata por DOI, semantic_paper_id ou título.
     Retorna o id (UUID) do paper — seja o já existente ou o recém-criado.
     """
+    year = _coerce_year(year)
+
     conn = get_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -232,58 +254,78 @@ def save_search_result(search_id, paper_id,
         cursor.close()
         conn.close()
 
+def _apply_result_flags(cursor, search_id, paper_id,
+                        selected_first_page=None,
+                        excluded_duplicate=None,
+                        duplicate_of=None):
+    """
+    Aplica as flags de um resultado já existente usando um cursor já aberto.
+    Só atualiza os campos que forem passados (não None).
+    Não faz commit/rollback nem fecha nada — quem chama controla a transação.
+    Retorna True se um UPDATE foi executado, False se foi pulado (paper_id
+    não resolvido ou nenhum campo para atualizar).
+    """
+    try:
+        uuid.UUID(str(paper_id))
+    except ValueError:
+        cursor.execute("""
+            SELECT id FROM papers
+            WHERE semantic_paper_id = %s OR doi = %s
+        """, (paper_id, paper_id))
+        row = cursor.fetchone()
+        if row:
+            paper_id = str(row[0])
+        else:
+            print(f"[DB WARN - update_result_flags] ID inválido e paper não encontrado: {paper_id}", file=sys.stderr)
+            return False
+
+    fields = []
+    values = []
+
+    if selected_first_page is not None:
+        fields.append("selected_first_page = %s")
+        values.append(selected_first_page)
+
+    if excluded_duplicate is not None:
+        fields.append("excluded_duplicate = %s")
+        values.append(excluded_duplicate)
+
+    if duplicate_of is not None:
+        fields.append("duplicate_of = %s")
+        values.append(duplicate_of)
+
+    if not fields:
+        return False
+
+    fields.append("updated_at = NOW()")
+    values.extend([search_id, paper_id])
+
+    cursor.execute(f"""
+        UPDATE search_results
+        SET {', '.join(fields)}
+        WHERE search_id = %s AND paper_id = %s
+    """, values)
+
+    return True
+
+
 def update_result_flags(search_id, paper_id,
                         selected_first_page=None,
                         excluded_duplicate=None,
                         duplicate_of=None):
     """
-    Atualiza as flags de um resultado já existente.
-    Só atualiza os campos que forem passados (não None).
+    Atualiza as flags de um único resultado já existente (uma conexão por chamada).
+    Mantido para compatibilidade com update_flag.py; a triagem em lote usa
+    update_result_flags_batch, que reaproveita uma única conexão para vários itens.
     """
     conn = get_connection()
     cursor = conn.cursor()
 
     try:
-        try:
-            uuid.UUID(str(paper_id))
-        except ValueError:
-            cursor.execute("""
-                SELECT id FROM papers 
-                WHERE semantic_paper_id = %s OR doi = %s
-            """, (paper_id, paper_id))
-            row = cursor.fetchone()
-            if row:
-                paper_id = str(row[0])
-            else:
-                print(f"[DB WARN - update_result_flags] ID inválido e paper não encontrado: {paper_id}", file=sys.stderr)
-                return
-
-        fields = []
-        values = []
-
-        if selected_first_page is not None:
-            fields.append("selected_first_page = %s")
-            values.append(selected_first_page)
-
-        if excluded_duplicate is not None:
-            fields.append("excluded_duplicate = %s")
-            values.append(excluded_duplicate)
-
-        if duplicate_of is not None:
-            fields.append("duplicate_of = %s")
-            values.append(duplicate_of)
-
-        if not fields:
-            return
-
-        fields.append("updated_at = NOW()")
-        values.extend([search_id, paper_id])
-
-        cursor.execute(f"""
-            UPDATE search_results
-            SET {', '.join(fields)}
-            WHERE search_id = %s AND paper_id = %s
-        """, values)
+        _apply_result_flags(cursor, search_id, paper_id,
+                             selected_first_page=selected_first_page,
+                             excluded_duplicate=excluded_duplicate,
+                             duplicate_of=duplicate_of)
 
         conn.commit()
         print("[DB UPDATE - FLAGS]", file=sys.stderr)
@@ -295,6 +337,55 @@ def update_result_flags(search_id, paper_id,
     finally:
         cursor.close()
         conn.close()
+
+
+def update_result_flags_batch(updates):
+    """
+    Aplica várias atualizações de flags numa única conexão/transação.
+    `updates` é uma lista de dicts com search_id, paper_id, e opcionalmente
+    selected_first_page, excluded_duplicate, duplicate_of.
+    Itens com paper_id não resolvido são pulados (não abortam o lote inteiro).
+    Retorna (updated_count, skipped_paper_ids).
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    updated_count = 0
+    skipped = []
+
+    try:
+        for item in updates:
+            search_id = item.get("search_id")
+            paper_id = item.get("paper_id")
+
+            if not search_id or not paper_id:
+                skipped.append(paper_id)
+                continue
+
+            applied = _apply_result_flags(
+                cursor, search_id, paper_id,
+                selected_first_page=item.get("selected_first_page"),
+                excluded_duplicate=item.get("excluded_duplicate"),
+                duplicate_of=item.get("duplicate_of"),
+            )
+
+            if applied:
+                updated_count += 1
+            else:
+                skipped.append(paper_id)
+
+        conn.commit()
+        print(f"[DB UPDATE - FLAGS BATCH] {updated_count} atualizados, {len(skipped)} pulados", file=sys.stderr)
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR - update_result_flags_batch] {e}", file=sys.stderr)
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+    return updated_count, skipped
 
 def get_search_results(search_id, only_selected=False, exclude_duplicates=True):
     """
@@ -441,6 +532,136 @@ def save_criteria_log(paper_id, criteria_id, passed, reason=None):
         conn.close()
 
 
+def _resolve_paper_id_by_identity(cursor, doi=None, title=None):
+    """
+    Acha o id de um paper já salvo, por DOI ou (se não achar) por título
+    case-insensitive — mesma lógica de dedupe que save_paper() já usa.
+    Retorna None se não encontrar.
+    """
+    if doi and doi != "-":
+        cursor.execute("SELECT id FROM papers WHERE doi = %s", (doi,))
+        row = cursor.fetchone()
+        if row:
+            return str(row[0])
+
+    if title and title != "-":
+        cursor.execute("SELECT id FROM papers WHERE LOWER(title) = LOWER(%s)", (title,))
+        row = cursor.fetchone()
+        if row:
+            return str(row[0])
+
+    return None
+
+
+def _get_or_create_criterion(cursor, search_id, description, criterion_type):
+    """
+    Reaproveita o critério se (search_id, type, description) já existir —
+    evita duplicar linhas em `criteria` toda vez que a análise é rerodada
+    com o mesmo texto de critério.
+    """
+    cursor.execute("""
+        SELECT id FROM criteria
+        WHERE search_id = %s AND type = %s AND description = %s
+    """, (search_id, criterion_type, description))
+    row = cursor.fetchone()
+    if row:
+        return str(row[0])
+
+    criterion_id = str(uuid.uuid4())
+    cursor.execute("""
+        INSERT INTO criteria (id, search_id, description, type)
+        VALUES (%s, %s, %s, %s)
+    """, (criterion_id, search_id, description, criterion_type))
+    return criterion_id
+
+
+def save_criteria_and_logs(search_id, criteria, results):
+    """
+    Grava os critérios de inclusão/exclusão de uma busca e o veredito da LLM
+    para cada (paper, critério), numa única conexão/transação — pensado pro
+    fim da análise em criterios.html, uma chamada só em vez de uma por artigo.
+
+    criteria: {"Inclusion": {"IC1": "desc", ...}, "Exclusion": {"EC1": "desc", ...}}
+              (mesmo formato que services/prompt.py:criteria_from_text produz)
+    results:  [{"doi": ..., "title": ..., "results": {"IC1": "Yes", ...}}, ...]
+
+    O paper de cada item é resolvido por doi/título (o paper já foi salvo na
+    busca original). Itens sem paper correspondente são pulados, não abortam
+    o lote inteiro. "passed" = True só quando a LLM respondeu "Yes"; a
+    resposta bruta (No/Unsure/error) fica em `reason`.
+
+    Retorna {criteria_saved, logs_saved, skipped_papers}.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    criteria_saved = 0
+    logs_saved = 0
+    skipped_papers = []
+
+    try:
+        criterion_ids = {}  # ex.: "IC1" -> uuid do banco
+
+        for criterion_type, group in (
+            ("inclusion", (criteria or {}).get("Inclusion") or {}),
+            ("exclusion", (criteria or {}).get("Exclusion") or {}),
+        ):
+            for label, description in group.items():
+                criterion_ids[label] = _get_or_create_criterion(
+                    cursor, search_id, description, criterion_type
+                )
+                criteria_saved += 1
+
+        for item in (results or []):
+            doi = item.get("doi")
+            title = item.get("title")
+            paper_id = _resolve_paper_id_by_identity(cursor, doi=doi, title=title)
+
+            if not paper_id:
+                print(f"[DB WARN - save_criteria_and_logs] Paper não encontrado: doi={doi} title={title}", file=sys.stderr)
+                skipped_papers.append(doi or title)
+                continue
+
+            for label, raw_answer in (item.get("results") or {}).items():
+                criterion_id = criterion_ids.get(label)
+                if not criterion_id:
+                    continue
+
+                passed = str(raw_answer or "").strip().lower() == "yes"
+
+                cursor.execute("""
+                    INSERT INTO criteria_logs (id, paper_id, criteria_id, passed, reason)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (paper_id, criteria_id)
+                    DO UPDATE SET
+                        passed       = EXCLUDED.passed,
+                        reason       = EXCLUDED.reason,
+                        evaluated_at = NOW()
+                """, (str(uuid.uuid4()), paper_id, criterion_id, passed, raw_answer))
+                logs_saved += 1
+
+        conn.commit()
+        print(
+            f"[DB SAVE - CRITERIA ANALYSIS] {criteria_saved} critérios, "
+            f"{logs_saved} logs, {len(skipped_papers)} artigos pulados",
+            file=sys.stderr
+        )
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR - save_criteria_and_logs] {e}", file=sys.stderr)
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {
+        "criteria_saved": criteria_saved,
+        "logs_saved": logs_saved,
+        "skipped_papers": skipped_papers,
+    }
+
+
 def get_criteria_logs(search_id, paper_id=None):
     """
     Retorna os logs de avaliação de critérios de uma busca.
@@ -533,34 +754,47 @@ def save_full_result(output_json: dict, user_id: str):
     paper_id_map = {}
 
     citations = output_json.get("citations", [])
+    skipped_items = 0
     for item in citations:
-        paper_id = save_paper(
-            doi=item.get("doi"),
-            title=item.get("title"),
-            year=item.get("year"),
-            abstract=item.get("abstract"),
-            citation_count=item.get("citationCount", 0),
-            semantic_paper_id=item.get("paperId"),
-        )
+        # Um item com dado ruim (ex.: year mal-formado, texto gigante) não pode
+        # derrubar a busca inteira — cada citação/referência é independente.
+        try:
+            paper_id = save_paper(
+                doi=item.get("doi"),
+                title=item.get("title"),
+                year=item.get("year"),
+                abstract=item.get("abstract"),
+                citation_count=item.get("citationCount", 0),
+                semantic_paper_id=item.get("paperId"),
+            )
 
-        item_authors = item.get("authors", [])
-        if item_authors:
-            save_authors(paper_id, item_authors)
+            item_authors = item.get("authors", [])
+            if item_authors:
+                save_authors(paper_id, item_authors)
 
-        save_search_result(
-            search_id=search_id,
-            paper_id=paper_id,
-            selected_first_page=False,
-            excluded_duplicate=False,
-        )
+            save_search_result(
+                search_id=search_id,
+                paper_id=paper_id,
+                selected_first_page=False,
+                excluded_duplicate=False,
+            )
 
-        key = item.get("paperId") or item.get("doi")
-        if key:
-            paper_id_map[key] = paper_id
+            key = item.get("paperId") or item.get("doi")
+            if key:
+                paper_id_map[key] = paper_id
+
+        except Exception as item_error:
+            skipped_items += 1
+            print(
+                f"[DB ERROR - save_full_result item] {item_error} | title={item.get('title')}",
+                file=sys.stderr
+            )
+            continue
 
     print(
         f"[DB SAVE COMPLETO] seed={seed_id} | search={search_id} "
-        f"| {len(citations)} resultados salvos",
+        f"| {len(citations) - skipped_items}/{len(citations)} resultados salvos"
+        f"{f' ({skipped_items} pulados por erro)' if skipped_items else ''}",
         file=sys.stderr
     )
 

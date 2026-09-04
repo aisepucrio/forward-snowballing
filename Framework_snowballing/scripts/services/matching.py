@@ -1,11 +1,17 @@
 from services.normalize import normalize_doi, normalize_title, is_missing
 
 
-def build_dedup_key(title, doi):
+def build_dedup_key(title, doi, unique_id=None):
+    # A busca só funde automaticamente quando o DOI bate exato — é o único
+    # critério seguro pra dizer "é com certeza o mesmo artigo" sem checar com
+    # o usuário. Sem DOI, cada item fica com uma chave única (unique_id) e
+    # nunca funde com nada aqui, nem com outro item de título igual: esse
+    # caso (mesmo artigo sem DOI em um dos lados, ou títulos iguais com DOIs
+    # diferentes) fica pro botão de duplicatas, que é revisão manual.
     normalized_doi = normalize_doi(doi)
     if normalized_doi:
         return f"doi:{normalized_doi}"
-    return f"title:{normalize_title(title)}"
+    return f"unique:{unique_id}"
 
 
 def score_citation(citation):

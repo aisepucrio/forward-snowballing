@@ -57,6 +57,25 @@ class LlmAnalysisService {
 
     return result;
   }
+
+  // Grava os critérios de inclusão/exclusão e o veredito da LLM por artigo
+  // no banco, numa única conexão — chamado uma vez ao fim da análise em
+  // criterios.html, não por artigo.
+  async saveCriteriaResults({ searchId, criteria, results }) {
+    if (!searchId) {
+      const err = new Error('searchId é obrigatório');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    return this.pythonRunner.runJsonScript('save_criteria_results.py', {
+      input: {
+        search_id: searchId,
+        criteria: criteria || {},
+        results: results || [],
+      },
+    });
+  }
 }
 
 module.exports = {

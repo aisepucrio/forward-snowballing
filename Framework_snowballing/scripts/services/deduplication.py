@@ -50,11 +50,12 @@ def parse_single_citation(c):
 def deduplicate_citations(raw_citations):
     best_by_key = {}
 
-    for c in raw_citations:
+    for index, c in enumerate(raw_citations):
         citation_obj = parse_single_citation(c)
         dedup_key = build_dedup_key(
             citation_obj.get("title"),
-            citation_obj.get("doi")
+            citation_obj.get("doi"),
+            unique_id=index
         )
 
         if dedup_key not in best_by_key:

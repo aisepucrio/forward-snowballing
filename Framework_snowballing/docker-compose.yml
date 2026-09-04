@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:18
+    container_name: snowmap-bd
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-snowmap_bd}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - snowmap_pgdata:/var/lib/postgresql
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-snowmap_bd}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  snowmap_pgdata:
