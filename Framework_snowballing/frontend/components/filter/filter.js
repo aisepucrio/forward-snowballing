@@ -184,9 +184,19 @@ const FilterComponent = (function () {
       return;
     }
 
-    container.innerHTML = authors.map(a => `
-      <button type="button" class="btn-author" data-author="${a.name.replace(/"/g, '&quot;')}">${a.name} (${a.count})</button>
-    `).join('');
+    // Construído por DOM, não por innerHTML: os nomes vêm de OpenAlex/Semantic
+    // Scholar/Crossref, bases colaborativas onde qualquer um cadastra metadado.
+    // Um autor chamado <img src=x onerror=...> executaria script ao abrir este
+    // submenu. textContent e dataset nunca interpretam HTML.
+    container.innerHTML = '';
+    authors.forEach(a => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-author';
+      btn.dataset.author = a.name;
+      btn.textContent = `${a.name} (${a.count})`;
+      container.appendChild(btn);
+    });
 
     const authorButtons = container.querySelectorAll('.btn-author');
     
@@ -236,9 +246,17 @@ const FilterComponent = (function () {
       return;
     }
 
-    container.innerHTML = venues.map(v => `
-      <button type="button" class="btn-venue" data-venue="${v.name.replace(/"/g, '&quot;')}">${v.name} (${v.count})</button>
-    `).join('');
+    // Mesmo motivo do renderAuthorList: nome de venue é dado de terceiro e não
+    // pode ser interpolado em innerHTML.
+    container.innerHTML = '';
+    venues.forEach(v => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-venue';
+      btn.dataset.venue = v.name;
+      btn.textContent = `${v.name} (${v.count})`;
+      container.appendChild(btn);
+    });
 
     const venueButtons = container.querySelectorAll('.btn-venue');
     if (activeFilters.venues && activeFilters.venues.length) {
@@ -290,13 +308,48 @@ const FilterComponent = (function () {
   }
 
   function resetFilters() {
+    clearActiveFilters();
+
+    const full = getBaseData();
+    try { window.citationsData = full; } catch (err) {}
+    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(full);
+  }
+
+  /**
+   * Zera o estado dos filtros e o destaque dos botões, sem mexer nos dados.
+   *
+   * Usado quando o dataset é trocado por baixo (Citations <-> References): os
+   * filtros valiam para a lista anterior, e manter os botões marcados enquanto
+   * a tabela mostra tudo faz a UI afirmar algo que não é verdade.
+   */
+  function clearActiveFilters() {
     activeFilters.years = [];
     activeFilters.authors = [];
     activeFilters.venues = [];
 
-    const full = window.allCitationsData || [];
-    try { window.citationsData = full; } catch (err) {}
-    if (typeof mostrarCitacoes === 'function') mostrarCitacoes(full);
+    document
+      .querySelectorAll('.btn-decade.active, .btn-author.active, .btn-venue.active')
+      .forEach(btn => btn.classList.remove('active'));
+  }
+
+  /**
+   * Re-renderiza o submenu que estiver aberto, com os dados atuais.
+   *
+   * Sem isso, trocar de modo deixava as listas de autor e venue exibindo o
+   * dataset anterior, com contagens erradas — só o year-range era atualizado.
+   */
+  function refreshOpenSubmenu() {
+    const statusSelect = document.getElementById('status');
+    if (!statusSelect) return;
+
+    const renderers = {
+      'year-range': renderYearRangeButtons,
+      author: renderAuthorList,
+      venue: renderVenueList,
+    };
+
+    const render = renderers[statusSelect.value];
+    if (render) render();
   }
 
   function setupUiListeners(options = {}) {
@@ -379,6 +432,8 @@ const FilterComponent = (function () {
     init,
     renderYearRangeButtons,
     applyCombinedFilters,
+    clearActiveFilters,
+    refreshOpenSubmenu,
     reset: resetFilters
   };
 })();
