@@ -508,3 +508,47 @@ body:not(.busca-realizada) #searchForm {
 .flex-grow-1 {
   flex-grow: 1;
 }
+
+/* ---------------------------------------------------------------------------
+   Progresso da busca
+
+   Uma linha só: o que a busca já encontrou e há quanto tempo ela roda. O
+   detalhe de quais fontes responderam, cache e deduplicação fica no log e nos
+   testes — na tela, é ruído.
+   --------------------------------------------------------------------------- */
+.search-progress {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid #e3e8e5;
+  border-radius: 10px;
+  background: #fbfdfc;
+}
+
+.search-progress-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.search-progress-status {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #14532d;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Tabular para o contador nao "pular" a cada segundo. */
+.search-progress-elapsed {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.search-progress-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #9ca3af;
+}

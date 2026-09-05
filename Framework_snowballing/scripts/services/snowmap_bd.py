@@ -707,7 +707,7 @@ def get_criteria_logs(search_id, paper_id=None):
 
 def save_full_result(output_json: dict, user_id: str):
     """
-    Recebe o output_json gerado pelo backend (run_forward.py / run_backward.py)
+    Recebe o output_json gerado pelo backend (run_forward.py)
     e salva tudo no banco: seed, citations/references, autores e search_results.
 
     Espera a estrutura:

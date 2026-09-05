@@ -11,6 +11,7 @@ from services.deduplication import deduplicate_citations
 from services.normalize import normalize_doi
 from services.search import (
     build_pages,
+    collapse_duplicates_by_key,
     enrich_incomplete_citations,
     get_record_key,
     merge_records_across_sources,
@@ -95,7 +96,6 @@ class OpenAlexReferenceProvider:
         # Setado a cada get_references(): quantos dos referenced_works
         # listados pelo OpenAlex de fato resolveram para um work de verdade.
         # Um provider é criado por processo e usado uma única vez por busca
-        # (forward OU backward, nunca as duas em paralelo no mesmo processo),
         # então guardar isso na instância é seguro apesar de não ser thread-safe
         # em geral.
         self.last_warning = None
@@ -284,17 +284,6 @@ class SnowballingResultBuilder:
         })
         return result
 
-    def build_backward(self, search_input, paper, references):
-        result = self.build_base(search_input, paper, "backward")
-        result.update({
-            "citations_count": paper.get("citationCount", paper.get("citations_count", 0)),
-            "references_count": len(references),
-            "references_retrieved": len(references),
-            "references": references,
-            "citations": [],
-        })
-        return result
-
 
 class SnowballingPipeline:
     def __init__(self, reference_provider=None, result_builder=None):
@@ -342,7 +331,7 @@ class SnowballingPipeline:
                 doi=resolved_doi, openalex_id=openalex_id
             )
 
-        # Mesmo caso do run_backward: o Semantic Scholar também contribui
+        # O Semantic Scholar também contribui
         # referências (via paper.get("references"), que search_combined já
         # traz de search_input.doi ou do título resolvido) — sem somar as
         # duas fontes aqui, o forward ficava com o "References" contando só o
@@ -365,16 +354,24 @@ class SnowballingPipeline:
             file=sys.stderr,
         )
 
+        # collapse_duplicates_by_key roda DEPOIS do enriquecimento: é ele que
+        # descobre o DOI de registros que chegaram só com título, e sem uma
+        # segunda passada esses pares nunca são reconhecidos como o mesmo
+        # trabalho.
         citations = CitationNormalizer.normalize_counts(
-            enrich_incomplete_citations(
-                paper.get("citations", [])
+            collapse_duplicates_by_key(
+                enrich_incomplete_citations(
+                    paper.get("citations", [])
+                )
             )
         )
         references = CitationNormalizer.normalize_counts(
-            enrich_incomplete_citations(
-                merge_records_across_sources(
-                    semantic_references,
-                    openalex_references,
+            collapse_duplicates_by_key(
+                enrich_incomplete_citations(
+                    merge_records_across_sources(
+                        semantic_references,
+                        openalex_references,
+                    )
                 )
             )
         )
@@ -410,82 +407,6 @@ class SnowballingPipeline:
             paper["partial_result"] = True
 
         result = self.result_builder.build_forward(search_input, paper, citations, references)
-        self._save(result, search_input.doi)
-        return result
-
-    def run_backward(self, search_input):
-        search_input.validate()
-        init_db()
-
-        cached = get_cached(doi=search_input.doi, title=search_input.title, mode="backward")
-        if cached and cached.get("references"):
-            print("[CACHE HIT - BACKWARD]", file=sys.stderr)
-            return cached
-
-        # Semantic Scholar contribui direto (paper.get("references")) e o
-        # OpenAlex é sempre buscado também, não só como fallback quando o S2
-        # vem vazio: uma fonte sozinha raramente é completa (o S2 às vezes tem
-        # a lista de referências bloqueada pela editora; o OpenAlex às vezes
-        # extrai poucas do PDF) — mesmo padrão que citations já usa em
-        # run_forward, combinando as duas fontes em vez de escolher uma.
-        if search_input.doi:
-            # DOI já conhecido: não precisa esperar o search_combined resolver
-            # nada pra consultar o OpenAlex, então as duas buscas rodam em
-            # paralelo — mesmo padrão do DOI branch de run_forward.
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                fut_paper = executor.submit(search_combined, search_input.doi, search_input.title)
-                fut_refs = executor.submit(self.reference_provider.get_references, search_input.doi)
-                paper = fut_paper.result()
-                openalex_references = fut_refs.result()
-        else:
-            # Busca por título: os identificadores só são conhecidos depois de
-            # resolver o paper, então aqui não dá pra paralelizar.
-            paper = search_combined(doi=search_input.doi, title=search_input.title)
-
-            resolved_doi = normalize_doi(paper.get("doi"))
-            openalex_id = paper.get("openalex_id")
-
-            # Artigos sem DOI (comuns em anais e periódicos regionais) ainda
-            # podem ter referências no OpenAlex, acessíveis pelo openalex_id.
-            if not resolved_doi and not openalex_id:
-                openalex_match = fallback_openalex_by_title(search_input.title)
-                if openalex_match:
-                    openalex_id = openalex_match.get("openalex_id")
-                    resolved_doi = normalize_doi(openalex_match.get("doi")) or resolved_doi
-
-            openalex_references = (
-                self.reference_provider.get_references(doi=resolved_doi, openalex_id=openalex_id)
-                if (resolved_doi or openalex_id) else []
-            )
-
-        semantic_references = tag_source(paper.get("references"), "semantic")
-        paper["citations"] = tag_source(paper.get("citations"), "semantic")
-        print(
-            f"[SOURCE COUNTS] Semantic: references={len(semantic_references)}; "
-            f"OpenAlex: references={len(openalex_references)}",
-            file=sys.stderr,
-        )
-        references = merge_records_across_sources(
-            semantic_references,
-            openalex_references,
-        )
-        references = enrich_incomplete_citations(references)
-        references = CitationNormalizer.normalize_counts(references)
-
-        print(
-            f"[SOURCE COUNTS] Final backward: references={len(references)}",
-            file=sys.stderr,
-        )
-
-        openalex_warning = self.reference_provider.last_warning
-        if openalex_warning:
-            existing_warning = paper.get("warning")
-            paper["warning"] = (
-                f"{existing_warning} | {openalex_warning}" if existing_warning else openalex_warning
-            )
-            paper["partial_result"] = True
-
-        result = self.result_builder.build_backward(search_input, paper, references)
         self._save(result, search_input.doi)
         return result
 
@@ -551,13 +472,23 @@ class SnowballingPipeline:
             json.dump(result, output_file, ensure_ascii=False, indent=2)
 
 
-def run_cli(mode):
+def run_cli():
+    """
+    Entrada única do snowballing.
+
+    Existia um run_backward separado, de quando ele era o único caminho que
+    fundia as referências do Semantic Scholar com as do OpenAlex. Depois que o
+    pipeline foi unificado, run_forward passou a coletar as duas listas — as
+    referências pelo mesmo encadeamento, mais as citações — e o backward virou
+    um subconjunto estrito, que nem a interface chamava (ela faz uma busca só,
+    forward, e o toggle "Citations/References" apenas alterna entre as duas
+    listas da mesma resposta).
+    """
     sys.stdout.reconfigure(encoding="utf-8")
 
     try:
         search_input = SearchInput.from_argv(sys.argv)
-        pipeline = SnowballingPipeline()
-        result = pipeline.run_forward(search_input) if mode == "forward" else pipeline.run_backward(search_input)
+        result = SnowballingPipeline().run_forward(search_input)
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except ValueError as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False))
