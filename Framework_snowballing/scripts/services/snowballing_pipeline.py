@@ -96,7 +96,6 @@ class OpenAlexReferenceProvider:
         # Setado a cada get_references(): quantos dos referenced_works
         # listados pelo OpenAlex de fato resolveram para um work de verdade.
         # Um provider é criado por processo e usado uma única vez por busca
-        # (forward OU backward, nunca as duas em paralelo no mesmo processo),
         # então guardar isso na instância é seguro apesar de não ser thread-safe
         # em geral.
         self.last_warning = None
@@ -332,7 +331,7 @@ class SnowballingPipeline:
                 doi=resolved_doi, openalex_id=openalex_id
             )
 
-        # Mesmo caso do run_backward: o Semantic Scholar também contribui
+        # O Semantic Scholar também contribui
         # referências (via paper.get("references"), que search_combined já
         # traz de search_input.doi ou do título resolvido) — sem somar as
         # duas fontes aqui, o forward ficava com o "References" contando só o
@@ -473,13 +472,23 @@ class SnowballingPipeline:
             json.dump(result, output_file, ensure_ascii=False, indent=2)
 
 
-def run_cli(mode):
+def run_cli():
+    """
+    Entrada única do snowballing.
+
+    Existia um run_backward separado, de quando ele era o único caminho que
+    fundia as referências do Semantic Scholar com as do OpenAlex. Depois que o
+    pipeline foi unificado, run_forward passou a coletar as duas listas — as
+    referências pelo mesmo encadeamento, mais as citações — e o backward virou
+    um subconjunto estrito, que nem a interface chamava (ela faz uma busca só,
+    forward, e o toggle "Citations/References" apenas alterna entre as duas
+    listas da mesma resposta).
+    """
     sys.stdout.reconfigure(encoding="utf-8")
 
     try:
         search_input = SearchInput.from_argv(sys.argv)
-        pipeline = SnowballingPipeline()
-        result = pipeline.run_forward(search_input) if mode == "forward" else pipeline.run_backward(search_input)
+        result = SnowballingPipeline().run_forward(search_input)
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except ValueError as exc:
         print(json.dumps({"error": str(exc)}, ensure_ascii=False))

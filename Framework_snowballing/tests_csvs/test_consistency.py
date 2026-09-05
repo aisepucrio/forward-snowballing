@@ -12,7 +12,12 @@ FRAMEWORK_DIR = os.path.dirname(SCRIPT_DIR)
 SCRIPTS_DIR = os.path.join(FRAMEWORK_DIR, "scripts")
 
 RUN_FORWARD_PY = os.path.join(SCRIPTS_DIR, "run_forward.py")
-RUN_BACKWARD_PY = os.path.join(SCRIPTS_DIR, "run_backward.py")
+
+# Cada entrada e buscada duas vezes. O run_backward foi eliminado (era
+# subconjunto estrito do forward), entao a repeticao passou a ser do mesmo
+# script — que e o que esta medida sempre quis: variacao entre execucoes.
+# Agora as duas linhas trazem citacoes, e nao so uma delas.
+EXECUCOES_POR_ENTRADA = 2
 
 INPUT_CSV = os.path.join(SCRIPT_DIR, "tests_csvs.csv")
 OUTPUT_CSV = os.path.join(SCRIPT_DIR, "result_searches.csv")
@@ -20,6 +25,13 @@ OUTPUT_CSV = os.path.join(SCRIPT_DIR, "result_searches.csv")
 # Segundos de espera após cada busca, para não estourar o limite anônimo da
 # Semantic Scholar (~1 req/s). Ajustável por variável de ambiente.
 PAUSA_ENTRE_BUSCAS = float(os.getenv("PAUSA_ENTRE_BUSCAS", "2"))
+
+# Teto por busca. Era 120s, apertado desde que a Semantic Scholar passou a ser
+# consultada a 1 req/s: uma busca com muitas chamadas leva ~53s em média, e as
+# mais pesadas passavam de 120s e entravam no CSV como TIMEOUT — falha do teto
+# do teste, não do pipeline (o mesmo artigo buscado por DOI concluía normal).
+# 300s dá folga para o pior caso sem deixar uma busca travada segurar a suíte.
+TIMEOUT_POR_BUSCA = float(os.getenv("TIMEOUT_POR_BUSCA", "300"))
 
 
 def load_input_papers(csv_path):
@@ -82,8 +94,8 @@ def parse_citations_data(data):
         "citations_retrieved": data.get("citations_retrieved"),
         "references_retrieved": data.get("references_retrieved"),
         # Total que a API atribui ao artigo semente. build_forward grava em
-        # "citationCount" e build_backward em "citations_count" — mesma coisa,
-        # nomes diferentes.
+        # "citationCount". A chave "citations_count" vinha do build_backward,
+        # já removido; o fallback continua por causa de CSVs antigos.
         "citations_reported": data.get("citationCount", data.get("citations_count")),
         "data_source": data.get("data_source"),
         "resolved_doi": data.get("resolved_doi"),
@@ -128,7 +140,7 @@ def run_python_script(script_path, doi, title):
             encoding="utf-8",
             cwd=SCRIPTS_DIR,
             env=env,
-            timeout=120
+            timeout=TIMEOUT_POR_BUSCA
         )
 
         if completed_process.returncode == 0:
@@ -167,18 +179,17 @@ def main():
         return
 
     print(f"Total de linhas lidas no CSV de entrada: {len(papers)}")
-    print(f"Total de linhas esperadas na saída (2x): {len(papers) * 2}")
+    print(f"Total de linhas esperadas na saída: {len(papers) * EXECUCOES_POR_ENTRADA}")
 
-    # "script" e não "direction": desde que o pipeline foi unificado, run_forward
-    # devolve citações E referências, então a linha do run_backward não traz
-    # nenhum número que a do forward já não tenha. As duas entradas continuam
-    # úteis como execuções independentes — servem para flagrar variação entre
-    # chamadas — mas o que a coluna distingue é qual script rodou, não qual
-    # direção foi medida.
+    # "execucao" e não "script"/"direction": as duas linhas de uma entrada são
+    # a MESMA busca repetida. É isso que esta suíte mede — se a mesma consulta
+    # devolve os mesmos números duas vezes seguidas. Comparar as duas linhas de
+    # um artigo com a coluna data_source diz se uma divergência veio do
+    # pipeline ou de uma fonte que não respondeu naquela execução.
     fieldnames = [
         "input_title",
         "input_doi",
-        "script",
+        "execucao",
         "citations_retrieved",
         "references_retrieved",
         "citations_reported",
@@ -188,11 +199,11 @@ def main():
         "warning",
     ]
 
-    def linha(p_title, p_doi, script, res):
+    def linha(p_title, p_doi, execucao, res):
         return {
             "input_title": p_title,
             "input_doi": p_doi,
-            "script": script,
+            "execucao": execucao,
             "citations_retrieved": res["citations_retrieved"],
             "references_retrieved": res["references_retrieved"],
             "citations_reported": res["citations_reported"],
@@ -219,11 +230,10 @@ def main():
             identifier = p_doi if p_doi else p_title[:40]
             print(f"\n({idx}/{len(papers)}) Processando linha individual: {identifier}")
 
-            for script, caminho in (("run_forward", RUN_FORWARD_PY),
-                                    ("run_backward", RUN_BACKWARD_PY)):
-                print(f"  -> Executando {script}...")
-                res = run_python_script(caminho, doi=p_doi, title=p_title)
-                writer.writerow(linha(p_title, p_doi, script, res))
+            for execucao in range(1, EXECUCOES_POR_ENTRADA + 1):
+                print(f"  -> Execução {execucao}/{EXECUCOES_POR_ENTRADA}...")
+                res = run_python_script(RUN_FORWARD_PY, doi=p_doi, title=p_title)
+                writer.writerow(linha(p_title, p_doi, execucao, res))
                 f.flush()
                 total += 1
 
@@ -265,8 +275,7 @@ CONTEXTO
 - "resolved_doi": para conferir se a busca por título resolveu o artigo certo.
 - "warning": inclui o caso em que a editora bloqueia a lista de referências.
 
-Todos os números vêm direto dos campos homônimos do JSON, sem inferência. Vazio
-significa que o número não se aplica — run_backward não coleta citações.
+Todos os números vêm direto dos campos homônimos do JSON, sem inferência.
 
 Um zero é informação legítima: nada foi coletado. Não é substituído por totais
 reportados pelas APIs.

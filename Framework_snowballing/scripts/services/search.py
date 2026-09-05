@@ -31,7 +31,7 @@ CROSSREF_TITLE_MATCH_THRESHOLD = 0.85
 # A chave da Semantic Scholar permite 1 requisição por segundo. Estourar isso
 # devolve 429 e o pipeline degrada para OpenAlex-only, o que fazia a MESMA
 # busca devolver contagens diferentes a cada execução. O intervalo é aplicado
-# por processo e vale para todas as threads: run_forward/run_backward disparam
+# por processo e vale para todas as threads: run_forward dispara
 # search_combined e a busca de referências em paralelo, e enrich_semantic_records
 # faz uma chamada por registro incompleto — sem serializar, essas chamadas
 # competem entre si e estouram o limite sozinhas.

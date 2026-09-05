@@ -314,6 +314,100 @@ function trocarModo() {
   mostrarCitacoes(window.citationsData);
 }
 
+// ---------------------------------------------------------------------------
+// Progresso da busca
+//
+// O servidor responde em NDJSON: uma linha por marco enquanto o Python roda e,
+// na última, o resultado. Isso existe porque a busca leva ~50s (podendo passar
+// de 3 minutos) e antes a tela só mostrava um spinner — sem como distinguir
+// "está vindo" de "travou" ou "deu erro".
+// ---------------------------------------------------------------------------
+let progressoTimer = null;
+
+function iniciarProgresso() {
+  const status = document.getElementById('progressStatus');
+  const elapsed = document.getElementById('progressElapsed');
+
+  if (status) status.textContent = 'Searching…';
+
+  const inicio = Date.now();
+  if (elapsed) elapsed.textContent = '0s';
+
+  clearInterval(progressoTimer);
+  progressoTimer = setInterval(() => {
+    if (!elapsed) return;
+    const seg = Math.floor((Date.now() - inicio) / 1000);
+    elapsed.textContent = seg < 60 ? `${seg}s` : `${Math.floor(seg / 60)}m${String(seg % 60).padStart(2, '0')}s`;
+  }, 1000);
+}
+
+function pararProgresso() {
+  clearInterval(progressoTimer);
+  progressoTimer = null;
+}
+
+function registrarProgresso(evento) {
+  const status = document.getElementById('progressStatus');
+  if (!status || !evento.message) return;
+
+  // Substitui a linha, não acumula histórico: o único marco publicado é a
+  // contagem final, que é a informação que o usuário veria na tela seguinte.
+  status.textContent = evento.message;
+}
+
+// Lê o corpo NDJSON conforme ele chega, entregando um objeto por linha.
+async function* lerLinhasNdjson(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const linhas = buffer.split('\n');
+    // A última pode estar pela metade: fica no buffer até o próximo chunk.
+    buffer = linhas.pop();
+
+    for (const linha of linhas) {
+      if (!linha.trim()) continue;
+      try {
+        yield JSON.parse(linha);
+      } catch {
+        // Linha truncada ou ruído: progresso é acessório, seguir em frente.
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    try { yield JSON.parse(buffer); } catch { /* idem */ }
+  }
+}
+
+async function buscarComProgresso(url) {
+  const res = await fetch(url, { headers: { Accept: 'application/x-ndjson' } });
+
+  if (!res.ok) throw new Error('Search failed');
+
+  // Se o servidor não streamou (consumidor antigo, ou erro antes do Python
+  // começar), a resposta é o JSON único de sempre.
+  const tipo = res.headers.get('Content-Type') || '';
+  if (!tipo.includes('application/x-ndjson')) {
+    return res.json();
+  }
+
+  let resultado = null;
+  for await (const evento of lerLinhasNdjson(res)) {
+    if (evento.type === 'progress') registrarProgresso(evento);
+    else if (evento.type === 'result') resultado = evento.data;
+    else if (evento.type === 'error') throw new Error(evento.error || 'Search failed');
+  }
+
+  if (!resultado) throw new Error('Search ended without returning a result.');
+  return resultado;
+}
+
 async function buscarArtigo() {
   try {
     const input = document.getElementById('searchInput');
@@ -345,13 +439,9 @@ async function buscarArtigo() {
     window.pendingFlagChanges = {}; // nova busca, nova search_id: descarta pendências da busca anterior
     atualizarBotaoSalvar();
 
-    const searchPromise = fetch(buildSearchURL(inputValue, 'forward'))
-      .then(r => {
-        if (!r.ok) throw new Error('Search failed');
-        return r.json();
-      });
+    iniciarProgresso();
 
-    searchPromise
+    buscarComProgresso(buildSearchURL(inputValue, 'forward'))
       .then(fwd => {
         window.currentSearchIdForward = fwd.search_id || null;
         window.currentSearchIdBackward = fwd.search_id_backward || null;
@@ -384,13 +474,18 @@ async function buscarArtigo() {
         document.body.classList.add('busca-realizada');
       })
       .catch(err => {
+        // A causa real (artigo não encontrado, API fora, timeout) fica no
+        // console e no log do servidor, que é onde os testes a leem. Na tela
+        // vai uma linha neutra: o usuário final não tem o que fazer com o
+        // detalhe técnico, e ele só polui a interface.
         console.error(err);
         window.forwardData = [];
         window.backwardData = [];
         document.getElementById('resultado').innerHTML =
-          '<p class="text-danger">Search failed.</p>';
+          '<p class="text-muted">No results for this search. Check the DOI or title and try again.</p>';
       })
       .finally(() => {
+        pararProgresso();
         document.getElementById('loadingSpinner').style.display = 'none';
       });
   } catch (err) {
@@ -419,20 +514,13 @@ function buscarArtigoNavbar() {
 function construirAvisoResultadoParcial(artigo) {
   if (!artigo || (!artigo.partial_result && !artigo.warning)) return '';
 
-  const mensagens = String(artigo.warning || 'Partial result: not every source answered this search.')
-    .split('|')
-    .map(trecho => trecho.trim())
-    .filter(Boolean);
-
+  // O texto detalhado do pipeline (quais fontes falharam, quantos IDs não
+  // resolveram) continua no JSON, no log e nos testes — não na tela. Aqui só
+  // o que muda a leitura do resultado: os números podem estar incompletos.
   return `
     <div class="alert alert-warning d-flex gap-2 mb-3 py-2 px-3" role="alert" style="font-size:0.85rem;">
       <i class="bi bi-exclamation-triangle-fill flex-shrink-0" style="line-height:1.4;"></i>
-      <div>
-        <strong>Incomplete result — counts below may understate the real numbers.</strong>
-        <ul class="mb-0 mt-1 ps-3">
-          ${mensagens.map(m => `<li>${TableComponent.escapeHtml(m)}</li>`).join('')}
-        </ul>
-      </div>
+      <div>Some sources didn't respond — the counts below may be incomplete.</div>
     </div>
   `;
 }

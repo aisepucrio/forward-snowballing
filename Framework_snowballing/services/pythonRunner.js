@@ -4,6 +4,21 @@ const { spawn, execSync } = require('child_process');
 
 const MAX_OUTPUT_BYTES = 10 * 1024 * 1024;
 
+// Lê a mensagem de {"error": "..."} que os scripts imprimem no stdout ao
+// falhar de forma esperada. Devolve null quando o stdout não é esse formato,
+// para quem chama cair no stderr.
+function extractScriptError(stdout) {
+  const text = String(stdout || '').trim();
+  if (!text) return null;
+
+  try {
+    const parsed = JSON.parse(text);
+    return parsed && typeof parsed.error === 'string' ? parsed.error : null;
+  } catch {
+    return null;
+  }
+}
+
 class PythonRunner {
   constructor({ projectRoot, defaultTimeoutMs = 5 * 60 * 1000 } = {}) {
     this.projectRoot = projectRoot || path.join(__dirname, '..');
@@ -49,7 +64,7 @@ class PythonRunner {
     }
   }
 
-  runJsonScript(scriptName, { args = [], input = null, timeoutMs = this.defaultTimeoutMs, abortEmitter = null } = {}) {
+  runJsonScript(scriptName, { args = [], input = null, timeoutMs = this.defaultTimeoutMs, abortEmitter = null, onStderrLine = null } = {}) {
     return new Promise((resolve, reject) => {
       const pythonPath = this.findExecutable();
       if (!pythonPath) {
@@ -113,8 +128,35 @@ class PythonRunner {
         }
       });
 
+      // O stderr continua sendo acumulado (é ele que vira mensagem de erro
+      // quando o script falha), mas agora também é entregue linha a linha
+      // enquanto o processo roda. Os scripts já imprimem marcos de progresso
+      // ali ([SOURCE COUNTS], [OPENALEX REFERENCES], [DEDUP COUNTS]); sem isso
+      // eles morriam no buffer e a interface ficava girando sem informação.
+      // O corte é por linha porque um chunk do stream pode partir uma linha ao
+      // meio — repassar o chunk cru entregaria marcos truncados.
+      let stderrPending = '';
+
       pythonProcess.stderr.on('data', (data) => {
-        errorOutput += data.toString();
+        const chunk = data.toString();
+        errorOutput += chunk;
+
+        if (onStderrLine) {
+          stderrPending += chunk;
+          const lines = stderrPending.split(/\r?\n/);
+          stderrPending = lines.pop();
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                onStderrLine(line);
+              } catch {
+                // Progresso é acessório: se o consumidor falhar (cliente já
+                // desconectado, por exemplo), a busca segue normalmente.
+              }
+            }
+          }
+        }
+
         if (errorOutput.length > MAX_OUTPUT_BYTES) {
           onMaxBufferExceeded();
         }
@@ -127,7 +169,15 @@ class PythonRunner {
       pythonProcess.on('close', (code) => {
         finish(() => {
           if (code !== 0) {
-            const err = new Error(errorOutput || output || 'Erro ao executar script Python.');
+            // Os scripts sinalizam falha esperada (artigo não encontrado, DOI
+            // inválido) escrevendo {"error": "..."} no STDOUT e saindo com 1.
+            // Montar a mensagem a partir do stderr fazia o usuário receber a
+            // primeira linha de diagnóstico — literalmente "[CACHE MISS]" —
+            // em vez do motivo real. O stderr continua sendo o recurso quando
+            // não há erro estruturado (traceback, crash).
+            const err = new Error(
+              extractScriptError(output) || errorOutput || output || 'Erro ao executar script Python.'
+            );
             err.code = code;
             err.stderr = errorOutput;
             err.stdout = output;
