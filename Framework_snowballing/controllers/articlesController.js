@@ -1,5 +1,6 @@
 const { ArticleSearchService } = require('../services/articleSearchService');
 const { handlePythonRunnerError } = require('./pythonRunnerErrorHandler');
+const { parseProgressLine } = require('../services/searchProgress');
 
 class ArticlesController {
   constructor({ articleSearchService = new ArticleSearchService() } = {}) {
@@ -9,6 +10,7 @@ class ArticlesController {
     this.marcarArtigo = this.marcarArtigo.bind(this);
     this.getArtigosIncluidos = this.getArtigosIncluidos.bind(this);
     this.updateFlag = this.updateFlag.bind(this);
+    this.updateFlagBatch = this.updateFlagBatch.bind(this);
   }
 
   getMockPapers(req, res) {
@@ -20,18 +22,74 @@ class ArticlesController {
     res.json(citations);
   }
 
+  // A busca leva ~50s e pode passar de 3 minutos. Quem pede NDJSON recebe os
+  // marcos de progresso conforme eles acontecem e o resultado na última linha;
+  // quem não pede continua recebendo o mesmo JSON único de antes, para não
+  // quebrar nenhum consumidor que já exista.
   async searchByDOI(req, res) {
+    const wantsStream = String(req.headers.accept || '').includes('application/x-ndjson');
+
+    let streaming = false;
+    let ultimaMensagem = null;
+
+    const enviarProgresso = (linha) => {
+      if (!streaming) return;
+
+      const progresso = parseProgressLine(linha);
+      // O mesmo marco pode sair repetido (o aviso de banco indisponível sai uma
+      // vez por direção gravada, por exemplo) — repetir na tela só faz parecer
+      // que a busca está patinando.
+      if (!progresso || progresso.message === ultimaMensagem) return;
+
+      ultimaMensagem = progresso.message;
+      res.write(`${JSON.stringify({ type: 'progress', ...progresso })}\n`);
+    };
+
     try {
+      // req.query.type não é mais lido: a busca é sempre a completa, que já
+      // devolve citations e references. Uma chamada antiga com ?type=backward
+      // continua funcionando e recebe as referências que pedia — agora
+      // acompanhadas das citações.
       const data = await this.articleSearchService.search({
         sessionId: req.sessionId,
         doi: req.query.doi,
         title: req.query.title,
-        type: req.query.type || 'forward',
         abortEmitter: req,
+        onProgress: wantsStream
+          ? (linha) => {
+            if (!streaming) {
+              streaming = true;
+              res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+              res.setHeader('Cache-Control', 'no-store');
+              // Sem isso o nginx segura a resposta inteira no buffer e o
+              // progresso só apareceria junto com o resultado — ou seja, nunca.
+              res.setHeader('X-Accel-Buffering', 'no');
+              res.write(`${JSON.stringify({ type: 'progress', stage: 'start', message: 'Starting search…' })}\n`);
+            }
+            enviarProgresso(linha);
+          }
+          : null,
       });
+
+      if (streaming) {
+        res.write(`${JSON.stringify({ type: 'result', data })}\n`);
+        res.end();
+        return;
+      }
 
       res.json(data);
     } catch (err) {
+      // Erro depois que a resposta já começou não pode mais virar status HTTP:
+      // vai como última linha do stream, e o cliente decide o que mostrar.
+      if (res.headersSent || streaming) {
+        if (err.statusCode !== 499) {
+          console.error('Erro ao buscar artigo', err.stderr || err.message);
+          res.write(`${JSON.stringify({ type: 'error', error: err.message || 'Erro ao buscar o artigo.' })}\n`);
+        }
+        res.end();
+        return;
+      }
+
       handlePythonRunnerError(err, res, {
         logPrefix: 'Erro ao buscar artigo',
         genericMessage: 'Erro ao buscar o artigo via script Python.',
@@ -74,6 +132,20 @@ class ArticlesController {
       handlePythonRunnerError(err, res, {
         logPrefix: 'Erro ao atualizar flag',
         genericMessage: 'Erro ao atualizar flag no banco.',
+      });
+    }
+  }
+
+  // Grava várias flags de uma vez (botão "Save Research State" da triagem),
+  // numa única conexão com o banco em vez de uma por item.
+  async updateFlagBatch(req, res) {
+    try {
+      const result = await this.articleSearchService.updateFlagBatch(req.body.updates);
+      res.json(result);
+    } catch (err) {
+      handlePythonRunnerError(err, res, {
+        logPrefix: 'Erro ao atualizar flags em lote',
+        genericMessage: 'Erro ao atualizar flags no banco.',
       });
     }
   }

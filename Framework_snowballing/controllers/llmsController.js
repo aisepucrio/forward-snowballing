@@ -5,6 +5,7 @@ class LlmsController {
   constructor({ llmAnalysisService = new LlmAnalysisService() } = {}) {
     this.llmAnalysisService = llmAnalysisService;
     this.analisar = this.analisar.bind(this);
+    this.salvarCriterios = this.salvarCriterios.bind(this);
   }
 
   async analisar(req, res) {
@@ -28,6 +29,21 @@ class LlmsController {
       handlePythonRunnerError(err, res, {
         logPrefix: 'Erro na análise LLM',
         genericMessage: 'Erro ao processar os artigos.',
+      });
+    }
+  }
+
+  // Grava critérios + veredito da LLM (criteria/criteria_logs) no banco,
+  // chamado uma vez ao fim da análise em criterios.html.
+  async salvarCriterios(req, res) {
+    try {
+      const { search_id: searchId, criteria, results } = req.body;
+      const resultado = await this.llmAnalysisService.saveCriteriaResults({ searchId, criteria, results });
+      res.json(resultado);
+    } catch (err) {
+      handlePythonRunnerError(err, res, {
+        logPrefix: 'Erro ao salvar critérios',
+        genericMessage: 'Erro ao salvar critérios no banco.',
       });
     }
   }

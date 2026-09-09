@@ -19,7 +19,13 @@ class ArticleSearchService {
     return data.citations;
   }
 
-  async search({ sessionId, doi, title, type, abortEmitter = null }) {
+  // Uma busca só devolve as duas listas: run_forward.py traz `citations` e
+  // `references`. Havia aqui um desvio para run_backward.py quando
+  // type === 'backward', mas aquele script coletava as referências pelo mesmo
+  // caminho e a mais nada — era subconjunto estrito, e a interface nunca o
+  // pedia (o toggle "Citations/References" alterna entre as duas listas desta
+  // mesma resposta, sem nova requisição).
+  async search({ sessionId, doi, title, abortEmitter = null, onProgress = null }) {
     const normalizedDoi = this.normalizeInput(doi);
     const normalizedTitle = this.normalizeInput(title);
 
@@ -29,10 +35,10 @@ class ArticleSearchService {
       throw err;
     }
 
-    const scriptName = type === 'backward' ? 'run_backward.py' : 'run_forward.py';
-    const data = await this.pythonRunner.runJsonScript(scriptName, {
+    const data = await this.pythonRunner.runJsonScript('run_forward.py', {
       args: [normalizedDoi || '-', normalizedTitle || '-'],
       abortEmitter,
+      onStderrLine: onProgress,
     });
 
     writeOutput(sessionId, data);
@@ -55,6 +61,31 @@ class ArticleSearchService {
     });
 
     return this.pythonRunner.runJsonScript('update_flag.py', {
+      args: [payload],
+      timeoutMs: FLAG_UPDATE_TIMEOUT_MS,
+    });
+  }
+
+  // Aplica várias flags numa única conexão com o banco, em vez de uma
+  // conexão por item — usada pelo botão "Save Research State" da triagem,
+  // para não sobrecarregar o Postgres com um processo por clique.
+  async updateFlagBatch(updates) {
+    if (!Array.isArray(updates) || updates.length === 0) {
+      const err = new Error('updates deve ser uma lista não vazia');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const invalid = updates.some((u) => !u || !u.search_id || !u.paper_id);
+    if (invalid) {
+      const err = new Error('Cada item de updates precisa de search_id e paper_id');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const payload = JSON.stringify(updates);
+
+    return this.pythonRunner.runJsonScript('update_flags_batch.py', {
       args: [payload],
       timeoutMs: FLAG_UPDATE_TIMEOUT_MS,
     });
