@@ -4,52 +4,72 @@ import json
 import subprocess
 import sys
 import time
+import urllib.request
+import urllib.parse
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
 FRAMEWORK_DIR = os.path.dirname(SCRIPT_DIR)
-
 SCRIPTS_DIR = os.path.join(FRAMEWORK_DIR, "scripts")
 
 RUN_FORWARD_PY = os.path.join(SCRIPTS_DIR, "run_forward.py")
 
-# Cada entrada e buscada duas vezes. O run_backward foi eliminado (era
-# subconjunto estrito do forward), entao a repeticao passou a ser do mesmo
-# script — que e o que esta medida sempre quis: variacao entre execucoes.
-# Agora as duas linhas trazem citacoes, e nao so uma delas.
-EXECUCOES_POR_ENTRADA = 2
-
 INPUT_CSV = os.path.join(SCRIPT_DIR, "tests_csvs.csv")
 OUTPUT_CSV = os.path.join(SCRIPT_DIR, "result_searches.csv")
 
-# Segundos de espera após cada busca, para não estourar o limite anônimo da
-# Semantic Scholar (~1 req/s). Ajustável por variável de ambiente.
+EXECUCOES_POR_ENTRADA = 2
 PAUSA_ENTRE_BUSCAS = float(os.getenv("PAUSA_ENTRE_BUSCAS", "2"))
-
-# Teto por busca. Era 120s, apertado desde que a Semantic Scholar passou a ser
-# consultada a 1 req/s: uma busca com muitas chamadas leva ~53s em média, e as
-# mais pesadas passavam de 120s e entravam no CSV como TIMEOUT — falha do teto
-# do teste, não do pipeline (o mesmo artigo buscado por DOI concluía normal).
-# 300s dá folga para o pior caso sem deixar uma busca travada segurar a suíte.
 TIMEOUT_POR_BUSCA = float(os.getenv("TIMEOUT_POR_BUSCA", "300"))
 
 
+def fetch_openalex_data(doi_or_title):
+    """
+    Consulta diretamente a API pública do OpenAlex para obter os dados oficiais
+    de citações (cited_by_count) e referências (referenced_works_count).
+    """
+    if not doi_or_title or doi_or_title == "-":
+        return {"openalex_citations": None, "openalex_references": None}
+
+    headers = {'User-Agent': 'SnowmapTester/1.0 (mailto:test@snowmap.org)'}
+
+    try:
+        if doi_or_title.startswith("10.") or ("/" in doi_or_title and " " not in doi_or_title):
+            url = f"https://api.openalex.org/works/https://doi.org/{doi_or_title.strip()}"
+        else:
+            query = urllib.parse.quote(doi_or_title.strip())
+            url = f"https://api.openalex.org/works?filter=title.search:{query}"
+
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                
+                if "results" in data:
+                    if not data["results"]:
+                        return {"openalex_citations": None, "openalex_references": None}
+                    work = data["results"][0]
+                else:
+                    work = data
+
+                cited_by = work.get("cited_by_count")
+                referenced_works = work.get("referenced_works", [])
+                referenced_count = work.get("referenced_works_count", len(referenced_works))
+
+                return {
+                    "openalex_citations": cited_by,
+                    "openalex_references": referenced_count
+                }
+    except Exception as e:
+        print(f"    [Aviso OpenAlex API] Não foi possível obter dados diretos: {e}")
+
+    return {"openalex_citations": None, "openalex_references": None}
+
+
 def load_input_papers(csv_path):
-    """
-    Lê CADA LINHA do CSV como uma entrada totalmente independente.
-    Se a linha for um DOI, passa apenas o DOI.
-    Se for um título, passa apenas o título.
-    """
     papers = []
     if not os.path.exists(csv_path):
         print(f"(ERRO) Arquivo não encontrado: {csv_path}")
         return papers
 
-    # Lido linha a linha, não com csv.reader: o arquivo é uma coluna só, e
-    # títulos de artigo costumam conter vírgula. O parser de CSV quebraria
-    # "Software testing, verification and reliability" em duas colunas e o
-    # script buscaria apenas "Software testing" — resultado errado com status
-    # SUCCESS, sem nenhum sinal de que a entrada foi truncada.
     with open(csv_path, mode="r", encoding="utf-8-sig") as f:
         for raw_line in f:
             line_content = raw_line.strip()
@@ -59,7 +79,7 @@ def load_input_papers(csv_path):
             if line_content.lower() in ["title", "doi", "input_title", "input_doi"]:
                 continue
 
-            if line_content.startswith("10.") or "/" in line_content and not " " in line_content:
+            if line_content.startswith("10.") or "/" in line_content and " " not in line_content:
                 papers.append({"title": "", "doi": line_content})
             else:
                 papers.append({"title": line_content, "doi": ""})
@@ -68,34 +88,12 @@ def load_input_papers(csv_path):
 
 
 def parse_citations_data(data):
-    """
-    Lê o que a busca de fato coletou, direto dos campos que o pipeline expõe.
-
-    Não usar cadeia de fallbacks aqui: o backward devolve "citations": [] e um
-    "citations_count" que é a contagem de citações do artigo semente, vinda da
-    API — não algo coletado. Adivinhar a partir dessas chaves fazia o backward
-    reportar citações no lugar de referências.
-
-    Devolve um dict com o que foi COLETADO e o que as APIs REPORTAM existir.
-    Vazio significa que aquele número não se aplica ou não está disponível.
-
-    Não existe contagem reportada de referências: o referenceCount da Semantic
-    Scholar é consultado em search.py mas só vira texto dentro de "warning",
-    nunca chega ao JSON como número. Por isso a coluna warning é incluída — é
-    onde aparece o caso "a editora bloqueou a lista de referências".
-    """
     if not isinstance(data, dict):
         return {}
 
     return {
-        # Um zero legítimo é informação: significa que nada foi coletado, que é
-        # justamente a falha que este teste precisa expor. Nunca substituir por
-        # um total reportado pela API.
         "citations_retrieved": data.get("citations_retrieved"),
         "references_retrieved": data.get("references_retrieved"),
-        # Total que a API atribui ao artigo semente. build_forward grava em
-        # "citationCount". A chave "citations_count" vinha do build_backward,
-        # já removido; o fallback continua por causa de CSVs antigos.
         "citations_reported": data.get("citationCount", data.get("citations_count")),
         "data_source": data.get("data_source"),
         "resolved_doi": data.get("resolved_doi"),
@@ -104,7 +102,6 @@ def parse_citations_data(data):
 
 
 def resultado_vazio(status):
-    """Linha de saída quando a execução não produziu JSON utilizável."""
     return {
         "citations_retrieved": None,
         "references_retrieved": None,
@@ -125,11 +122,6 @@ def run_python_script(script_path, doi, title):
     arg_title = title if title else "-"
 
     cmd = [python_executable, "-X", "utf8", script_path, arg_doi, arg_title]
-
-    # Cada artigo entra duas vezes no CSV (título e DOI). Com o cache ligado, a
-    # segunda busca lê do disco e devolve o valor da primeira — as duas linhas
-    # saem sempre idênticas e o teste não consegue detectar inconsistência
-    # nenhuma, que é justamente o que ele existe para medir.
     env = dict(os.environ, SNOWMAP_DISABLE_CACHE="1")
 
     try:
@@ -181,11 +173,6 @@ def main():
     print(f"Total de linhas lidas no CSV de entrada: {len(papers)}")
     print(f"Total de linhas esperadas na saída: {len(papers) * EXECUCOES_POR_ENTRADA}")
 
-    # "execucao" e não "script"/"direction": as duas linhas de uma entrada são
-    # a MESMA busca repetida. É isso que esta suíte mede — se a mesma consulta
-    # devolve os mesmos números duas vezes seguidas. Comparar as duas linhas de
-    # um artigo com a coluna data_source diz se uma divergência veio do
-    # pipeline ou de uma fonte que não respondeu naquela execução.
     fieldnames = [
         "input_title",
         "input_doi",
@@ -193,31 +180,19 @@ def main():
         "citations_retrieved",
         "references_retrieved",
         "citations_reported",
+        "openalex_citations",
+        "openalex_references",
+        "diff_citations",
+        "diff_references",
         "data_source",
         "resolved_doi",
         "status",
         "warning",
     ]
 
-    def linha(p_title, p_doi, execucao, res):
-        return {
-            "input_title": p_title,
-            "input_doi": p_doi,
-            "execucao": execucao,
-            "citations_retrieved": res["citations_retrieved"],
-            "references_retrieved": res["references_retrieved"],
-            "citations_reported": res["citations_reported"],
-            "data_source": res["data_source"],
-            "resolved_doi": res["resolved_doi"],
-            "status": res["status"],
-            "warning": res["warning"],
-        }
-
     total = 0
 
-    # Arquivo aberto antes do laço e cada linha gravada assim que existe. Sem
-    # cache a execução leva dezenas de minutos; gravar só no final faria uma
-    # interrupção qualquer descartar todas as chamadas já feitas às APIs.
+    # f.flush() força a gravação imediata no disco usando o manipulador do arquivo f
     with open(OUTPUT_CSV, mode="w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=",")
         writer.writeheader()
@@ -227,62 +202,55 @@ def main():
             p_title = paper["title"]
             p_doi = paper["doi"]
 
-            identifier = p_doi if p_doi else p_title[:40]
-            print(f"\n({idx}/{len(papers)}) Processando linha individual: {identifier}")
+            identifier = p_doi if p_doi else p_title
+            print(f"\n({idx}/{len(papers)}) Processando: {identifier[:50]}...")
+
+            openalex_info = fetch_openalex_data(p_doi if p_doi else p_title)
 
             for execucao in range(1, EXECUCOES_POR_ENTRADA + 1):
                 print(f"  -> Execução {execucao}/{EXECUCOES_POR_ENTRADA}...")
                 res = run_python_script(RUN_FORWARD_PY, doi=p_doi, title=p_title)
-                writer.writerow(linha(p_title, p_doi, execucao, res))
+                
+                c_retrieved = res.get("citations_retrieved")
+                r_retrieved = res.get("references_retrieved")
+                oa_cit = openalex_info.get("openalex_citations")
+                oa_ref = openalex_info.get("openalex_references")
+
+                diff_cit = (c_retrieved - oa_cit) if (c_retrieved is not None and oa_cit is not None) else None
+                diff_ref = (r_retrieved - oa_ref) if (r_retrieved is not None and oa_ref is not None) else None
+
+                linha = {
+                    "input_title": p_title,
+                    "input_doi": p_doi,
+                    "execucao": execucao,
+                    "citations_retrieved": c_retrieved,
+                    "references_retrieved": r_retrieved,
+                    "citations_reported": res["citations_reported"],
+                    "openalex_citations": oa_cit,
+                    "openalex_references": oa_ref,
+                    "diff_citations": diff_cit,
+                    "diff_references": diff_ref,
+                    "data_source": res["data_source"],
+                    "resolved_doi": res["resolved_doi"],
+                    "status": res["status"],
+                    "warning": res["warning"],
+                }
+
+                writer.writerow(linha)
                 f.flush()
                 total += 1
 
-                print(f"     {res['status']} | citations={res['citations_retrieved']} "
-                      f"references={res['references_retrieved']} source={res['data_source']}")
+                print(f"     {res['status']} | Citations: script={c_retrieved} vs openalex={oa_cit} (diff={diff_cit}) | "
+                      f"References: script={r_retrieved} vs openalex={oa_ref} (diff={diff_ref})")
 
-                # A Semantic Scholar limita acesso anônimo a ~1 req/s e cada busca
-                # faz de 1 a 3 chamadas. Encadear as execuções sem pausa faz o
-                # próprio teste provocar o throttling que ele deveria medir: metade
-                # das linhas sai com data_source=openalex por causa do ritmo, não
-                # por indisponibilidade real da API.
                 time.sleep(PAUSA_ENTRE_BUSCAS)
 
     print(f"\n(SUCESSO) Processamento concluído! {total} linhas salvas em: {OUTPUT_CSV}")
 
 
 if __name__ == "__main__":
-    main()
-
-
-"""
-Funcionamento da exibição dos dados no CSV de saída (result_searches.csv):
-
-COLETADO (o que o sistema entregou)
-- "citations_retrieved": quantas citações a busca trouxe.
-- "references_retrieved": quantas referências a busca trouxe.
-
-REPORTADO (o que as APIs dizem existir)
-- "citations_reported": total de citações que a API atribui ao artigo semente.
-
-Comparar as duas colunas de citações mostra o quanto ficou pelo caminho. Não há
-equivalente para referências: o referenceCount da Semantic Scholar é consultado
-em search.py mas só aparece como texto em "warning", nunca como número no JSON.
-
-CONTEXTO
-- "data_source": openalex ou semantic+openalex. Explica variações entre
-  execuções — sem ele não dá para distinguir "o artigo tem poucas citações" de
-  "o Semantic Scholar foi barrado nesta rodada".
-- "resolved_doi": para conferir se a busca por título resolveu o artigo certo.
-- "warning": inclui o caso em que a editora bloqueia a lista de referências.
-
-Todos os números vêm direto dos campos homônimos do JSON, sem inferência.
-
-Um zero é informação legítima: nada foi coletado. Não é substituído por totais
-reportados pelas APIs.
-
-O cache é desligado nos subprocessos (SNOWMAP_DISABLE_CACHE=1), senão a linha do
-DOI apenas releria o resultado da linha do título e toda comparação sairia
-idêntica.
-
-ob.: o arquivo de entrada deve ter o nome 'tests_csvs.csv' e estar no mesmo diretório que este script.
-"""
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n[AVISO] Execução interrompida manualmente. Os dados parciais foram salvos em result_searches.csv.")
+        sys.exit(0)
