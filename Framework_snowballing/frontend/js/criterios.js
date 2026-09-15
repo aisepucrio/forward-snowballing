@@ -15,7 +15,10 @@ let metadataUidCounter = 0;
 
 // Modelo, chave, temperatura e paralelismo da LLM ficam só no .env do
 // servidor; o frontend envia apenas critérios, artigos e prompt extra.
-const ANALYSIS_BATCH_SIZE = 40;
+// Artigos por requisição ao servidor (cada artigo é uma chamada à LLM). Com
+// modelos de raciocínio cada chamada leva dezenas de segundos, e o servidor
+// corta a requisição em 10 minutos.
+const ANALYSIS_BATCH_SIZE = 8;
 
 function mostrarTabelaArtigos(artigos) {
   const tbody = document.getElementById('tabelaArtigosBody');
@@ -107,7 +110,8 @@ function prepararArtigosParaAnalise(artigos) {
 
   return artigos.map(artigo => ({
     title: limitarTexto(artigo.title, 300),
-    abstract: limitarTexto(artigo.abstract, 650),
+    // Mesmo limite de MAX_ABSTRACT_CHARS em scripts/services/prompt.py.
+    abstract: limitarTexto(artigo.abstract, 2000),
     language: artigo.language,
     year: artigo.year,
     venue: artigo.venue,
@@ -190,66 +194,134 @@ function jsonParaCSV(resultados) {
   return linhas.join('\n');
 }
 
-async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao, criteriaMetadata = {}) {
+// Progresso da análise salvo no navegador a cada lote, para que uma falha no
+// meio (cota do modelo, timeout, servidor fora) não descarte o que já foi
+// classificado e a análise possa ser retomada depois.
+const PROGRESSO_STORAGE_KEY = 'llmAnalysisProgress';
+
+// Só retoma um progresso salvo para os mesmos artigos, critérios e prompt extra.
+function assinaturaAnalise(artigos, criteriosInclusao, criteriosExclusao, extraPrompt) {
+  const texto = JSON.stringify([
+    artigos.map(artigo => artigo.title || ''),
+    criteriosInclusao,
+    criteriosExclusao,
+    extraPrompt,
+  ]);
+  let hash = 5381;
+  for (let i = 0; i < texto.length; i++) {
+    hash = ((hash << 5) + hash + texto.charCodeAt(i)) | 0;
+  }
+  return `${artigos.length}:${hash}`;
+}
+
+function lerProgressoSalvo() {
+  try {
+    return JSON.parse(localStorage.getItem(PROGRESSO_STORAGE_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function salvarProgresso(assinatura, resultados) {
+  try {
+    localStorage.setItem(PROGRESSO_STORAGE_KEY, JSON.stringify({ assinatura, resultados }));
+  } catch (err) {
+    console.warn('[LLM] Não foi possível salvar o progresso da análise:', err);
+  }
+}
+
+function limparProgresso() {
+  try {
+    localStorage.removeItem(PROGRESSO_STORAGE_KEY);
+  } catch {
+    // Sem localStorage não há progresso a limpar.
+  }
+}
+
+function erroComResultadosParciais(mensagem, resultadosParciais) {
+  const err = new Error(mensagem);
+  err.resultadosParciais = [...resultadosParciais];
+  return err;
+}
+
+// O servidor devolve os resultados na ordem dos artigos: resultados[i] é o
+// veredito de artigos[i], e a retomada continua a partir de
+// resultadosIniciais.length. Em falha, o erro carrega os resultados parciais.
+async function analisarEmLotes(
+  artigos,
+  criteriosInclusao,
+  criteriosExclusao,
+  criteriaMetadata = {},
+  { extraPrompt = '', resultadosIniciais = [], onLoteConcluido = () => {} } = {}
+) {
   const artigosLimpos = prepararArtigosParaAnalise(artigos);
-  const tamanhoLote = ANALYSIS_BATCH_SIZE;
-  const lotes = dividirEmLotes(artigosLimpos, tamanhoLote);
-  const resultadosFinais = [];
+  const total = artigosLimpos.length;
+  const resultadosFinais = [...resultadosIniciais];
+  const lotes = dividirEmLotes(artigosLimpos.slice(resultadosFinais.length), ANALYSIS_BATCH_SIZE);
 
   const statusEl = document.getElementById('statusAnalise');
   const progressoEl = document.getElementById('progressoAnalise');
   const progressContainer = document.querySelector('.progress');
 
+  const atualizarProgresso = (texto) => {
+    const percentual = Math.round((resultadosFinais.length / total) * 100);
+    statusEl.textContent = texto;
+    progressoEl.style.width = `${percentual}%`;
+    progressoEl.textContent = `${percentual}%`;
+  };
+
   if (progressContainer) {
     progressContainer.style.display = '';
   }
   statusEl.style.display = '';
+  statusEl.classList.remove('text-danger');
+  statusEl.classList.add('text-muted');
+  atualizarProgresso(resultadosFinais.length > 0
+    ? `Resuming analysis... ${resultadosFinais.length}/${total}`
+    : `Starting analysis... 0/${total}`);
 
-  statusEl.textContent = `Starting analysis... 0/${artigosLimpos.length}`;
-  progressoEl.style.width = '0%';
-  progressoEl.textContent = '0%';
+  for (const lote of lotes) {
+    const primeiro = resultadosFinais.length + 1;
+    const ultimo = resultadosFinais.length + lote.length;
+    let resultadosLote;
 
-  for (let i = 0; i < lotes.length; i++) {
-    const lote = lotes[i];
+    try {
+      const res = await fetch('/api/articles/analisar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          criteriosInclusao: criteriosInclusao,
+          criteriosExclusao: criteriosExclusao,
+          criteriaMetadata: criteriaMetadata,
+          artigos: lote,
+          extraPrompt: extraPrompt,
+        })
+      });
 
-    const payload = {
-      criteriosInclusao: criteriosInclusao,
-      criteriosExclusao: criteriosExclusao,
-      criteriaMetadata: criteriaMetadata,
-      artigos: lote,
-      extraPrompt: localStorage.getItem('llmPrompt') || '',
-    };
-
-    const res = await fetch('/api/articles/analisar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      let detalhe = '';
-      try {
-        detalhe = (await res.json()).error || '';
-      } catch {
-        detalhe = res.statusText;
+      if (!res.ok) {
+        let detalhe = '';
+        try {
+          detalhe = (await res.json()).error || '';
+        } catch {
+          detalhe = res.statusText;
+        }
+        throw new Error(detalhe || `HTTP ${res.status}`);
       }
-      throw new Error(`Error analyzing batch ${i + 1}${detalhe ? `: ${detalhe}` : ''}`);
+
+      resultadosLote = await res.json();
+      if (!Array.isArray(resultadosLote) || resultadosLote.length !== lote.length) {
+        throw new Error('Unexpected response from the server.');
+      }
+    } catch (err) {
+      throw erroComResultadosParciais(`Error analyzing articles ${primeiro}-${ultimo}: ${err.message}`, resultadosFinais);
     }
 
-    const resultadosLote = await res.json();
     resultadosFinais.push(...resultadosLote);
-
-    const processados = Math.min((i + 1) * tamanhoLote, artigosLimpos.length);
-    const percentual = Math.round((processados / artigosLimpos.length) * 100);
-
-    statusEl.textContent = `Analyzing articles... ${processados}/${artigosLimpos.length}`;
-    progressoEl.style.width = `${percentual}%`;
-    progressoEl.textContent = `${percentual}%`;
+    onLoteConcluido(resultadosFinais);
+    atualizarProgresso(`Analyzing articles... ${resultadosFinais.length}/${total}`);
   }
 
-  statusEl.textContent = `Analysis finished: ${artigosLimpos.length}/${artigosLimpos.length}`;
-  progressoEl.style.width = '100%';
-  progressoEl.textContent = '100%';
+  atualizarProgresso(`Analysis finished: ${total}/${total}`);
   setTimeout(() => {
     if (progressContainer) {
       progressContainer.style.display = 'none';
@@ -258,6 +330,27 @@ async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao, cr
   }, 800);
 
   return resultadosFinais;
+}
+
+function exibirResultados(resultados) {
+  document.getElementById('resultadoAnalise').dataset.resultadosRaw = JSON.stringify(resultados);
+  document.getElementById('selectedTitle').style.display = 'none';
+
+  const analysisSection = document.getElementById('analysisSection');
+  analysisSection.classList.remove('d-none');
+  analysisSection.classList.add('d-flex');
+
+  mostrarTabelaComResultados(artigosIncluidos, resultados);
+}
+
+function mostrarErroAnalise(mensagem) {
+  const statusEl = document.getElementById('statusAnalise');
+  statusEl.style.display = '';
+  statusEl.style.whiteSpace = 'pre-line';
+  statusEl.classList.remove('text-muted');
+  statusEl.classList.add('text-danger');
+  // textContent: a mensagem pode trazer texto vindo do provedor da LLM.
+  statusEl.textContent = mensagem;
 }
 
 document.getElementById('criteriosForm').addEventListener('submit', async (e) => {
@@ -303,6 +396,29 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     return;
   }
 
+  const extraPrompt = localStorage.getItem('llmPrompt') || '';
+  const total = artigosIncluidos.length;
+  const assinatura = assinaturaAnalise(artigosIncluidos, inclusao, exclusao, extraPrompt);
+  const progresso = lerProgressoSalvo();
+  let resultadosIniciais = [];
+
+  if (
+    progresso?.assinatura === assinatura &&
+    Array.isArray(progresso.resultados) &&
+    progresso.resultados.length > 0 &&
+    progresso.resultados.length < total
+  ) {
+    const retomar = confirm(
+      `A previous analysis of these articles and criteria stopped at ${progresso.resultados.length}/${total}.\n\n` +
+      'OK: resume from where it stopped\nCancel: start over'
+    );
+    if (retomar) {
+      resultadosIniciais = progresso.resultados;
+    } else {
+      limparProgresso();
+    }
+  }
+
   btnTexto.classList.add('d-none');
   btnLoading.classList.remove('d-none');
   analisarBtn.disabled = true;
@@ -312,27 +428,33 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
       artigosIncluidos,
       inclusao,
       exclusao,
-      criteriaMetadata
+      criteriaMetadata,
+      {
+        extraPrompt,
+        resultadosIniciais,
+        onLoteConcluido: parciais => salvarProgresso(assinatura, parciais),
+      }
     );
-    const divResultado = document.getElementById('resultadoAnalise');
-    divResultado.dataset.resultadosRaw = JSON.stringify(resultados);
-
-    document.getElementById('selectedTitle').style.display = 'none';
-
-    document.getElementById('analysisSection').classList.remove('d-none');
-    document.getElementById('analysisSection').classList.add('d-flex');
-
-    mostrarTabelaComResultados(artigosIncluidos, resultados);
+    limparProgresso();
+    exibirResultados(resultados);
+    // Só grava no banco a análise completa.
     await salvarCriteriosNoBanco(resultados);
   } catch (err) {
-    alert('Error: ' + err.message);
-    const divResultado = document.getElementById('resultadoAnalise');
-    // textContent: a mensagem pode trazer texto vindo do provedor da LLM.
-    const erroEl = document.createElement('p');
-    erroEl.className = 'text-danger';
-    erroEl.textContent = err.message;
-    divResultado.replaceChildren(erroEl);
-    divResultado.dataset.resultadosRaw = '';
+    const parciais = err.resultadosParciais || [];
+    let mensagem = err.message;
+
+    if (parciais.length > 0) {
+      exibirResultados(parciais);
+      mensagem =
+        `Analysis stopped at ${parciais.length}/${total}. ${err.message}\n` +
+        'The results so far are shown below and kept in this browser. ' +
+        'Click "Apply Criteria" again with the same criteria to resume.';
+    } else {
+      document.getElementById('resultadoAnalise').dataset.resultadosRaw = '';
+    }
+
+    mostrarErroAnalise(mensagem);
+    alert('Error: ' + mensagem);
   } finally {
     btnTexto.classList.remove('d-none');
     btnLoading.classList.add('d-none');

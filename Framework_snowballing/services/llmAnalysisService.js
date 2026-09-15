@@ -6,7 +6,9 @@ const MAX_CACHE_ENTRIES = 100;
 const MAX_ARTICLES_PER_REQUEST = 100;
 
 class LlmAnalysisService {
-  constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 5 * 60 * 1000 }) } = {}) {
+  // 10 minutos por requisição: modelos de raciocínio levam dezenas de
+  // segundos por artigo, e um artigo lento pode ser refeito.
+  constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 10 * 60 * 1000 }) } = {}) {
     this.pythonRunner = pythonRunner;
     this.cache = new Map();
   }

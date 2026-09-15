@@ -31,7 +31,6 @@ Framework_snowballing/
 ├── scripts/              # Python: citation analysis, LLM processing, database
 ├── init/                 # SQL executed when the Postgres container is first created
 ├── docker-compose.yml    # PostgreSQL container
-├── .env.example          # Configuration template
 ├── package.json          # Node.js dependencies
 ├── requirements.txt      # Python dependencies
 └── README.md
@@ -72,13 +71,7 @@ pip install -r requirements.txt
 
 ### 3. Configuration
 
-Copy the template and adjust if needed:
-
-```bash
-copy .env.example .env
-```
-
-On Linux/macOS use `cp .env.example .env`.
+Create a `.env` file in `Framework_snowballing/` with the variables below:
 
 | Variable | Default | Notes |
 |---|---|---|
@@ -93,10 +86,12 @@ On Linux/macOS use `cp .env.example .env`.
 | `OPENROUTER_API_KEY` | — | Required for LLM screening. Server-side only |
 | `LLM_MODEL` | `openai/gpt-4o` | Any OpenRouter model that supports structured outputs |
 | `LLM_FALLBACK_MODELS` | — | Optional, comma-separated |
-| `LLM_BATCH_SIZE` | `10` | Articles per LLM call |
-| `LLM_MAX_WORKERS` | `4` | Parallel LLM calls |
+| `LLM_MAX_WORKERS` | `8` | Parallel LLM calls (one call per article, with all criteria) |
 | `LLM_TEMPERATURE` | `0` | |
-| `LLM_MAX_TOKENS` | `4000` | Upper bound per call |
+| `LLM_MAX_TOKENS` | `1000` | Upper bound per call. OpenRouter reserves credit for it; raise it for reasoning models |
+| `LLM_STRUCTURED_OUTPUT` | `true` | Sends the JSON schema. Set `false` for models without `structured_outputs` (e.g. most `:free` variants) |
+| `LLM_REASONING` | `false` | Enables reasoning (`reasoning: {enabled: true}`) |
+| `LLM_REASONING_EFFORT` | — | Optional: `low`, `medium` or `high` instead of the default effort |
 | `LLM_TIMEOUT_SECONDS` | `120` | Per call; 408/429/5xx are retried up to 3 times |
 
 `.env` is git-ignored and must never be committed.
@@ -154,6 +149,10 @@ Required only for the automated screening on the Criteria page. Create a key at
 <https://openrouter.ai/settings/keys> and set `OPENROUTER_API_KEY` in `.env`. The model
 and all LLM parameters are configured only in `.env`; the interface never sends them.
 Token usage and cost of each call are printed to the server log as `[LLM USAGE]`.
+
+The screening prompt, response schema and selection rule live in
+`scripts/services/prompt.py`. The same module is used by the LLM studies in
+`Forward_Analysis/LLMs_Analysis` and `Backward_Analisys/LLMs_Analysis`.
 
 ---
 
