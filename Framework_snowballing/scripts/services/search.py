@@ -516,6 +516,78 @@ def fallback_openalex_by_doi(doi):
     OPENALEX_CACHE[cache_key] = result
     return result
 
+def fallback_opencitations_by_doi(doi):
+    """
+    Busca na OpenCitations os DOIs referenciados por `doi`. Usada só como
+    fallback quando semantic_references_blocked_warning() detecta que a
+    Semantic Scholar sabe o total de referências mas não libera a lista
+    (bloqueio da editora).
+
+    A OpenCitations devolve só pares citing/cited de DOI, sem título, ano,
+    autores etc. Por isso o retorno aqui já sai no formato de "referência
+    incompleta" (doi presente, título "-") que enrich_incomplete_citations
+    sabe completar via Crossref — sem isso, get_record_key/merge_records_
+    across_sources não teriam como casar esses registros com os de outras
+    fontes, porque eles esperam "doi" ou "title", não "citing"/"cited".
+    """
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi:
+        return []
+
+    url = f"https://api.opencitations.net/index/v1/references/{normalized_doi}"
+    data = safe_get(url)
+
+    # safe_get devolve None em erro de rede/limite/etc. Sem essa guarda o
+    # "for item in data" quebra com TypeError e derruba o pipeline inteiro
+    # por causa de uma fonte que é só complementar.
+    if not data or not isinstance(data, list):
+        return []
+
+    references = []
+    seen_dois = set()
+    for item in data:
+        cited_doi = normalize_doi(item.get("cited"))
+        if not cited_doi or cited_doi in seen_dois:
+            continue
+        seen_dois.add(cited_doi)
+        references.append({
+            "doi": cited_doi,
+            "title": "-",
+            "api": "opencitations",
+            "source": "opencitations",
+        })
+
+    return references
+
+
+def add_opencitations_references_if_blocked(merged, doi, semantic_block_warning):
+    """
+    Só dispara a chamada à OpenCitations quando semantic_block_warning já veio
+    preenchido (ou seja, quando semantic_references_blocked_warning() já
+    confirmou o bloqueio da editora).
+    """
+    if not semantic_block_warning or not doi:
+        return merged
+
+    opencitations_references = fallback_opencitations_by_doi(doi)
+    if not opencitations_references:
+        return merged
+
+    # Cada registro chega só com doi/title="-"; aqui ganham título, ano,
+    # autores etc. via Crossref, do mesmo jeito que qualquer outra citação
+    # incompleta do pipeline.
+    opencitations_references = enrich_incomplete_citations(opencitations_references)
+
+    merged["references"] = merge_records_across_sources(
+        merged.get("references", []),
+        opencitations_references,
+    )
+    merged["warning"] = (
+        f"{semantic_block_warning} Recuperadas "
+        f"{len(opencitations_references)} referências via OpenCitations."
+    )
+    return merged
+
 
 def attach_openalex_citations(paper):
     merged = dict(paper)
@@ -1195,6 +1267,9 @@ def search_combined(doi=None, title=None):
             if semantic_block_warning:
                 merged["warning"] = semantic_block_warning
                 merged["partial_result"] = True
+                merged = add_opencitations_references_if_blocked(
+                    merged, merged["doi"], semantic_block_warning
+                )
 
             save_complete_cache(cleaned_doi, merged)
 
@@ -1342,6 +1417,9 @@ def search_combined(doi=None, title=None):
             if semantic_block_warning:
                 merged["warning"] = semantic_block_warning
                 merged["partial_result"] = True
+                merged = add_opencitations_references_if_blocked(
+                    merged, merged.get("doi") or cleaned_doi, semantic_block_warning
+                )
 
 
 
@@ -1548,4 +1626,3 @@ def clear_caches():
     CROSSREF_CACHE.clear()
     SEMANTIC_CACHE.clear()
     REQUEST_CACHE.clear()
-
