@@ -73,8 +73,12 @@ class PythonRunner {
       }
 
       const scriptPath = path.join(this.scriptsDir, scriptName);
+      // stdin/stdout em UTF-8, igual ao que o Node escreve e lê. Sem isso o
+      // Python no Windows usa cp1252: a entrada chega corrompida aos scripts e
+      // a saída só "funciona" porque a corrupção se desfaz na volta.
       const pythonProcess = spawn(pythonPath, [scriptPath, ...args], {
         cwd: this.projectRoot,
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
       });
 
       let output = '';

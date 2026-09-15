@@ -1,3 +1,12 @@
+"""
+Contrato da triagem por LLM: monta o prompt (uma chamada por artigo, com todos
+os criterios), o JSON schema da resposta, interpreta a resposta e decide se o
+artigo e selecionado.
+
+Fonte unica para a aplicacao (scripts/analisys_LLM.py) e para os estudos em
+Forward_Analysis/ e Backward_Analisys/ (LLMs_Analysis/code/analysis.py):
+mudar o prompt aqui muda o que os dois avaliam.
+"""
 import json
 from pathlib import Path
 from typing import Any
@@ -8,8 +17,80 @@ ARTICLES_KEY = "articles"
 INCLUSION_KEY = "Inclusion"
 EXCLUSION_KEY = "Exclusion"
 
+ANSWER_YES = "Yes"
+ANSWER_NO = "No"
+ANSWER_ERROR = "error"
 
 NOT_AVAILABLE = "not available"
+MAX_TITLE_CHARS = 300
+MAX_ABSTRACT_CHARS = 2000
+
+# Metadados enviados alem de titulo e abstract, na ordem em que aparecem no
+# prompt. Por enquanto vao todos; a selecao por criterio feita na interface
+# (criteriaMetadata) deve filtrar esta lista no futuro.
+METADATA_FIELDS = (
+    "year",
+    "language",
+    "venue",
+    "keywords",
+    "pages",
+    "numpages",
+    "open_access",
+    "citationCount",
+)
+
+
+SYSTEM_INSTRUCTIONS = """You are an expert researcher screening studies for a systematic literature review.
+Your task is to decide, for a single article, whether it satisfies each inclusion and exclusion criterion provided by the user.
+
+DECISION RULES
+- Evaluate every criterion independently.
+- Base your decisions only on the article data provided. The title and abstract are the main evidence. The other metadata fields (such as year, language, venue, keywords, pages, open access, and citation count) are also evidence and must be used whenever a criterion refers to them.
+- Metadata fields that are not listed were not available for the article.
+- Inclusion criterion: answer "Yes" if the article satisfies it; otherwise answer "No".
+- Exclusion criterion: answer "Yes" if the article satisfies it (that is, the article must be excluded for that reason); otherwise answer "No".
+- When the evidence is ambiguous, incomplete, or only weakly implied, favor keeping the article: answer "Yes" for inclusion criteria and "No" for exclusion criteria.
+- Think through the criteria carefully before answering, but do not include your reasoning in the output.
+"""
+
+EXAMPLES = """
+EXAMPLES
+The examples below illustrate the decision process only. Never apply the example criteria to the real article.
+
+Example criteria:
+INCLUSION CRITERIA
+- IC1: The article is a primary empirical study.
+- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
+EXCLUSION CRITERIA
+- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
+- EC2: The article was published before 2015.
+
+Example article 1:
+- title: Empirical evaluation of a method in the target research area
+- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
+- year: 2019
+Expected output:
+{"criteria":{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}
+
+Example article 2:
+- title: A review of methods in the target research area
+- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
+- year: 2012
+Expected output:
+{"criteria":{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"Yes"}}
+
+Example article 3 (abstract and year are not available, so the ambiguity rule applies):
+- title: Towards better methods in the target research area
+- abstract: not available
+Expected output:
+{"criteria":{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}
+"""
+
+OUTPUT_FORMAT = """
+OUTPUT FORMAT
+- Return only valid compact JSON, without markdown or any extra text.
+- The JSON must contain exactly one top-level key: "criteria".
+- "criteria" must contain every criterion ID given by the user, each with the value "Yes" or "No"."""
 
 
 def normalize_text(value: Any) -> str:
@@ -71,14 +152,22 @@ def format_criteria(criteria_group: dict[str, str]) -> str:
     )
 
 
-def _stringify_metadata_value(value: Any) -> str:
+def _is_missing(value: Any) -> bool:
     if value is None:
-        return NOT_AVAILABLE
-
+        return True
     if isinstance(value, str):
-        cleaned = value.strip()
-        return cleaned if cleaned else NOT_AVAILABLE
+        return value.strip() in ("", "-")
+    if isinstance(value, (list, dict)):
+        return not value
+    return False
 
+
+def _truncate(value: Any, limit: int) -> str:
+    text = normalize_text(value)
+    return f"{text[:limit]}..." if len(text) > limit else text
+
+
+def _stringify_metadata_value(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
 
@@ -100,191 +189,126 @@ def _stringify_metadata_value(value: Any) -> str:
     return normalize_text(value) or NOT_AVAILABLE
 
 
-def _format_article_metadata(article: dict[str, Any]) -> str:
-    metadata_fields = [
-        ("paperId", article.get("paperId")),
-        ("title", article.get("title")),
-        ("abstract", article.get("abstract")),
-        ("authors", article.get("authors")),
-        ("year", article.get("year")),
-        ("venue", article.get("venue")),
-        ("citationCount", article.get("citationCount", article.get("citations_count"))),
-        ("language", article.get("language")),
-        ("pages", article.get("pages")),
-        ("numpages", article.get("numpages")),
-        ("open_access", article.get("open_access")),
-        ("keywords", article.get("keywords")),
+def format_article(article: dict[str, Any]) -> str:
+    title = article.get("title")
+    abstract = article.get("abstract")
+    lines = [
+        f"- title: {NOT_AVAILABLE if _is_missing(title) else _truncate(title, MAX_TITLE_CHARS)}",
+        f"- abstract: {NOT_AVAILABLE if _is_missing(abstract) else _truncate(abstract, MAX_ABSTRACT_CHARS)}",
     ]
 
-    return "\n".join(
-        f"- {field_name}: {_stringify_metadata_value(field_value)}"
-        for field_name, field_value in metadata_fields
+    for field_name in METADATA_FIELDS:
+        value = article.get(field_name)
+        if field_name == "citationCount" and _is_missing(value):
+            value = article.get("citations_count")
+        # Campo ausente fica fora do prompt; o system prompt avisa que campo
+        # nao listado nao estava disponivel.
+        if not _is_missing(value):
+            lines.append(f"- {field_name}: {_stringify_metadata_value(value)}")
+
+    return "\n".join(lines)
+
+
+def _system_prompt(extra_prompt: str = "") -> str:
+    extra = normalize_text(extra_prompt)
+    extra_section = f"\nADDITIONAL INSTRUCTIONS FROM THE REVIEWER\n{extra}\n" if extra else ""
+    return f"{SYSTEM_INSTRUCTIONS}{extra_section}{EXAMPLES}{OUTPUT_FORMAT}"
+
+
+def _user_prompt(article: dict[str, Any], criteria: dict[str, dict[str, str]]) -> str:
+    output_shape = json.dumps(
+        {"criteria": {criterion_id: "Yes|No" for criterion_id in expected_criteria_ids(criteria)}},
+        separators=(",", ":"),
+    )
+    return (
+        f"INCLUSION CRITERIA\n{format_criteria(criteria.get(INCLUSION_KEY, {}))}\n\n"
+        f"EXCLUSION CRITERIA\n{format_criteria(criteria.get(EXCLUSION_KEY, {}))}\n\n"
+        f"ARTICLE\n{format_article(article)}\n\n"
+        f"Return the JSON in this shape:\n{output_shape}"
     )
 
 
-def _resolve_allowed_optional_fields(
-    criteria: dict[str, dict[str, str]],
-    criteria_metadata: dict[str, list[str]] | None,
-    optional_fields: tuple[str, ...],
-) -> set[str]:
-    if not criteria_metadata:
-        return set(optional_fields)
-
-    known_fields = set(optional_fields)
-    allowed: set[str] = set()
-    for criterion_id in expected_criteria_ids(criteria):
-        requested = criteria_metadata.get(criterion_id)
-        if requested is None:
-            allowed |= known_fields
-            continue
-        allowed |= (set(requested) & known_fields)
-    return allowed
-
-
-def generate_prompt(
+def generate_messages(
     article: dict[str, Any],
     criteria: dict[str, dict[str, str]],
     extra_prompt: str = "",
-) -> str:
-    inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
-    exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
-    criteria_schema = _format_criteria_schema(criteria)
-    article_metadata = _format_article_metadata(article)
-    extra_section = _format_extra_prompt(extra_prompt)
-
-    return f"""{extra_section}You are an expert researcher conducting a Systematic Review.
-Your task is to classify the article against each inclusion and exclusion criterion.
-
-Think through the criteria carefully before answering, but do not include your reasoning in the output.
-
-The examples below illustrate the decision process only.
-Do not reuse the example criteria when analyzing the real article.
-
-EXAMPLE CRITERIA
-
-INCLUSION CRITERIA
-- IC1: The article is a primary empirical study.
-- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
-
-EXCLUSION CRITERIA
-- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
-- EC2: The article is outside the review topic.
-
-EXAMPLE ARTICLE:
-- title: Empirical evaluation of a method in the target research area
-- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
-
-EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}}}
-
-EXAMPLE ARTICLE:
-- title: A review of methods in the target research area
-- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
-
-EXPECTED OUTPUT:
-{{"criteria":{{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"No"}}}}
-
-REAL CRITERIA
-
-INCLUSION CRITERIA
-{inclusion_criteria}
-
-EXCLUSION CRITERIA
-{exclusion_criteria}
-
-REAL ARTICLE
-{article_metadata}
-
-CLASSIFICATION RULES:
-- Consider each key in data to decide whether the article satisfies each criterion.
-- For each inclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
-- For each exclusion criterion, return "Yes" if the article satisfies it; otherwise return "No".
-- When evidence is ambiguous, incomplete, or only weakly implied, favor selection: use "Yes" for ambiguous inclusion criteria and "No" for ambiguous exclusion criteria.
-
-OUTPUT:
-- Return only valid compact JSON.
-- The JSON must contain exactly one top-level key: "criteria".
-- The "criteria" object must contain exactly these criterion keys and values "Yes", "No", or "Unsure":
-{criteria_schema}
-- Do not include explanations, reasoning, confidence, markdown, or extra text.
-"""
-
-
-def generate_batch_prompt(
-    articles: list[dict[str, Any]],
-    criteria: dict[str, dict[str, str]],
-    extra_prompt: str = "",
-    criteria_metadata: dict[str, list[str]] | None = None,
-) -> str:
-    inclusion_criteria = format_criteria(criteria[INCLUSION_KEY])
-    exclusion_criteria = format_criteria(criteria[EXCLUSION_KEY])
-    criteria_schema = _format_criteria_schema(criteria)
-    extra_section = _format_extra_prompt(extra_prompt)
-    articles_payload = []
-    optional_fields = (
-        "language",
-        "year",
-        "venue",
-        "open_access",
-        "keywords",
-        "pages",
-        "numpages",
-        "citationCount",
-    )
-    allowed_fields = _resolve_allowed_optional_fields(criteria, criteria_metadata, optional_fields)
-    for index, article in enumerate(articles):
-        payload = {
-            "index": index,
-            "title": _stringify_metadata_value(article.get("title")),
-            "abstract": _stringify_metadata_value(article.get("abstract")),
-        }
-        for field_name in optional_fields:
-            if field_name not in allowed_fields:
-                continue
-            field_value = article.get(field_name)
-            if field_value not in (None, "", "-"):
-                payload[field_name] = field_value
-        articles_payload.append(payload)
-
-    return f"""{extra_section}Screen each article for a systematic review.
-INCLUSION:
-{inclusion_criteria}
-EXCLUSION:
-{exclusion_criteria}
-ARTICLES:
-{json.dumps(articles_payload, ensure_ascii=False, separators=(",", ":"))}
-Return only compact JSON: {{"articles":[{{"index":0,"criteria":{criteria_schema}}}]}}
-Include every article in input order. Use "Yes", "No", or "Unsure" for every criterion.
-Use explicit metadata as evidence. Use "Unsure" only when the required information is absent.
-When language, year, venue, open_access, pages, or citationCount is present and the criterion asks about it, answer "Yes" or "No", never "Unsure".
-Language codes are explicit evidence: "en" means English, "pt" means Portuguese, and "es" means Spanish.
-"""
-
-
-def build_prompt_for_article(
-    article: dict[str, Any],
-    articles_json_path: str | Path,
-) -> str:
-    data = load_articles_json(articles_json_path)
-    criteria = extract_criteria(data)
-    return generate_prompt(article, criteria)
-
-
-def build_prompts_from_articles_json(articles_json_path: str | Path) -> list[str]:
-    data = load_articles_json(articles_json_path)
-    criteria = extract_criteria(data)
-    articles = data.get(ARTICLES_KEY, [])
-
-    if not isinstance(articles, list):
-        raise ValueError(f"Chave obrigatoria deve ser uma lista: {ARTICLES_KEY}")
-
+) -> list[dict[str, str]]:
+    """Mensagens no formato chat (role/content). Instrucoes fixas e exemplos
+    ficam no system; criterios e artigo no user."""
     return [
-        generate_prompt(
-            article=article,
-            criteria=criteria,
-        )
-        for article in articles
+        {"role": "system", "content": _system_prompt(extra_prompt)},
+        {"role": "user", "content": _user_prompt(article, criteria)},
     ]
+
+
+def response_schema(criteria: dict[str, dict[str, str]]) -> dict[str, Any]:
+    criterion_ids = expected_criteria_ids(criteria)
+    return {
+        "type": "object",
+        "properties": {
+            "criteria": {
+                "type": "object",
+                "properties": {
+                    criterion_id: {"type": "string", "enum": [ANSWER_YES, ANSWER_NO]}
+                    for criterion_id in criterion_ids
+                },
+                "required": criterion_ids,
+                "additionalProperties": False,
+            }
+        },
+        "required": ["criteria"],
+        "additionalProperties": False,
+    }
+
+
+def _normalize_answer(value: Any) -> str:
+    normalized = normalize_text(value).lower()
+
+    if normalized in {"yes", "sim"}:
+        return ANSWER_YES
+
+    if normalized in {"no", "nao", "não"}:
+        return ANSWER_NO
+
+    return ANSWER_ERROR
+
+
+def _extract_json_object(text: str) -> dict[str, Any]:
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end <= start:
+        raise ValueError("JSON nao encontrado na resposta")
+
+    return json.loads(text[start:end + 1])
+
+
+def parse_criteria_response(text: str, criteria: dict[str, dict[str, str]]) -> dict[str, str]:
+    """Resposta da LLM -> {criterio: "Yes" | "No" | "error"}. Nunca levanta:
+    resposta invalida ou criterio ausente vira "error"."""
+    criterion_ids = expected_criteria_ids(criteria)
+
+    try:
+        data = _extract_json_object(normalize_text(text))
+    except ValueError:
+        return {criterion_id: ANSWER_ERROR for criterion_id in criterion_ids}
+
+    raw_criteria = data.get("criteria") if isinstance(data.get("criteria"), dict) else data
+    return {
+        criterion_id: _normalize_answer(raw_criteria.get(criterion_id))
+        for criterion_id in criterion_ids
+    }
+
+
+def is_selected(criteria: dict[str, dict[str, str]], results: dict[str, str]) -> bool | None:
+    """Selecionado quando todo criterio de inclusao e "Yes" e nenhum de exclusao
+    e "Yes". None quando algum criterio ficou sem resposta valida."""
+    if any(results.get(criterion_id) not in (ANSWER_YES, ANSWER_NO) for criterion_id in expected_criteria_ids(criteria)):
+        return None
+
+    all_inclusion = all(results[criterion_id] == ANSWER_YES for criterion_id in criteria.get(INCLUSION_KEY, {}))
+    any_exclusion = any(results[criterion_id] == ANSWER_YES for criterion_id in criteria.get(EXCLUSION_KEY, {}))
+    return all_inclusion and not any_exclusion
 
 
 def _criteria_lines_to_dict(text: str, prefix: str) -> dict[str, str]:
@@ -309,19 +333,3 @@ def _strip_existing_numbering(line: str) -> str:
         return parts[1].strip()
 
     return stripped
-
-
-def _format_criteria_schema(criteria: dict[str, dict[str, str]]) -> str:
-    ids = expected_criteria_ids(criteria)
-
-    if not ids:
-        return "{}"
-
-    return json.dumps({criterion_id: "Yes, No, or Unsure" for criterion_id in ids})
-
-
-def _format_extra_prompt(extra_prompt: str) -> str:
-    cleaned = normalize_text(extra_prompt)
-    if not cleaned:
-        return ""
-    return f"ADDITIONAL INSTRUCTIONS\n{cleaned}\n\n"
