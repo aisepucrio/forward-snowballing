@@ -9,11 +9,8 @@ class LlmsController {
   }
 
   async analisar(req, res) {
-    const { artigos, model, ollamaUrl } = req.body;
-    console.log('Entrou no llmsController.analisar');
-    console.log('[DEBUG] ollamaUrl recebido:', ollamaUrl);
-    console.log('[DEBUG] model recebido:', model);
-    console.log('[DEBUG] artigos count:', artigos ? artigos.length : 0);
+    const { artigos } = req.body;
+    console.log('[LLM] artigos recebidos:', Array.isArray(artigos) ? artigos.length : 0);
 
     try {
       const resultados = await this.llmAnalysisService.analyze(req.body, { abortEmitter: req });

@@ -11,7 +11,7 @@ Access the deployed version of the framework here: https://snowmap.aise-lab.com/
 ## Key Features
 
 - **Citation Analysis**: Forward and Backward citation tracking using multiple APIs
-- **LLM Integration**: Integration with LLM services (Ollama) for automated screening
+- **LLM Integration**: Automated screening through [OpenRouter](https://openrouter.ai)
 - **Persistence**: PostgreSQL for searches, papers and screening flags
 - **API Aggregation**: Support for multiple citation databases:
   - OpenAlex
@@ -46,11 +46,11 @@ Framework_snowballing/
 | Node.js 14+ and npm | **Yes** | Web server and interface |
 | Python 3.8+ | **Yes** | Citation search and analysis |
 | Docker | No | PostgreSQL database |
-| Ollama | No | LLM-based screening |
+| OpenRouter API key | No | LLM-based screening |
 
 Only Node and Python are mandatory. Without Docker the application runs and searches
-normally — results simply are not persisted to PostgreSQL. Without Ollama, every step
-works except the automated criteria screening.
+normally — results simply are not persisted to PostgreSQL. Without an OpenRouter key,
+every step works except the automated criteria screening.
 
 ---
 
@@ -90,8 +90,14 @@ On Linux/macOS use `cp .env.example .env`.
 | `TEMP_USER_ID` | `00000000-0000-0000-0000-000000000001` | Fixed user until login exists |
 | `SEMANTIC_API_KEY` | — | Optional. Raises Semantic Scholar rate limits |
 | `PORT` | `3000` | Web server port |
-| `OLLAMA_URL` | `http://localhost:11434/api/chat` | Only for LLM screening |
-| `OLLAMA_MODEL` | `llama3.2:3b` | Only for LLM screening |
+| `OPENROUTER_API_KEY` | — | Required for LLM screening. Server-side only |
+| `LLM_MODEL` | `openai/gpt-4o` | Any OpenRouter model that supports structured outputs |
+| `LLM_FALLBACK_MODELS` | — | Optional, comma-separated |
+| `LLM_BATCH_SIZE` | `10` | Articles per LLM call |
+| `LLM_MAX_WORKERS` | `4` | Parallel LLM calls |
+| `LLM_TEMPERATURE` | `0` | |
+| `LLM_MAX_TOKENS` | `4000` | Upper bound per call |
+| `LLM_TIMEOUT_SECONDS` | `120` | Per call; 408/429/5xx are retried up to 3 times |
 
 `.env` is git-ignored and must never be committed.
 
@@ -142,17 +148,12 @@ Everyday commands:
 > require matching changes in `scripts/services/snowmap_bd.py`, which lists columns
 > explicitly in its SQL.
 
-### 5. Ollama (optional)
+### 5. OpenRouter (optional)
 
-Required only for the automated screening on the Criteria page. Install from
-<https://ollama.com>, then:
-
-```bash
-ollama pull llama3.2:3b
-```
-
-The model, URL, temperature and token limit can also be set directly in the interface,
-on the Criteria page.
+Required only for the automated screening on the Criteria page. Create a key at
+<https://openrouter.ai/settings/keys> and set `OPENROUTER_API_KEY` in `.env`. The model
+and all LLM parameters are configured only in `.env`; the interface never sends them.
+Token usage and cost of each call are printed to the server log as `[LLM USAGE]`.
 
 ---
 
@@ -205,9 +206,9 @@ The external APIs (OpenAlex, Semantic Scholar, Crossref) impose rate limits. Set
 `SEMANTIC_API_KEY` reduces throttling. Results are cached in `cache/snowballing_cache.db`,
 so repeating a search is fast.
 
-**LLM screening returns `error` for every criterion**
-Ollama is not reachable. Confirm it is running (`ollama list`) and that `OLLAMA_URL`
-points to it.
+**LLM screening fails with `OpenRouter recusou a requisicao`**
+HTTP 401 means an invalid `OPENROUTER_API_KEY`, 402 means no credits left, and 404 usually
+means `LLM_MODEL` does not exist or does not support structured outputs.
 
 ---
 

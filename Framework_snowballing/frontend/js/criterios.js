@@ -13,14 +13,9 @@ const METADATA_FIELDS = [
 
 let metadataUidCounter = 0;
 
+// Modelo, chave, temperatura e paralelismo da LLM ficam só no .env do
+// servidor; o frontend envia apenas critérios, artigos e prompt extra.
 const ANALYSIS_BATCH_SIZE = 40;
-const ANALYSIS_MAX_WORKERS = 1;
-const DEFAULT_LLM_SETTINGS = {
-  url: 'http://localhost:11434/api/chat',
-  model: 'llama3.2:3b',
-  temperature: 0.1,
-  tokens: 300,
-};
 
 function mostrarTabelaArtigos(artigos) {
   const tbody = document.getElementById('tabelaArtigosBody');
@@ -216,24 +211,13 @@ async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao, cr
 
   for (let i = 0; i < lotes.length; i++) {
     const lote = lotes[i];
-    let settings = {};
-    try {
-      settings = JSON.parse(localStorage.getItem('llmSettings') || '{}');
-    } catch {
-      settings = {};
-    }
 
     const payload = {
       criteriosInclusao: criteriosInclusao,
       criteriosExclusao: criteriosExclusao,
       criteriaMetadata: criteriaMetadata,
       artigos: lote,
-      model: settings.model ?? DEFAULT_LLM_SETTINGS.model,
-      temperature: settings.temperature ?? DEFAULT_LLM_SETTINGS.temperature,
-      tokens: settings.tokens ?? DEFAULT_LLM_SETTINGS.tokens,
-      ollamaUrl: settings.url ?? DEFAULT_LLM_SETTINGS.url,
       extraPrompt: localStorage.getItem('llmPrompt') || '',
-      maxWorkers: ANALYSIS_MAX_WORKERS,
     };
 
     const res = await fetch('/api/articles/analisar', {
@@ -243,7 +227,13 @@ async function analisarEmLotes(artigos, criteriosInclusao, criteriosExclusao, cr
     });
 
     if (!res.ok) {
-      throw new Error(`Error analyzing batch ${i + 1}`);
+      let detalhe = '';
+      try {
+        detalhe = (await res.json()).error || '';
+      } catch {
+        detalhe = res.statusText;
+      }
+      throw new Error(`Error analyzing batch ${i + 1}${detalhe ? `: ${detalhe}` : ''}`);
     }
 
     const resultadosLote = await res.json();
@@ -337,7 +327,11 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
   } catch (err) {
     alert('Error: ' + err.message);
     const divResultado = document.getElementById('resultadoAnalise');
-    divResultado.innerHTML = `<p class="text-danger">${err.message}</p>`;
+    // textContent: a mensagem pode trazer texto vindo do provedor da LLM.
+    const erroEl = document.createElement('p');
+    erroEl.className = 'text-danger';
+    erroEl.textContent = err.message;
+    divResultado.replaceChildren(erroEl);
     divResultado.dataset.resultadosRaw = '';
   } finally {
     btnTexto.classList.remove('d-none');
