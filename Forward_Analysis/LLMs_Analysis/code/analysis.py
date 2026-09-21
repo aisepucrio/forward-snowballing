@@ -1,15 +1,25 @@
 import json
 import os
+import sys
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
 
-try:
-    from services.prompt import generate_prompt
-except ModuleNotFoundError:
-    from prompt import generate_prompt
+# Prompt, schema, leitura da resposta e regra de selecao vem do mesmo modulo da
+# aplicacao (Framework_snowballing/scripts/services/prompt.py), para que o
+# estudo avalie exatamente o prompt que roda na ferramenta.
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT / "Framework_snowballing" / "scripts"))
+
+from services.prompt import (  # noqa: E402
+    CRITERIA_KEY,
+    extract_criteria,
+    generate_messages,
+    is_selected,
+    parse_criteria_response,
+)
 
 
 MODEL_NAME = "gemini-3.1-flash-lite-preview"
@@ -20,11 +30,11 @@ GEMINI_API_URL = (
     f"models/{MODEL_NAME}:generateContent"
 )
 
-CRITERIA_KEY = "Criteria"
+LLMS_ANALYSIS_DIR = Path(__file__).resolve().parents[1]
+
 ARTICLES_KEY = "articles"
 RESULTS_KEY = "results"
 TITLE_KEY = "title"
-ABSTRACT_KEY = "abstract"
 SELECTED_KEY = "selected"
 
 
@@ -76,13 +86,23 @@ def write_json(payload: dict[str, Any], path: str | Path) -> None:
 def load_articles_data(articles_json_path: str | Path) -> dict[str, Any]:
     data = read_json(articles_json_path)
 
-    if CRITERIA_KEY not in data:
-        raise ValueError(f"Chave obrigatoria nao encontrada: {CRITERIA_KEY}")
-
     if ARTICLES_KEY not in data or not isinstance(data[ARTICLES_KEY], list):
         raise ValueError(f"Chave obrigatoria deve ser uma lista: {ARTICLES_KEY}")
 
     return data
+
+
+def load_criteria(
+    articles_data: dict[str, Any],
+    criteria_json_path: str | Path | None = None,
+) -> dict[str, dict[str, str]]:
+    # Os estudos guardam os criterios em criteria.json; articles.json com a
+    # chave Criteria continua aceito.
+    if criteria_json_path is not None:
+        return extract_criteria(read_json(criteria_json_path))
+    if CRITERIA_KEY in articles_data:
+        return extract_criteria(articles_data)
+    raise ValueError(f"Criterios nao encontrados: informe criteria_json_path ou a chave {CRITERIA_KEY}")
 
 
 def load_results_data(results_json_path: str | Path) -> dict[str, list[dict[str, Any]]]:
@@ -103,26 +123,31 @@ def get_analyzed_titles(results_data: dict[str, list[dict[str, Any]]]) -> set[st
     }
 
 
-def build_gemini_request(prompt: str) -> dict[str, Any]:
-    return {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}],
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0,
-        },
-    }
+def build_gemini_request(messages: list[dict[str, str]]) -> dict[str, Any]:
+    system_text = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+    user_text = "\n\n".join(m["content"] for m in messages if m["role"] == "user")
+    generation_config: dict[str, Any] = {"temperature": 0}
+    request: dict[str, Any] = {"generationConfig": generation_config}
+
+    # Gemma via API do Gemini nao aceita systemInstruction nem modo JSON: as
+    # instrucoes vao no inicio da mensagem do usuario.
+    if MODEL_NAME.startswith("gemma"):
+        request["contents"] = [{"role": "user", "parts": [{"text": f"{system_text}\n\n{user_text}"}]}]
+    else:
+        request["systemInstruction"] = {"parts": [{"text": system_text}]}
+        request["contents"] = [{"role": "user", "parts": [{"text": user_text}]}]
+        generation_config["responseMimeType"] = "application/json"
+
+    return request
 
 
-def call_gemini(prompt: str, api_key: str, timeout_seconds: int = 120) -> str:
-    request_body = json.dumps(build_gemini_request(prompt)).encode("utf-8")
+def call_gemini(messages: list[dict[str, str]], api_key: str, timeout_seconds: int = 120) -> str:
+    request_body = json.dumps(build_gemini_request(messages)).encode("utf-8")
     request = urllib.request.Request(
-        f"{GEMINI_API_URL}?key={api_key}",
+        GEMINI_API_URL,
         data=request_body,
-        headers={"Content-Type": "application/json"},
+        # Chave no header, nao na URL: URLs acabam em logs e mensagens de erro.
+        headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
         method="POST",
     )
 
@@ -155,69 +180,40 @@ def extract_gemini_text(response_data: dict[str, Any]) -> str:
     return "\n".join(texts).strip()
 
 
-def strip_json_markdown(text: str) -> str:
-    cleaned = text.strip()
-
-    if cleaned.startswith("```json"):
-        cleaned = cleaned.removeprefix("```json").strip()
-    elif cleaned.startswith("```"):
-        cleaned = cleaned.removeprefix("```").strip()
-
-    if cleaned.endswith("```"):
-        cleaned = cleaned.removesuffix("```").strip()
-
-    return cleaned
-
-
-def parse_llm_selected(text: str) -> int | None:
-    cleaned = strip_json_markdown(text).strip()
-
-    if cleaned in {"0", "1"}:
-        return int(cleaned)
-
-    return None
-
-
-def build_output_result(article_title: str, selected: int) -> dict[str, Any]:
-    return {
-        TITLE_KEY: article_title,
-        SELECTED_KEY: selected,
-    }
-
-
 def analyze_article(
-    title: str,
-    abstract: str,
-    criteria: dict[str, Any],
+    article: dict[str, Any],
+    criteria: dict[str, dict[str, str]],
     api_key: str,
 ) -> dict[str, Any] | None:
-    prompt = generate_prompt(title, abstract, criteria)
-    response_text = call_gemini(prompt, api_key)
-    selected = parse_llm_selected(response_text)
+    response_text = call_gemini(generate_messages(article, criteria), api_key)
+    results = parse_criteria_response(response_text, criteria)
+    selected = is_selected(criteria, results)
 
     if selected is None:
         return None
 
-    return build_output_result(title, selected)
+    return {
+        TITLE_KEY: str(article.get(TITLE_KEY, "")).strip(),
+        SELECTED_KEY: int(selected),
+        RESULTS_KEY: results,
+    }
 
 
 def analyze_articles_json(
     articles_json_path: str | Path,
     results_json_path: str | Path,
+    criteria_json_path: str | Path | None = None,
     env_path: str | Path = ".env",
     delay_seconds: float = DEFAULT_REQUEST_DELAY_SECONDS,
 ) -> dict[str, list[dict[str, Any]]]:
     articles_data = load_articles_data(articles_json_path)
+    criteria = load_criteria(articles_data, criteria_json_path)
     results_data = load_results_data(results_json_path)
     analyzed_titles = get_analyzed_titles(results_data)
     api_key = get_gemini_api_key(env_path)
 
-    criteria = articles_data[CRITERIA_KEY]
-    articles = articles_data[ARTICLES_KEY]
-
-    for article in articles:
+    for article in articles_data[ARTICLES_KEY]:
         title = str(article.get(TITLE_KEY, "")).strip()
-        abstract = str(article.get(ABSTRACT_KEY, "")).strip()
 
         if not title:
             continue
@@ -230,7 +226,7 @@ def analyze_articles_json(
             if delay_seconds > 0:
                 time.sleep(delay_seconds)
 
-            result = analyze_article(title, abstract, criteria, api_key)
+            result = analyze_article(article, criteria, api_key)
         except Exception as error:
             print(f"erro {error}")
             continue
@@ -248,7 +244,10 @@ def analyze_articles_json(
 
 
 if __name__ == "__main__":
+    study_dir = LLMS_ANALYSIS_DIR / "study1"
     analyze_articles_json(
-        articles_json_path="data/study1/articles.json",
-        results_json_path="data/study1/results_llm.json",
+        articles_json_path=study_dir / "start_data" / "articles.json",
+        criteria_json_path=study_dir / "start_data" / "criteria.json",
+        results_json_path=study_dir / "gemini" / "results_llm.json",
+        env_path=LLMS_ANALYSIS_DIR / ".env",
     )

@@ -7,3 +7,5 @@ correcoes.txt
 .claude/
 __pycache__/
 *.pyc
+
+venv/

@@ -2,9 +2,13 @@ const { PythonRunner } = require('./pythonRunner');
 const crypto = require('crypto');
 
 const MAX_CACHE_ENTRIES = 100;
+// Cada artigo custa chamada paga na OpenRouter; o frontend manda lotes de 40.
+const MAX_ARTICLES_PER_REQUEST = 100;
 
 class LlmAnalysisService {
-  constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 5 * 60 * 1000 }) } = {}) {
+  // 10 minutos por requisição: modelos de raciocínio levam dezenas de
+  // segundos por artigo, e um artigo lento pode ser refeito.
+  constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 10 * 60 * 1000 }) } = {}) {
     this.pythonRunner = pythonRunner;
     this.cache = new Map();
   }
@@ -16,18 +20,20 @@ class LlmAnalysisService {
       err.statusCode = 400;
       throw err;
     }
+    if (artigos.length > MAX_ARTICLES_PER_REQUEST) {
+      const err = new Error(`Máximo de ${MAX_ARTICLES_PER_REQUEST} artigos por requisição.`);
+      err.statusCode = 400;
+      throw err;
+    }
 
+    // Modelo, chave e parâmetros da LLM vêm só do .env (lido pelo Python);
+    // nada disso é aceito do request.
     const input = {
       criteriosInclusao: payload.criteriosInclusao,
       criteriosExclusao: payload.criteriosExclusao,
       criteriaMetadata: payload.criteriaMetadata,
       artigos,
-      model: payload.model,
-      temperature: payload.temperature,
-      tokens: payload.tokens,
-      ollamaUrl: payload.ollamaUrl,
       extraPrompt: payload.extraPrompt,
-      maxWorkers: payload.maxWorkers,
     };
     const cacheKey = crypto
       .createHash('sha256')
