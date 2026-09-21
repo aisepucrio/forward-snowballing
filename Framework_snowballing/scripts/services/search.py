@@ -516,25 +516,54 @@ def fallback_openalex_by_doi(doi):
     OPENALEX_CACHE[cache_key] = result
     return result
 
+def extract_opencitations_doi(value):
+    """
+    Extrai o DOI de um campo "cited"/"citing" da OpenCitations.
+
+    A API v1 devolve o DOI puro ("10.5753/wei.2017.3556"); a v2 devolve todos
+    os identificadores separados por espaço ("omid:br/0616 doi:10.5753/wei...
+    openalex:W300..."). Aceitar os dois formatos protege contra mudança na
+    ordem dos tokens da v2 e permite voltar para a v1 se preciso.
+    """
+    if not value:
+        return None
+
+    text = str(value).strip()
+
+    for token in text.split():
+        if token.lower().startswith("doi:"):
+            return normalize_doi(token[4:])
+
+    # Formato da v1: o valor inteiro é o DOI. Reconhecido pelo prefixo "10."
+    # (todo DOI começa assim), e não pela ausência de ":" — DOIs no padrão
+    # SICI, comuns em periódicos antigos, contêm dois-pontos no sufixo
+    # ("10.1002/(SICI)1097-4571(199806)49:8<693::AID-ASI4>3.0.CO;2-O") e
+    # seriam descartados em silêncio.
+    if text.startswith("10.") and not any(ch.isspace() for ch in text):
+        return normalize_doi(text)
+
+    return None
+
+
 def fallback_opencitations_by_doi(doi):
     """
-    Busca na OpenCitations os DOIs referenciados por `doi`. Usada só como
-    fallback quando semantic_references_blocked_warning() detecta que a
-    Semantic Scholar sabe o total de referências mas não libera a lista
-    (bloqueio da editora).
+    Busca na OpenCitations os DOIs referenciados por `doi`.
 
-    A OpenCitations devolve só pares citing/cited de DOI, sem título, ano,
-    autores etc. Por isso o retorno aqui já sai no formato de "referência
-    incompleta" (doi presente, título "-") que enrich_incomplete_citations
-    sabe completar via Crossref — sem isso, get_record_key/merge_records_
-    across_sources não teriam como casar esses registros com os de outras
-    fontes, porque eles esperam "doi" ou "title", não "citing"/"cited".
+    A OpenCitations devolve só pares citing/cited, sem título, ano, autores etc.
+    Por isso o retorno sai no formato de "referência incompleta" (doi presente,
+    título "-") que enrich_incomplete_citations sabe completar via Crossref —
+    sem isso, get_record_key/merge_records_across_sources não teriam como casar
+    esses registros com os de outras fontes.
+
+    Quem decide QUANDO consultar é o pipeline (run_forward), não esta função:
+    só lá as referências do OpenAlex já estão disponíveis, e sem elas não há
+    como saber o que a OpenCitations acrescenta de fato.
     """
     normalized_doi = normalize_doi(doi)
     if not normalized_doi:
         return []
 
-    url = f"https://api.opencitations.net/index/v1/references/{normalized_doi}"
+    url = f"https://api.opencitations.net/index/v2/references/doi:{normalized_doi}"
     data = safe_get(url)
 
     # safe_get devolve None em erro de rede/limite/etc. Sem essa guarda o
@@ -546,7 +575,9 @@ def fallback_opencitations_by_doi(doi):
     references = []
     seen_dois = set()
     for item in data:
-        cited_doi = normalize_doi(item.get("cited"))
+        if not isinstance(item, dict):
+            continue
+        cited_doi = extract_opencitations_doi(item.get("cited"))
         if not cited_doi or cited_doi in seen_dois:
             continue
         seen_dois.add(cited_doi)
@@ -558,35 +589,6 @@ def fallback_opencitations_by_doi(doi):
         })
 
     return references
-
-
-def add_opencitations_references_if_blocked(merged, doi, semantic_block_warning):
-    """
-    Só dispara a chamada à OpenCitations quando semantic_block_warning já veio
-    preenchido (ou seja, quando semantic_references_blocked_warning() já
-    confirmou o bloqueio da editora).
-    """
-    if not semantic_block_warning or not doi:
-        return merged
-
-    opencitations_references = fallback_opencitations_by_doi(doi)
-    if not opencitations_references:
-        return merged
-
-    # Cada registro chega só com doi/title="-"; aqui ganham título, ano,
-    # autores etc. via Crossref, do mesmo jeito que qualquer outra citação
-    # incompleta do pipeline.
-    opencitations_references = enrich_incomplete_citations(opencitations_references)
-
-    merged["references"] = merge_records_across_sources(
-        merged.get("references", []),
-        opencitations_references,
-    )
-    merged["warning"] = (
-        f"{semantic_block_warning} Recuperadas "
-        f"{len(opencitations_references)} referências via OpenCitations."
-    )
-    return merged
 
 
 def attach_openalex_citations(paper):
@@ -950,7 +952,7 @@ def semantic_references_blocked_warning(paper_data):
         return (
             f"Semantic Scholar reporta {reported_count} referências para este "
             "paper, mas não disponibiliza a lista (bloqueio da editora). "
-            "Contagem final usa apenas o que a OpenAlex conseguiu recuperar."
+            "As referências exibidas vêm das demais fontes."
         )
 
     return None
@@ -1267,9 +1269,6 @@ def search_combined(doi=None, title=None):
             if semantic_block_warning:
                 merged["warning"] = semantic_block_warning
                 merged["partial_result"] = True
-                merged = add_opencitations_references_if_blocked(
-                    merged, merged["doi"], semantic_block_warning
-                )
 
             save_complete_cache(cleaned_doi, merged)
 
@@ -1417,9 +1416,6 @@ def search_combined(doi=None, title=None):
             if semantic_block_warning:
                 merged["warning"] = semantic_block_warning
                 merged["partial_result"] = True
-                merged = add_opencitations_references_if_blocked(
-                    merged, merged.get("doi") or cleaned_doi, semantic_block_warning
-                )
 
 
 
