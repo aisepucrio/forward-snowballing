@@ -85,7 +85,9 @@ Create a `.env` file in `Framework_snowballing/` with the variables below:
 | `PORT` | `3000` | Web server port |
 | `OPENROUTER_API_KEY` | — | Required for LLM screening. Server-side only |
 | `LLM_MODEL` | `openai/gpt-4o` | Any OpenRouter model that supports structured outputs |
-| `LLM_FALLBACK_MODELS` | — | Optional, comma-separated |
+| `LLM_FALLBACK_MODELS` | — | Optional, comma-separated OpenRouter models tried when the main one fails. Each must accept the same parameters (reasoning, and the JSON schema when enabled) |
+| `GEMINI_API_KEY` | — | Optional. When OpenRouter fails, screening falls back to the Google Gemini API directly |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | Model used for that fallback |
 | `LLM_MAX_WORKERS` | `8` | Parallel LLM calls (one call per article, with all criteria) |
 | `LLM_TEMPERATURE` | `0` | |
 | `LLM_MAX_TOKENS` | `1000` | Upper bound per call. OpenRouter reserves credit for it; raise it for reasoning models |
