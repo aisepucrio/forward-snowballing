@@ -1,0 +1,59 @@
+Comparacao com o gabarito - study0
+
+Execucao
+- run: nemotron-baseline
+- modelo: nvidia/nemotron-3-ultra-550b-a55b:free
+- fallback Gemini: gemini-3.7-flash,gemini-3.5-flash-lite
+- prompt: 2ddcf92d0373
+- raciocinio: true | json schema: false | temperatura: 0
+
+Resumo
+- artigos no gabarito: 109
+- artigos na execucao: 109
+- artigos comparados: 109
+- artigos com erro na execucao: 0
+
+Decisao final (gabarito como referencia)
+- precision: 0.3750
+- recall: 0.6000
+- f1: 0.4615
+- accuracy: 0.8716
+
+Matriz
+- true positives: 6
+- false positives: 10
+- false negatives: 4
+- true negatives: 89
+
+Concordancia por criterio
+- IC1: 96.33% (105 iguais, 4 diferentes)
+- IC2: 72.48% (79 iguais, 30 diferentes)
+- IC3: 84.40% (92 iguais, 17 diferentes)
+- EC1: 97.25% (106 iguais, 3 diferentes)
+- EC2: 89.91% (98 iguais, 11 diferentes)
+- EC3: 95.41% (104 iguais, 5 diferentes)
+- EC4: 67.89% (74 iguais, 35 diferentes)
+
+Incluidos pela LLM e excluidos no gabarito (falsos positivos)
+- Automated identification of security-relevant configuration settings using NLP
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
+- Feature-oriented defect prediction
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Reducing the Length of Field-replay Based Load Testing
+- Regression model trees: Compact energy models for complex IoT devices
+- Scalable sampling of highly-configurable systems: Generating random instances of the Linux kernel
+- Unicorn: Reasoning about configurable system performance through the lens of causality
+- kconfig-webconf: retrofitting performance models onto kconfig-based software product lines
+
+Excluidos pela LLM e incluidos no gabarito (falsos negativos)
+- Configuration optimization with limited functional impact
+- On Programming Variability with Large Language Model-based Assistant
+- Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
+- Transfer learning across variants and versions: The case of linux kernel size
+
+Artigos do gabarito sem resultado na execucao
+- nenhum
+
+Artigos da execucao ausentes no gabarito
+- nenhum

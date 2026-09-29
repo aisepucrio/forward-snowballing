@@ -25,7 +25,8 @@ DEFAULT_LLM_WORKERS = 8
 DEFAULT_MAX_TOKENS = 1000
 DEFAULT_TIMEOUT_SECONDS = 120
 MAX_ATTEMPTS = 3
-MAX_RETRY_DELAY_SECONDS = 30
+# O Gemini chega a pedir ~58s de espera quando a cota do minuto estoura.
+MAX_RETRY_DELAY_SECONDS = 60
 RETRYABLE_STATUS = {408, 429, 500, 502, 503, 504}
 
 
@@ -219,8 +220,16 @@ def _gemini_api_key():
     return os.getenv("GEMINI_API_KEY", "").strip()
 
 
-def _gemini_model():
-    return os.getenv("GEMINI_MODEL", "").strip() or DEFAULT_GEMINI_MODEL
+def _gemini_models():
+    """Cadeia de modelos do Gemini, na ordem em que aparecem em GEMINI_MODEL,
+    separados por virgula. Serve para cair num modelo de cota maior quando o
+    primeiro esgota."""
+    models = []
+    for model in os.getenv("GEMINI_MODEL", "").split(","):
+        model = model.strip()
+        if model and model not in models:
+            models.append(model)
+    return models or [DEFAULT_GEMINI_MODEL]
 
 
 def _parse_gemini_response(model, data):
@@ -246,11 +255,10 @@ def _parse_gemini_response(model, data):
     return text
 
 
-def _call_gemini(messages):
-    """Fallback pela API do Google, com a mesma mensagem de sistema e de
-    usuario. O schema nao vai na requisicao: o formato ja esta no prompt e
+def _call_gemini_model(model, messages):
+    """Uma chamada ao Gemini, com a mesma mensagem de sistema e de usuario. O
+    schema nao vai na requisicao: o formato ja esta no prompt e
     parse_criteria_response extrai o JSON do texto."""
-    model = _gemini_model()
     system_text = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
     user_text = "\n\n".join(m["content"] for m in messages if m["role"] != "system")
     payload = {
@@ -280,32 +288,47 @@ def _call_gemini(messages):
                 return _parse_gemini_response(model, response.json())
             message = _error_message(response)
             if response.status_code not in RETRYABLE_STATUS:
-                raise LLMFatalError(f"Gemini recusou a requisicao (HTTP {response.status_code}): {message}")
+                raise LLMFatalError(f"{model} recusou a requisicao (HTTP {response.status_code}): {message}")
             last_error = f"HTTP {response.status_code}: {message}"
 
         if attempt < MAX_ATTEMPTS:
             delay = _retry_delay(response, attempt)
-            print(f"[GEMINI RETRY {attempt}] {last_error}; nova tentativa em {delay}s", file=sys.stderr)
+            print(f"[GEMINI RETRY {attempt}] {model}: {last_error}; nova tentativa em {delay}s", file=sys.stderr)
             time.sleep(delay)
 
-    raise LLMFatalError(f"Gemini nao respondeu apos {MAX_ATTEMPTS} tentativas: {last_error}")
+    raise LLMFatalError(f"{model} nao respondeu apos {MAX_ATTEMPTS} tentativas: {last_error}")
+
+
+def _call_gemini(messages):
+    """Percorre a cadeia de modelos do Gemini: o primeiro que responder vale.
+    Assim, quando a cota de um modelo acaba, a triagem segue no proximo."""
+    last_error = None
+    for model in _gemini_models():
+        try:
+            return _call_gemini_model(model, messages)
+        except (LLMFatalError, ValueError) as error:
+            last_error = error
+            print(f"[GEMINI] {model} falhou: {error}", file=sys.stderr)
+
+    raise last_error
 
 
 def _call_with_fallback(messages, schema):
-    """OpenRouter primeiro; se falhar e houver GEMINI_API_KEY, tenta o Gemini
-    direto, para a triagem nao parar por cota, falta de credito ou provedor
-    fora do ar."""
+    """OpenRouter primeiro; se falhar e houver GEMINI_API_KEY, tenta a cadeia
+    de modelos do Gemini, para a triagem nao parar por cota, falta de credito
+    ou provedor fora do ar."""
     try:
         return _call_llm(messages, schema)
     except (LLMFatalError, ValueError) as error:
         if not _gemini_api_key():
             raise
 
-        print(f"[LLM FALLBACK] OpenRouter falhou ({error}); tentando {_gemini_model()}", file=sys.stderr)
+        models = ", ".join(_gemini_models())
+        print(f"[LLM FALLBACK] OpenRouter falhou ({error}); tentando {models}", file=sys.stderr)
         try:
             return _call_gemini(messages)
         except (LLMFatalError, ValueError) as fallback_error:
-            print(f"[LLM FALLBACK] {_gemini_model()} tambem falhou: {fallback_error}", file=sys.stderr)
+            print(f"[LLM FALLBACK] o Gemini tambem falhou: {fallback_error}", file=sys.stderr)
             # Mantem o diagnostico do provedor principal.
             raise error
 

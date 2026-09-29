@@ -87,7 +87,7 @@ Create a `.env` file in `Framework_snowballing/` with the variables below:
 | `LLM_MODEL` | `openai/gpt-4o` | Any OpenRouter model that supports structured outputs |
 | `LLM_FALLBACK_MODELS` | — | Optional, comma-separated OpenRouter models tried when the main one fails. Each must accept the same parameters (reasoning, and the JSON schema when enabled) |
 | `GEMINI_API_KEY` | — | Optional. When OpenRouter fails, screening falls back to the Google Gemini API directly |
-| `GEMINI_MODEL` | `gemini-3.7-flash` | Model used for that fallback |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | Fallback chain, comma-separated and tried in order (e.g. `gemini-3.7-flash,gemini-3.5-flash-lite`). Put the model with the larger free quota last |
 | `LLM_MAX_WORKERS` | `8` | Parallel LLM calls (one call per article, with all criteria) |
 | `LLM_TEMPERATURE` | `0` | |
 | `LLM_MAX_TOKENS` | `1000` | Upper bound per call. OpenRouter reserves credit for it; raise it for reasoning models |
@@ -153,8 +153,9 @@ and all LLM parameters are configured only in `.env`; the interface never sends 
 Token usage and cost of each call are printed to the server log as `[LLM USAGE]`.
 
 The screening prompt, response schema and selection rule live in
-`scripts/services/prompt.py`. The same module is used by the LLM studies in
-`Forward_Analysis/LLMs_Analysis` and `Backward_Analisys/LLMs_Analysis`.
+`scripts/services/prompt.py`. The evaluation tools in `LLMs_Analysis/` run through this
+same module and through `scripts/analisys_LLM.py`, so they measure what the application
+actually does.
 
 ---
 

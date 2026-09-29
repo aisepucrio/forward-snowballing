@@ -18,7 +18,6 @@ This repository centralizes CSV datasets exported from different snowballing and
 snowballing_for_review/
 ├── Data/                  # Datasets exported from the tools
 ├── Notebooks_Analysis/    # Analysis and graph generation notebooks
-├── LLMs_Analysis/         # Scripts and experiments using LLMs
 ├── Quartile/              # Data used for publication venue quartile analysis
 ├── requirements.txt
 └── README.md
@@ -69,11 +68,14 @@ This notebook reproduces the publication venue and quartile analyses.
 
 This notebook reproduces the coverage analyses and graph-based comparisons among the evaluated tools.
 
-Instructions for configuring and executing the LLM-related scripts are available in the README file located in the `LLMs_Analysis/` directory.
+The LLM screening evaluation lives in `LLMs_Analysis/`, at the root of the repository, and
+is shared with the backward analysis. It runs the screening through the same prompt and
+client used by the SnowMap tool and compares the results against the human ground truth.
+See the README in that directory.
 
 ```bash
-python LLMs_Analysis/code/analysis.py
-python LLMs_Analysis/code/compare.py
+python code/run_screening.py study0
+python code/compare.py study0
 ```
 
 ---

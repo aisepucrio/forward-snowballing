@@ -17,7 +17,6 @@ This repository centralizes CSV datasets exported from different snowballing and
 snowballing_for_review/
 ├── Data/                  # Datasets exported from the tools
 ├── Notebooks_Analysis/    # Analysis and graph generation notebooks
-├── LLMs_Analysis/         # Scripts and experiments using LLMs
 ├── Quartile/              # Data used for publication venue quartile analysis
 ├── requirements.txt
 └── README.md

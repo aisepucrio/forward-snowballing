@@ -3,9 +3,9 @@ Contrato da triagem por LLM: monta o prompt (uma chamada por artigo, com todos
 os criterios), o JSON schema da resposta, interpreta a resposta e decide se o
 artigo e selecionado.
 
-Fonte unica para a aplicacao (scripts/analisys_LLM.py) e para os estudos em
-Forward_Analysis/ e Backward_Analisys/ (LLMs_Analysis/code/analysis.py):
-mudar o prompt aqui muda o que os dois avaliam.
+Fonte unica para a aplicacao (scripts/analisys_LLM.py) e para a avaliacao
+contra o gabarito humano (LLMs_Analysis/code/run_screening.py): mudar o prompt
+aqui muda o que a ferramenta faz e o que os estudos medem.
 """
 import json
 from pathlib import Path
