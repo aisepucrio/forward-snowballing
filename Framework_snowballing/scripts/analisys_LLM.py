@@ -211,6 +211,105 @@ def _call_llm(messages, schema):
     raise LLMFatalError(f"OpenRouter nao respondeu apos {MAX_ATTEMPTS} tentativas: {last_error}")
 
 
+GEMINI_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+DEFAULT_GEMINI_MODEL = "gemini-3.7-flash"
+
+
+def _gemini_api_key():
+    return os.getenv("GEMINI_API_KEY", "").strip()
+
+
+def _gemini_model():
+    return os.getenv("GEMINI_MODEL", "").strip() or DEFAULT_GEMINI_MODEL
+
+
+def _parse_gemini_response(model, data):
+    candidates = data.get("candidates") or []
+    if not candidates:
+        raise ValueError(f"Gemini sem candidates (promptFeedback={data.get('promptFeedback')})")
+
+    usage = data.get("usageMetadata") or {}
+    print(
+        f"[LLM USAGE] model={model} "
+        f"prompt_tokens={usage.get('promptTokenCount')} "
+        f"completion_tokens={usage.get('candidatesTokenCount')} "
+        f"reasoning_tokens={usage.get('thoughtsTokenCount')} "
+        f"cost=n/a",
+        file=sys.stderr,
+    )
+
+    parts = (candidates[0].get("content") or {}).get("parts") or []
+    text = "\n".join(part.get("text", "") for part in parts if part.get("text")).strip()
+    if not text:
+        raise ValueError(f"Gemini sem conteudo (finishReason={candidates[0].get('finishReason')})")
+
+    return text
+
+
+def _call_gemini(messages):
+    """Fallback pela API do Google, com a mesma mensagem de sistema e de
+    usuario. O schema nao vai na requisicao: o formato ja esta no prompt e
+    parse_criteria_response extrai o JSON do texto."""
+    model = _gemini_model()
+    system_text = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+    user_text = "\n\n".join(m["content"] for m in messages if m["role"] != "system")
+    payload = {
+        "systemInstruction": {"parts": [{"text": system_text}]},
+        "contents": [{"role": "user", "parts": [{"text": user_text}]}],
+        "generationConfig": {
+            "temperature": _coerce_temperature(os.getenv("LLM_TEMPERATURE")),
+            "maxOutputTokens": _coerce_positive_int(os.getenv("LLM_MAX_TOKENS"), DEFAULT_MAX_TOKENS),
+            "responseMimeType": "application/json",
+        },
+    }
+    # Chave no header, nao na URL: URLs acabam em logs e mensagens de erro.
+    headers = {"Content-Type": "application/json", "x-goog-api-key": _gemini_api_key()}
+    timeout = _coerce_positive_int(os.getenv("LLM_TIMEOUT_SECONDS"), DEFAULT_TIMEOUT_SECONDS)
+
+    last_error = None
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        response = None
+        try:
+            response = requests.post(
+                GEMINI_URL_TEMPLATE.format(model=model), json=payload, headers=headers, timeout=timeout
+            )
+        except requests.RequestException as error:
+            last_error = error
+        else:
+            if response.ok:
+                return _parse_gemini_response(model, response.json())
+            message = _error_message(response)
+            if response.status_code not in RETRYABLE_STATUS:
+                raise LLMFatalError(f"Gemini recusou a requisicao (HTTP {response.status_code}): {message}")
+            last_error = f"HTTP {response.status_code}: {message}"
+
+        if attempt < MAX_ATTEMPTS:
+            delay = _retry_delay(response, attempt)
+            print(f"[GEMINI RETRY {attempt}] {last_error}; nova tentativa em {delay}s", file=sys.stderr)
+            time.sleep(delay)
+
+    raise LLMFatalError(f"Gemini nao respondeu apos {MAX_ATTEMPTS} tentativas: {last_error}")
+
+
+def _call_with_fallback(messages, schema):
+    """OpenRouter primeiro; se falhar e houver GEMINI_API_KEY, tenta o Gemini
+    direto, para a triagem nao parar por cota, falta de credito ou provedor
+    fora do ar."""
+    try:
+        return _call_llm(messages, schema)
+    except (LLMFatalError, ValueError) as error:
+        if not _gemini_api_key():
+            raise
+
+        print(f"[LLM FALLBACK] OpenRouter falhou ({error}); tentando {_gemini_model()}", file=sys.stderr)
+        try:
+            return _call_gemini(messages)
+        except (LLMFatalError, ValueError) as fallback_error:
+            print(f"[LLM FALLBACK] {_gemini_model()} tambem falhou: {fallback_error}", file=sys.stderr)
+            # Mantem o diagnostico do provedor principal.
+            raise error
+
+
 # Resposta vazia ou fora do formato e intermitente (sobretudo sem JSON schema,
 # como nos modelos :free): refaz a chamada antes de marcar o artigo com "error".
 INVALID_RESPONSE_ATTEMPTS = 2
@@ -224,7 +323,7 @@ def classificar_artigo(article, criteria, extra_prompt=""):
 
     for attempt in range(1, INVALID_RESPONSE_ATTEMPTS + 1):
         try:
-            content = _call_llm(messages, schema)
+            content = _call_with_fallback(messages, schema)
         except LLMUpstreamError as e:
             # Recusa do provedor ja foi repetida dentro de _call_llm.
             print(f"[ERRO LLM] {title[:80]}: {e}", file=sys.stderr)
