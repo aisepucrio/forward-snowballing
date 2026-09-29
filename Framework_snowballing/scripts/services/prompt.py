@@ -41,56 +41,26 @@ METADATA_FIELDS = (
 
 
 SYSTEM_INSTRUCTIONS = """You are an expert researcher screening studies for a systematic literature review.
-Your task is to decide, for a single article, whether it satisfies each inclusion and exclusion criterion provided by the user.
+For a single article, decide whether each inclusion and exclusion criterion given by the user is satisfied.
 
 DECISION RULES
-- Evaluate every criterion independently.
-- Base your decisions only on the article data provided. The title and abstract are the main evidence. The other metadata fields (such as year, language, venue, keywords, pages, open access, and citation count) are also evidence and must be used whenever a criterion refers to them.
-- Metadata fields that are not listed were not available for the article.
-- Inclusion criterion: answer "Yes" if the article satisfies it; otherwise answer "No".
-- Exclusion criterion: answer "Yes" if the article satisfies it (that is, the article must be excluded for that reason); otherwise answer "No".
-- When the evidence is ambiguous, incomplete, or only weakly implied, favor keeping the article: answer "Yes" for inclusion criteria and "No" for exclusion criteria.
+- Judge every criterion independently, by its own wording. The answer to one criterion never constrains the answer to another.
+- Use only the article data provided. The title and abstract are the main evidence. The other metadata fields (such as year, language, venue, keywords, pages, open access, and citation count) are evidence too, and must be used whenever a criterion refers to them.
+- Metadata fields that are not listed were not available for this article. Never invent data and never rely on outside knowledge about the article.
+- Inclusion criterion: answer "Yes" when the article satisfies it, "No" otherwise.
+- Exclusion criterion: answer "Yes" when the criterion applies to the article, which means the article must be excluded for that reason, and "No" otherwise.
+- Aim for the correct answer on every criterion. Weigh the evidence and choose the answer it supports best. Do not default to "Yes" or to "No" when the article data is thin.
+- The wording of the abstract, the venue and the page count usually reveal the type of study and how it was conducted; read those signals instead of guessing.
 - Think through the criteria carefully before answering, but do not include your reasoning in the output.
-"""
-
-EXAMPLES = """
-EXAMPLES
-The examples below illustrate the decision process only. Never apply the example criteria to the real article.
-
-Example criteria:
-INCLUSION CRITERIA
-- IC1: The article is a primary empirical study.
-- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
-EXCLUSION CRITERIA
-- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
-- EC2: The article was published before 2015.
-
-Example article 1:
-- title: Empirical evaluation of a method in the target research area
-- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
-- year: 2019
-Expected output:
-{"criteria":{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}
-
-Example article 2:
-- title: A review of methods in the target research area
-- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
-- year: 2012
-Expected output:
-{"criteria":{"IC1":"No","IC2":"Yes","EC1":"Yes","EC2":"Yes"}}
-
-Example article 3 (abstract and year are not available, so the ambiguity rule applies):
-- title: Towards better methods in the target research area
-- abstract: not available
-Expected output:
-{"criteria":{"IC1":"Yes","IC2":"Yes","EC1":"No","EC2":"No"}}
+- Before you answer, check each criterion once more against the article data.
 """
 
 OUTPUT_FORMAT = """
 OUTPUT FORMAT
-- Return only valid compact JSON, without markdown or any extra text.
-- The JSON must contain exactly one top-level key: "criteria".
-- "criteria" must contain every criterion ID given by the user, each with the value "Yes" or "No"."""
+- Return one JSON object and nothing else: no explanation, no reasoning, no confidence, no markdown and no code fences.
+- The object has exactly one top-level key: "criteria".
+- "criteria" holds exactly the criterion IDs given by the user, each with the value "Yes" or "No".
+- "Yes" and "No" are the only accepted values. Never answer with another word and never leave a criterion out."""
 
 
 def normalize_text(value: Any) -> str:
@@ -212,7 +182,7 @@ def format_article(article: dict[str, Any]) -> str:
 def _system_prompt(extra_prompt: str = "") -> str:
     extra = normalize_text(extra_prompt)
     extra_section = f"\nADDITIONAL INSTRUCTIONS FROM THE REVIEWER\n{extra}\n" if extra else ""
-    return f"{SYSTEM_INSTRUCTIONS}{extra_section}{EXAMPLES}{OUTPUT_FORMAT}"
+    return f"{SYSTEM_INSTRUCTIONS}{extra_section}{OUTPUT_FORMAT}"
 
 
 def _user_prompt(article: dict[str, Any], criteria: dict[str, dict[str, str]]) -> str:
@@ -221,10 +191,12 @@ def _user_prompt(article: dict[str, Any], criteria: dict[str, dict[str, str]]) -
         separators=(",", ":"),
     )
     return (
-        f"INCLUSION CRITERIA\n{format_criteria(criteria.get(INCLUSION_KEY, {}))}\n\n"
-        f"EXCLUSION CRITERIA\n{format_criteria(criteria.get(EXCLUSION_KEY, {}))}\n\n"
+        'INCLUSION CRITERIA (answer "Yes" when the article satisfies the criterion)\n'
+        f"{format_criteria(criteria.get(INCLUSION_KEY, {}))}\n\n"
+        'EXCLUSION CRITERIA (answer "Yes" when the criterion applies and the article must be excluded)\n'
+        f"{format_criteria(criteria.get(EXCLUSION_KEY, {}))}\n\n"
         f"ARTICLE\n{format_article(article)}\n\n"
-        f"Return the JSON in this shape:\n{output_shape}"
+        f"Answer with this exact JSON shape, replacing each Yes|No with one of the two values:\n{output_shape}"
     )
 
 
@@ -233,8 +205,8 @@ def generate_messages(
     criteria: dict[str, dict[str, str]],
     extra_prompt: str = "",
 ) -> list[dict[str, str]]:
-    """Mensagens no formato chat (role/content). Instrucoes fixas e exemplos
-    ficam no system; criterios e artigo no user."""
+    """Mensagens no formato chat (role/content). Instrucoes fixas ficam no
+    system; criterios e artigo no user."""
     return [
         {"role": "system", "content": _system_prompt(extra_prompt)},
         {"role": "user", "content": _user_prompt(article, criteria)},
