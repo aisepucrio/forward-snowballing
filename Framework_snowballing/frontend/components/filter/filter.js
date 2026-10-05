@@ -246,8 +246,6 @@ const FilterComponent = (function () {
       return;
     }
 
-    // Mesmo motivo do renderAuthorList: nome de venue é dado de terceiro e não
-    // pode ser interpolado em innerHTML.
     container.innerHTML = '';
     venues.forEach(v => {
       const btn = document.createElement('button');
@@ -367,6 +365,7 @@ const FilterComponent = (function () {
     const authorSubMenu = document.getElementById('authorSubMenu');
     const venueSubMenu = document.getElementById('venueSubMenu');
     const collapseBtn = document.getElementById('filterCollapseBtn');
+    const filterWrapper = document.getElementById('filterWrapper');
 
     function hideAllSubmenus() {
       decadeSubMenu && decadeSubMenu.classList.add('hidden');
@@ -416,6 +415,14 @@ const FilterComponent = (function () {
         }
       });
     }
+
+    // Fecha os submenus ao clicar fora da área do filtro
+    document.addEventListener('click', (event) => {
+      if (!filterWrapper) return;
+      if (filterWrapper.contains(event.target)) return; 
+
+      hideAllSubmenus();
+    });
 
     renderYearRangeButtons();
   }
