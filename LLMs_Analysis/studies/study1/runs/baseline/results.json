@@ -1,0 +1,227 @@
+{
+  "run": {
+    "run": "baseline",
+    "study": "study1",
+    "started_at": "2026-09-29T15:13:40-03:00",
+    "prompt": "2ddcf92d0373",
+    "articles": 404,
+    "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "openrouter_fallbacks": "",
+    "gemini_fallback": "gemini-3.5-flash-lite,gemini-3.7-flash",
+    "structured_output": "false",
+    "reasoning": "true",
+    "temperature": "0",
+    "max_tokens": "16000",
+    "analyzed": 16
+  },
+  "results": [
+    {
+      "title": "Segmentation-based deep-learning approach for surface-defect detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Multiple kernel ensemble learning for software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Combining deep learning with information retrieval to localize buggy files for bug reports",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Survey on software defect prediction techniques",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software defect prediction: do different classifiers find the same defects?",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Automated bug assignment: Ensemble-based machine learning in large scale industrial contexts",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Implementation of cyber-physical production systems for quality prediction and operation control in metal casting",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Learning from Mutants: Using Code Mutation to Learn and Monitor Invariants of a Cyber-Physical System",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "NEUZZ: Efficient fuzzing with neural program smoothing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Latent error prediction and fault localization for microservice applications by learning from system trace logs",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Iterated feature selection algorithms with layered recurrent neural network for software fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Compiler fuzzing through deep learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Predictive Mutation Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Convolutional neural networks over control flow graphs for software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Automatically identifying code features for software defect prediction: Using AST N-grams",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Classification with reject option for software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    }
+  ]
+}

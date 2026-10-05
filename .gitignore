@@ -1,11 +1,28 @@
-#Variáveis de ambiente
+# Variáveis de ambiente
 .env
+.env.bak
 .env.baks
 
-.DS_Store
+# Banco de dados e cache
+*.db
+cache/
+
+# Arquivos gerados
+output.json
+app.log
+db_debug.log
 correcoes.txt
-.claude/
+
+# Python
 __pycache__/
 *.pyc
-
 venv/
+.venv/
+
+# Node
+node_modules/
+
+# Editor e sistema
+.claude/
+.vscode/
+.DS_Store
