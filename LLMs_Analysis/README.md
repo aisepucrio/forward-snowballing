@@ -3,8 +3,8 @@
 Avaliação da triagem por LLM do SnowMap contra o gabarito humano dos estudos.
 
 As ferramentas daqui rodam **pelo mesmo caminho da aplicação**: o prompt de
-`Framework_snowballing/scripts/services/prompt.py` e o cliente de
-`Framework_snowballing/scripts/analisys_LLM.py` (OpenRouter, com fallback para a API do
+`scripts/services/prompt.py` e o cliente de
+`scripts/analisys_LLM.py` (OpenRouter, com fallback para a API do
 Gemini, novas tentativas e leitura da resposta). Ou seja, o que se mede aqui é o que roda em
 produção. Mudou o prompt ou o modelo? Rode de novo e compare.
 
@@ -32,12 +32,12 @@ LLMs_Analysis/
 
 ## Configuração
 
-As chaves e os parâmetros da LLM vêm do `.env` do `Framework_snowballing` — o mesmo que a
+As chaves e os parâmetros da LLM vêm do `.env` na raiz do repositório — o mesmo que a
 aplicação usa. Veja a tabela de variáveis no README de lá. Em resumo: `OPENROUTER_API_KEY` e
 `LLM_MODEL` para o modelo principal, `GEMINI_API_KEY` para o fallback, e
 `LLM_MAX_WORKERS` para o paralelismo.
 
-As dependências são as mesmas da aplicação (`Framework_snowballing/requirements.txt`).
+As dependências são as mesmas da aplicação (`requirements.txt` na raiz).
 
 ## Uso
 

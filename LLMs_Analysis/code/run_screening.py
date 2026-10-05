@@ -1,6 +1,6 @@
 """
 Roda a triagem de um estudo pelo mesmo caminho da aplicacao: o prompt de
-Framework_snowballing/scripts/services/prompt.py e o cliente de
+scripts/services/prompt.py e o cliente de
 scripts/analisys_LLM.py (OpenRouter, fallback para o Gemini, novas tentativas e
 leitura da resposta). O que se mede aqui e o que roda em producao.
 
@@ -22,7 +22,7 @@ from datetime import datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "Framework_snowballing" / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from analisys_LLM import (  # noqa: E402
     DEFAULT_GEMINI_MODEL,
