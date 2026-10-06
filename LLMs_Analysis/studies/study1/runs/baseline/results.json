@@ -2,17 +2,18 @@
   "run": {
     "run": "baseline",
     "study": "study1",
-    "started_at": "2026-09-29T15:13:40-03:00",
+    "started_at": "2026-10-05T21:03:06-03:00",
     "prompt": "2ddcf92d0373",
     "articles": 404,
     "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "openrouter_fallbacks": "",
-    "gemini_fallback": "gemini-3.5-flash-lite,gemini-3.7-flash",
+    "gemini_fallback": "gemini-3.7-flash,gemini-3.5-flash-lite",
     "structured_output": "false",
     "reasoning": "true",
     "temperature": "0",
     "max_tokens": "16000",
-    "analyzed": 16
+    "analyzed": 396,
+    "errors": 0
   },
   "results": [
     {
@@ -222,6 +223,4946 @@
         "EC4": "No"
       },
       "selected": false
+    },
+    {
+      "title": "Software defect prediction techniques using metrics based on neural network classifier",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Convolutional neural networks on assembly code for predicting software defects",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Digital Twin-enabled Collaborative Data Management for Metal Additive Manufacturing Systems",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software defect prediction using neural networks",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A public bug database of GitHub projects and its application in bug prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Should fixing these failures be delegated to automated program repair?",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Domain adaptation for test report classification in crowdsourced testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Incorporating fault-proneness estimations into coverage-based test case prioritization methods",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Balancing the trade-off between accuracy and interpretability in software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Evolutionary extreme learning machine with sparse cost matrix for imbalanced learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "The impact of software fault prediction in real-world application: An automated approach for software engineering",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ISTEP, an integrated self-tuning engine for predictive maintenance in industry 4.0",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Precise learn-to-rank fault localization using dynamic and static features of target programs",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A dynamical quality model to continuously monitor software maintenance",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ConPredictor: Concurrency Defect Prediction in Real-World Applications",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Virtualized-Fault Injection Testing: A Machine Learning Approach",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "LWE: LDA refined word embeddings for duplicate bug report detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "Yes",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Generation of complex data for AI-based predictive maintenance research with a physical factory model",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning Semantic Features for Software Defect Prediction by Code Comments Embedding",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Spark-based cluster implementation of a bug report assignment recommender system",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Analytics for network security: A survey and taxonomy",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "On deterministic chaos in software reliability growth models",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An extensive study on cross-project predictive mutation testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Representing small commercial building faults in EnergyPlus, Part I: Model development",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software defect prediction: A comparison between artificial neural network and support vector machine",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Intelligent fault analysis in electrical power grids",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "LTRWES: A new framework for security bug report detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Revisiting the Class Imbalance Issue in Software Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Large scale distributed data science from scratch using apache spark 2.0",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Hierarchical and clustering WSN models: Their requirements for complex applications",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Real-Time Anomaly Detection of NoSQL Systems Based on Resource Usage Monitoring",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software fault prediction based on one-class SVM",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Fault Diagnosis Method of Tread Production Line Based on Convolutional Neural Network",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Industry paper: Proactive disruption management system: How not to be surprised by upcoming situations",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Application and development trend of artificial intelligence in petroleum exploration and development [人工智能在石油勘探开发领域的应用现状与发展趋势]",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A novel modified undersampling (MUS) technique for software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Prioritizing test inputs for deep neural networks via mutation analysis",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Complaint-driven Training Data Debugging for Query 2.0",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ReMot Reputation and Resource-Based Model to Estimate the Reliability of the Host Machines in Volunteer Cloud Environment",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "MTFuzz: Fuzzing with a multi-task neural network",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Analyzing machine learning techniques for fault prediction using web applications",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Representing small commercial building faults in energyplus, Part II: Model validation",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Improvement in Software Defect Prediction Outcome Using Principal Component Analysis and Ensemble Machine Learning Algorithms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Class Imbalance in Software Fault Prediction Data Set",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Opinion Mining at Scale: A Case Study of the First Self-driving Car Fatality",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software engineering approach to bug prediction models using machine learning as a service (MLaaS)",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Getting defect prediction into industrial practice: The ELFF tool",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An improvement to test case failure prediction in the context of test case prioritization",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Efficient Bug Triage for Industrial Environments",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "TFCheck : A TensorFlow Library for Detecting Training Issues in Neural Network Programs",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Enhancing PowerFactory Dynamic Models with Python for Rapid Prototyping",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Search-Based Predictive Modelling for Software Engineering: How Far Have We Gone?",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Combining spreadsheet smells for improved fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A probabilistic approach based on a finite mixture model of multivariate beta distributions",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A practical guide to support change-proneness prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Evaluation of machine learning approaches for change-proneness prediction using code smells",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning Feature Representations from Change Dependency Graphs for Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Assessment and analysis of software reliability using machine learning techniques",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A survey on machine learning techniques used for software quality prediction",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software Change Proneness Prediction Using Machine Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning and configurable systems: A gentle introduction",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Predicting just-in-time software defects to reduce post-release quality costs in the maritime industry",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Large-scale intent analysis for identifying large-review-effort code changes",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Failure of One, Fall of Many: An Exploratory Study of Software Features for Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Bibliometric Survey on the Reliable Software Delivery Using Predictive Analysis",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Engine Knock Evaluation Using a Machine Learning Approach",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Deep Introduction to AI Based Software Defect Prediction (SDP) and its Current Challenges",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "LearnX: A hybrid deterministic-statistical defect diagnosis methodology",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Automatic calculation of process metrics and their bug prediction capabilities",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "COOBA: Cross-project bug localization via adversarial transfer learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Prognostics and health management solution development in LabVIEW: Watchdog agent® toolkit and case study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning and its emergence in the modern world and its contribution to artificial intelligence",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Dilated convolutional neural network based model for bearing faults and broken rotor bar detection in squirrel cage induction motors",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Traceability recovery between bug reports and test cases-a Mozilla Firefox case study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Using different characteristics of machine learners to identify different defect families",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning-based fault detection and diagnosis of faulty power connections of induction machines",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Article metaheuristic optimized multi-level classification learning system for engineering management",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "OntoReq: An Ontology Focused Collective Knowledge Approach for Requirement Traceability Modelling",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Predicting Software Defects with Explainable Machine Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An Empirical Study on Spectral Clustering-based Software Defect Detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "On the Defect Prediction for Large Scale Software Systems-From Defect Density to Machine Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Fast Detection of Duplicate Bug Reports using LDA-based Topic Modeling and Classification",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Deep-Adversarial-Transfer Learning Based Fault Classification of Power Lines in Smart Grid",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fault prediction in SOA-based systems using deep learning techniques",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "OffSide: Learning to Identify Mistakes in Boundary Conditions",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Brake fault identification and fault-tolerant directional stability control of heavy road vehicles",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A study on software metric selection for software fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "T-REC: Towards accurate bug triage for technical groups",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "The Prediction of Positioning shift for a Robot Arm Using Machine Learning Techniques",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Towards one reusable model for various software defect mining tasks",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "PReT: A tool for automatic phase-based regression testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Implications of discretization towards improving classification accuracy for software defect data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning for embedded devices software analysis via hardware platform emulation",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Pragmatic investigation on performance of instance-based learning algorithms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Cognitive estimation of development effort, time, errors, and the defects of software",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A spatial–temporal graph neural network framework for automated software bug triaging",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Early prediction for merged vs abandoned code changes in modern code reviews",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Enhancing software model encoding for feature location approaches based on machine learning techniques",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Deriving and evaluating a fault model for testing data science applications",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Anomaly Detection in Smart Grid Network Using FC-Based Blockchain Model and Linear SVM",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning Long-and Short-Term Temporal Patterns for ML-driven Fault Management in Optical Communication Networks",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Intelligent framework for automated failure prediction, detection, and classification of mission critical autonomous flights",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software Fault Prediction Using Data Mining Techniques on Software Metrics",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Data Collection: Use and Transformation in Predictive Maintenance Models",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Machine Learning Model Comparison and Selection Framework for Software Defect Prediction Using VIKOR",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Simplify Your Neural Networks: An Empirical Study on Cross-Project Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Flexible Architecture for Data-Driven Predictive Maintenance with Support for Offline and Online Machine Learning Techniques",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "2021 4th International Conference on Computer Information Science and Application Technology, CISAT 2021",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Research Cloud Bazaar: A software defined cloud workflow cost management tool",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ESPY Carting Systems:The Real -Time Tracking Mechanism Architecture",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning off-by-one mistakes: An empirical study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Prioritized test generation guided by software fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "On the prediction of long-lived bugs: An analysis and comparative study using FLOSS projects",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Correlation feature and instance weights transfer learning for cross project software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Improving Test Case Generation for REST APIs Through Hierarchical Clustering",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Towards the generation of machine learning defect reports",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "DeepOrder: Deep Learning for Test Case Prioritization in Continuous Integration Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Comparative Analysis of Software Aging in Image Classifiers on Cloud and Edge",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software defect prediction using hybrid model (CBIL) of convolutional neural network (CNN) and bidirectional long short-term memory (Bi-LSTM)",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine-learning for automated fiber placement for manufacturing efficiency and process optimization",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Research on vibration monitoring and fault diagnosis of rotating machinery based on internet of things technology",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Genetic algorithm-based oversampling approach to prune the class imbalance issue in software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Feature selection using artificial immune network: An approach for software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Modeling of guided waves for aerospace applications",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fast duplicate bug reports detector training using sampling for dimension reduction: Using instance-based learning for continous query in real-world",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Handling Imbalanced Dataset Classification in Machine Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A three-stage method for classification of binary imbalanced big data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Singling the odd ones out: A novelty detection approach to find defects in infrastructure-as-code",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Software Failures Prediction in Self-Driving Vehicles",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "7th International Conference on Electrical Engineering Computer Science and Informatics, EECSI 2020",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Modelling machine learning components for mapping and scheduling of AUTOSAR runnables",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Proceedings of the 6th International Conference on Engineering and MIS 2020, ICEMIS 2020",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Evaluation of functional abilities in 0–6 year olds: An analysis with the eearlycare computer application",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Deterministic-Statistical Multiple-Defect Diagnosis Methodology",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software defect prediction: A survey with machine learning approach",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A design architecture for an autonomous pre-launch procedure control system",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Predictive maintenance as enhancement of fault detection, isolation and recovery strategies of spacecraft",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "13th International Conference on the Quality of Information and Communications Technology, QUATIC 2020",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Classification based software defect prediction model for finance software system - An industry study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Evolutionary Computing Assisted Heterogenous Ensemble Model for Web-of-Service Software Reusability Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An evolutionary approach for software defect prediction on high dimensional data using subspace clustering and machine learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Textout: Detecting Text-Layout Bugs in Mobile Apps via Visualization-Oriented Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software Package for Improving Financial and Technological Performance of Microgrid Networks",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ACT Testbot and 4S Quality Metrics in XAAS Framework",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Process Monitoring Platform based on Industry 4.0 tools: A waste-to-energy plant case study",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning and sonarqube KPIs to predict increasing bug resolution times",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "16th International Conference on Mobile Web and Intelligent Information Systems, MobiWIS 2019",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "39th SGAI International Conference on Innovative Techniques and Applications of Artificial Intelligence, AI 2019",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Deep-Learning-Based Computer Vision System for Surface-Defect Detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Proceedings - 18th IEEE International Working Conference on Source Code Analysis and Manipulation, SCAM 2018",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Buffer overflow detection for c programs is hard to learn",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "2017 6th International Conference on Reliability, Infocom Technologies and Optimization: Trends and Future Directions, ICRITO 2017",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Proceedings of the European Test Workshop",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Research on defect detection technology of trusted behavior decision tree based on intelligent data semantic analysis of massive data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A novel probabilistic-ABC based boosting model for software defect detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An approach for improving classification accuracy using discretized software defect data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "7th International Workshop on Service Orientation in Holonic and Multi-agent Manufacturing, SOHOMA 2017",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Designing ANFIS model to predict the reliability of component-based system",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Exploration of Machine Learning Techniques for Defect Classification",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "21st European Symposium on Research in Computer Security, ESORICS 2016",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Estimating a machine learning model for fault detection using test case prioritization technique in open dependency",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Application of gene expression programming in predicting software reliability",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Proceedings of 2021 International Conference on Autonomous Unmanned Systems (ICAUS 2021)",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "Yes",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Trends in Data Engineering Methods for Intelligent Systems",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Industrial Internet of Things",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Data Engineering for Smart Systems",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Advances in Information, Communication and Cybersecurity",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Artificial Intelligence for Knowledge Management, Energy, and Sustainability",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Robot Operating System (ROS)",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine Learning for Cyber Agents",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Introduction to Python Network Automation",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Converging Technologies and Enhancement",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Minimally Invasive Percutaneous Nephrolithotomy",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Understanding current states of machine learning approaches in medical informatics: a systematic literature review",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Parallel Evolving IT-BI Systems",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Big Data and Machine Learning for the Smart Factoryâ€”Solutions for Condition Monitoring, Diagnosis and Optimization",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Study on Reliability of Rotors Using XLrotor",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine Learning Techniques for Intrusion Detection in SDN: A Survey",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "On the Defect Prediction for Large Scale Software Systems â€“ From Defect Density to Machine Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Software Defects Prediction using Machine Learning Algorithms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An approach for software defect prediction by combined soft computing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ConPredictor: Concurrency Defect Prediction in Real-World Applications",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Revisiting the Class Imbalance Issue in Software Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Getting Defect Prediction Into Industrial Practice: the ELFF Tool",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "A Deep Introduction to AI Based Software Defect Prediction (SDP) and its Current Challenges",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A novel probabilistic-ABC based boosting model for software defect detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Study on Software Metric Selection for Software Fault Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning Semantic Features for Software Defect Prediction by Code Comments Embedding",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Prioritized Test Generation Guided by Software Fault Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software fault prediction based on one-class SVM",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Modelling Machine Learning Components for Mapping and Scheduling of AUTOSAR Runnables",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Failure of One, Fall of Many: An Exploratory Study of Software Features for Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Novel Class-Imbalance Learning Approach for Both Within-Project and Cross-Project Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Poster: LWE: LDA Refined Word Embeddings for Duplicate Bug Report Detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Comparative Analysis of Software Reliability Prediction Using Machine Learning and Deep Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Convolutional Neural Networks over Control Flow Graphs for Software Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fault Description Based Attribute Transfer for Zero-Sample Industrial Fault Diagnosis",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Investigating the Performance of Machine Learning Algorithms for Improving Fault Tolerance for Large Scale Workflow Applications in Cloud Computing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Brake Fault Identification and Fault-Tolerant Directional Stability Control of Heavy Road Vehicles",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Combining Spreadsheet Smells for Improved Fault Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software Change Proneness Prediction Using Machine Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "T-REC: Towards Accurate Bug Triage for Technical Groups",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Using Supervised Learning to Guide the Selection of Software Inspectors in Industry",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Learning Feature Representations from Change Dependency Graphs for Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Efficient Bug Triage For Industrial Environments",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Fault Diagnosis Method of Tread Production Line Based on Convolutional Neural Network",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An Empirical Study on Spectral Clustering-based Software Defect Detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fast Detection of Duplicate Bug Reports using LDA-based Topic Modeling and Classification",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Identifying Supplementary Bug-fix Commits",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Using Machine Learning to Build Test Oracles: an Industrial Case Study on Elevators Dispatching Algorithms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "On-line fault diagnosis of rolling bearing based on machine learning algorithm",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Flexible Architecture for Data-Driven Predictive Maintenance with Support for Offline and Online Machine Learning Techniques",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Kernel-based Class-specific Broad Learning System for software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Prediction of Sensor Faults and Outliers in IoT Devices",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Three-stage Method for Classification of Binary Imbalanced Big Data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Bug Localization with Combination of Deep Learning and Information Retrieval",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "The Prediction of Positioning shift for a Robot Arm Using Machine Learning Techniques",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Combining Deep Learning with Information Retrieval to Localize Buggy Files for Bug Reports (N)",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "LearnX: A Hybrid Deterministic-Statistical Defect Diagnosis Methodology",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Extracting Interaction-Related Failure Indicators for Online Detection and Prediction of Content Failures",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Deterministic-Statistical Multiple-Defect Diagnosis Methodology",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software Package For Improving Financial And Technological Performance Of Microgrid Networks",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "ACT Testbot and 4S Quality Metrics in XAAS Framework",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Convolutional neural networks on assembly code for predicting software defects",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning the Evolution Regularities for BigService-Oriented Online Reliability Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Error Vulnerabilities and Fault Recovery in Deep-Learning Frameworks for Hardware Accelerators",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Automated diagnostic of virtualized service performance degradation",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fault Prediction for Large Scale Projects Using Deep Learning Techniques",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Deep Learning-Based Resolution Prediction of Software Enhancement Reports",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Domain Adaptation for Test Report Classification in Crowdsourced Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Modified Fuzzy-Q-Learning (MFQL)-Based Mechanical Fault Diagnosis for Direct-Drive Wind Turbines Using Electrical Signals",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Process Monitoring Platform based on Industry 4.0 tools: a waste-to-energy plant case study",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Towards the generation of machine learning defect reports",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Should fixing these failures be delegated to automated program repair?",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Health Status Assessment and Failure Prediction for Hard Drives with Recurrent Neural Networks",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Localizing Multiple Faults in Simulink Models",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "AudioForesight: A Process Model for Audio Predictive Maintenance in Industrial Environments",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Textout: Detecting Text-Layout Bugs in Mobile Apps via Visualization-Oriented Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "DeepOrder: Deep Learning for Test Case Prioritization in Continuous Integration Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Control strategy of a Multiple Hearth Furnace enhanced by machine learning algorithms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An Extensive Study on Cross-Project Predictive Mutation Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Proactive-Restoration Technique for SDNs",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Unintended Behavior in Learning-Enabled Systems: Detecting the Unknown Unknowns",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Bayesian Optimization-Based Gradient Boosting Method of Fault Detection in Oil-Immersed Transformer and Reactors",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Improving Test Case Generation for REST APIs Through Hierarchical Clustering",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Handling Imbalanced Dataset Classification in Machine Learning",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "iSTEP, an Integrated Self-Tuning Engine for Predictive Maintenance in Industry 4.0",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Prognostics and health management solution development in LabVIEW: Watchdog agentÂ® toolkit and case study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Opinion Mining at Scale: A Case Study of the First Self-driving Car Fatality",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Survey on Spark Ecosystem: Big Data Processing Infrastructure, Machine Learning, and Applications",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "TFCheck : A TensorFlow Library for Detecting Training Issues in Neural Network Programs",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Enhancing PowerFactory Dynamic Models with Python for Rapid Prototyping",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning Long-and Short-Term Temporal Patterns for ML-driven Fault Management in Optical Communication Networks",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Time Series Anomaly Detection Based on GAN",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "PReT: A Tool for Automatic Phase-Based Regression Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "DeepDroid: Feature Selection approach to detect Android malware using Deep Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Prioritizing Test Inputs for Deep Neural Networks via Mutation Analysis",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "GaDei: On Scale-Up Training as a Service for Deep Learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "IFeedback: exploiting user feedback for real-time issue detection in large-scale online service systems",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Improving the decision-making process of self-adaptive systems by accounting for tactic volatility",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Leopard: identifying vulnerable code for vulnerability assessment through program metrics",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fast Outage Analysis of Large-scale Production Clouds with Service Correlation Mining",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "AIOps: real-world challenges and research innovations",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Domain adaptation for test report classification in crowdsourced testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Unifying logic and probability",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Applications of Machine Learning Algorithms to Predictive Manufacturing: Trends and Application of Tool Wear Compensation Parameter Recommendation",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Measuring high and low priority defects on traditional and mobile open source software",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Local-based active classification of test report to assist crowdsourced testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "QTEP: quality-aware test case prioritization",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software Vulnerability Analysis and Discovery Using Machine-Learning and Data-Mining Techniques: A Survey",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Screening heuristics for project gating systems",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine-Learning-Guided Typestate Analysis for Static Use-After-Free Detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Combining spreadsheet smells for improved fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Grounding Interactive Machine Learning Tool Design in How Non-Experts Actually Build Models",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Survey of Machine Learning for Big Code and Naturalness",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Predicting Node failure in cloud service systems",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Is there a \"golden\" feature set for static warning identification? an experimental evaluation",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "MODE: automated neural network model debugging via state differential analysis and input selection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Automatically assessing vulnerabilities discovered by compositional analysis",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "How Effectively Is Defective Code Actually Tested? An Analysis of JUnit Tests in Seven Open Source Systems",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "DeepFL: integrating multiple fault diagnosis dimensions for deep fault localization",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "DeepBugs: a learning approach to name-based bug detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "How incidental are the incidents? characterizing and prioritizing incidents for large-scale online service systems",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "PABLO: Helping Novices Debug Python Code Through Data-Driven Fault Localization",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "A Systematic Review on Imbalanced Data Challenges in Machine Learning: Applications and Solutions",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Precise Learn-to-Rank Fault Localization Using Dynamic and Static Features of Target Programs",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "The importance of accounting for real-world labelling when predicting software vulnerabilities",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "JLLAR: A Logging Recommendation Plug-in Tool for Java",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "NetFlowTotal: A Cloud Service Integration Platform for Malicious Traffic Analysis and Collaboration",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Real-time incident prediction for online service systems",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Classification Based Software Defect Prediction Model for Finance Software System - An Industry Study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Understanding the automated parameter optimization on transfer learning for cross-project defect prediction: an empirical study",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "The Impact of Software Fault Prediction in Real-World Application: An Automated Approach for Software Engineering",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Quest for the Golden Approach: An Experimental Evaluation of Duplicate Crowdtesting Reports Detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Deep Learning for Software Defect Prediction: A Survey",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Detecting and understanding real-world differential performance bugs in machine learning libraries",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Orchestrating the Development Lifecycle of Machine Learning-based IoT Applications: A Taxonomy and Survey",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Genetic Improvement @ ICSE 2020",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Bran: Reduce Vulnerability Search Space in Large Open Source Repositories by Learning Bug Symptoms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "DeepWukong: Statically Detecting Software Vulnerabilities Using Deep Graph Neural Network",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Towards Reliable AI for Source Code Understanding",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Survey of AIOps Methods for Failure Management",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A Web Information Extraction Framework with Adaptive and Failure Prediction Feature",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Transductive Instance Transfer Learning for Cross-Language Defect Prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Using Hadoop MapReduce for Parallel Genetic Algorithms: A Comparison of the Global, Grid and Island Models",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Learning to find naming issues with big code and small supervision",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Probabilistic demand forecasting at scale",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Online detection of anomalous applications on the cloud",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A systematic review of machine learning techniques for software fault prediction",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Enhancing software defect prediction using supervised-learning based framework",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Real-world application of machine-learning-based fault detection trained with experimental data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An online machine learning framework for early detection of product failures in an Industry 4.0 context",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Support Vector Machine with k-fold cross validation model for software fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An empirical study of robustness and stability of machine learning classifiers in software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software vulnerability analysis and discovery using machine-learning and data-mining techniques: A survey",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Software defect prediction techniques using metrics based on neural network classifier",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Performance analysis of IoT-based sensor, big data processing, and machine learning model for real-time monitoring system in automotive manufacturing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Design of machine learning models with domain experts for automated sensor selection for energy fault detection",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "A machine learning approach for vibration-based multipoint tool insert health prediction on vertical machining centre (VMC)",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Tackling class overlap and imbalance problems in software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A systematic literature review of software defect prediction",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Balancing the trade-off between accuracy and interpretability in software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Performance tuning for automotive software fault prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Empirical comparison of machine learning algorithms for bug prediction in open source software",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Conpredictor: Concurrency defect prediction in real-world applications",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning approach using MLP and SVM algorithms for the fault prediction of a centrifugal pump in the oil and gas industry",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Deep learning based software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Progress on approaches to software defect prediction",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Taxonomy of machine learning algorithms in software fault prediction using object oriented metrics",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fault Diagnosis Management Model using Machine Learning",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Revisiting the class imbalance issue in software defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Lessons learned from using a deep tree-based model for software defect prediction in practice",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Production fault simulation and forecasting from time series data with machine learning in glove textile industry",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Experimental setup for online fault diagnosis of induction machines via promising IoT and machine learning: Towards industry 4.0 empowerment",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fault Prediction with Static Software Metrics in Evolving Software: A Case Study in Apache Ant",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Tackling faults in the industry 4.0 era—a survey of machine-learning solutions and key aspects",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A systematic review on software defect prediction",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A comparative analysis of soft computing techniques in software fault prediction model development",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A taxonomy of software engineering challenges for machine learning systems: An empirical investigation",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning and reasoning for predictive maintenance in Industry 4.0: Current status and challenges",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A survey of software quality for machine learning applications",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A literature review study of software defect prediction using machine learning techniques",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Bug report severity level prediction in open source software: A survey and research opportunities",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A public bug database of github projects and its application in bug prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Improved approach for software defect prediction using artificial neural networks",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A decision tree logic based recommendation system to select software fault prediction techniques",
+      "results": {
+        "IC1": "No",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning in predictive maintenance towards sustainable smart manufacturing in industry 4.0",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Studying aging-related bug prediction using cross-project models",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Data fusion and machine learning for industrial prognosis: Trends and perspectives towards Industry 4.0",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "The effectiveness of supervised machine learning algorithms in predicting software refactoring",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Large-scale machine learning systems in real-world industrial settings: A review of challenges and solutions",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Computational fluid dynamics-based in-situ sensor analytics of direct metal laser solidification process using machine learning",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A generic fault prognostics algorithm for manufacturing industries using unsupervised machine learning classifiers",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Data Mining and Machine Learning for Condition-based Maintenance",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Real-world application of machine-learning-based fault detection trained with experimental data",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Real-time defect detection in 3D printing using machine learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine Learning Framework for Predictive Maintenance in Milling",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Detection of faults in subsea pipelines by flow monitoring with regression supervised machine learning,",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Research and application of machine learning for additive manufacturing,",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Fault state detection and remaining useful life prediction in AC powered solenoid operated valves based on traditional machine learning and deep neural networks,",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning applications in production lines: A systematic literature review",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning based defect detection in a low automated assembly environment",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "SituRepair: Incorporating Machine-Learning Fault Class Prediction to Inform Situational Multiple Fault Automatic Program Repair",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Data-driven predictive maintenance planning framework for MEP components based on BIM and IoT using machine learning algorithms",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Classification of mechanism of reinforcement in the fiber-matrix interface: Application of Machine Learning on nanoindentation data",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Improving high-impact bug report prediction with combination of interactive machine learning and active learning",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "A machine learning approach for vibration-based multipoint tool insert health prediction on vertical machining centre (VMC)",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "State-of-the-art on research and applications of machine learning in the building life cycle",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Chapter 6 - Machine learning-based energy consumption forecasting model for process industryâ€”Hybrid PSO-LSSVM algorithm electricity consumption forecasting model for papermaking process",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Machine learning and multiresolution decomposition for embedded applications to detect short-circuit in induction motors",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Ex-situ porosity classification in metallic components by laser metal deposition: A machine learning-based approach",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Finite element modeling of direct metal laser solidification process: Sensor data replication and use in defect detection and data reduction via machine learning",
+      "results": {
+        "IC1": "No",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Chapter 10 - Error Traceability and Error Prediction using Machine Learning Techniques to Improve the Quality of Vehicle Modeling in Computer-Aided Engineering",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "An investigation of cross-project learning in online just-in-time sotfware defect prediction",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Neural Network Classification for Improving Continuous Regression Testing",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Empirically evaluating readily available information for regression test optimization in continuous integration",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Automated defect prioritization based on defects resolved at various project periods",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Demo: Automatically retrainable self improving model for the automated classification of software incidents into multiple classes",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "No",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": false
+    },
+    {
+      "title": "Continuous Build Outcome Prediction: A Small-N Experiment in Settings of a Real Software Project",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
+    },
+    {
+      "title": "Cost Effectiveness of Software Defect Prediction in an\nIndustrial Project",
+      "results": {
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      },
+      "selected": true
     }
   ]
 }

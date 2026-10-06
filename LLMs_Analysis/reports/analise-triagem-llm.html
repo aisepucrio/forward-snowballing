@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triagem por LLM: study0 e study1 contra o gabarito humano</title>
+<style>
+  :root {
+    --bg: #f6f7f5;
+    --surface: #ffffff;
+    --ink: #16202b;
+    --ink-2: #47576a;
+    --muted: #7a8796;
+    --line: #e1e4e3;
+    --accent: #2f4a8a;
+    --accent-soft: #e9edf8;
+    --warn: #ad5019;
+    --good: #2d6b4f;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10161c;
+      --surface: #182028;
+      --ink: #e9eef3;
+      --ink-2: #aab8c5;
+      --muted: #7d8b99;
+      --line: #27323d;
+      --accent: #8fabf0;
+      --accent-soft: #1e2938;
+      --warn: #e0925c;
+      --good: #6cb693;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .page { max-width: 68rem; margin: 0 auto; padding-inline: 20px; padding-block: 40px 60px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 36px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.15; margin: 0 0 12px; }
+  h2 { font-size: 1.4rem; margin: 44px 0 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 26px 0 6px; }
+  p { margin: 10px 0; max-width: 52rem; }
+  .lead { font-size: 1.06rem; color: var(--ink-2); }
+  .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-top: 14px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.93rem; margin: 14px 0; }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  td.key { font-family: var(--mono); font-size: 0.85rem; }
+  .bad { color: var(--warn); font-weight: 600; }
+  .ok { color: var(--good); font-weight: 600; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 14px; margin: 16px 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+  .card .k { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); display: block; }
+  .card .v { font-size: 2rem; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .card .d { font-size: 0.84rem; color: var(--ink-2); display: block; }
+  .card.key { border-color: var(--accent); background: var(--accent-soft); }
+  .card.key .v { color: var(--accent); }
+
+  .bars { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; }
+  .bar-row { display: grid; grid-template-columns: 3rem 1fr 8.5rem; gap: 12px; align-items: center; margin-bottom: 8px; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-row .id { font-family: var(--mono); font-size: 0.84rem; color: var(--ink-2); }
+  .track { position: relative; height: 20px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .track::after { content: ""; position: absolute; top: 0; bottom: 0; left: 90%; border-left: 2px dashed var(--muted); opacity: 0.65; }
+  .fill { height: 100%; background: var(--accent); }
+  .bar-row.low .fill { background: var(--warn); }
+  .bar-row .n { font-family: var(--mono); font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--ink-2); text-align: right; }
+  .legend { font-size: 0.8rem; color: var(--muted); margin: 0 0 12px; }
+
+  .matrix { display: grid; grid-template-columns: repeat(2, minmax(9rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; max-width: 34rem; margin: 14px 0; }
+  .cell { background: var(--surface); padding: 12px 14px; }
+  .cell .n { font-size: 1.6rem; font-variant-numeric: tabular-nums; display: block; }
+  .cell .k { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: block; }
+  .cell.err .n { color: var(--warn); }
+  .cell.hit .n { color: var(--good); }
+
+  blockquote { margin: 12px 0; padding: 10px 16px; border-left: 3px solid var(--accent); background: var(--surface); color: var(--ink-2); font-size: 0.93rem; }
+  blockquote.warn { border-left-color: var(--warn); }
+  ul, ol { max-width: 52rem; }
+  li { margin-bottom: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.85rem; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+
+  @media (max-width: 640px) {
+    .bar-row { grid-template-columns: 2.6rem 1fr 6rem; }
+    .matrix { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <p class="eyebrow">SnowMap · avaliação da triagem por LLM</p>
+  <h1>Triagem por LLM contra o gabarito humano: study0 e study1</h1>
+  <p class="lead">Dois estudos de revisão sistemática, 472 artigos triados por LLM e comparados à decisão dos pesquisadores. O relatório mede a decisão final, identifica em qual critério a LLM erra e aponta o que corrigir.</p>
+  <p class="meta">Execuções <code>study0/nemotron-baseline</code> e <code>study1/baseline</code> · prompt 2ddcf92d0373 · outubro de 2026</p>
+</header>
+
+<h2>1. Como a triagem funciona</h2>
+<p>A avaliação roda pelo mesmo caminho da aplicação: o prompt de <code>scripts/services/prompt.py</code> e o cliente de <code>scripts/analisys_LLM.py</code>. O que se mede aqui é o que o SnowMap faz em produção.</p>
+<ul>
+  <li><b>Uma chamada por artigo</b>, com todos os critérios de inclusão e exclusão de uma vez.</li>
+  <li><b>Resposta Yes/No por critério</b>. Um artigo é incluído quando todos os critérios de inclusão são "Yes" e nenhum de exclusão é "Yes".</li>
+  <li><b>Cadeia de provedores:</b> OpenRouter (Nemotron 3 Ultra gratuito) e, em caso de falha ou cota esgotada, a API do Google com Gemini 3.7 Flash e depois Gemini 3.5 Flash Lite.</li>
+  <li><b>Raciocínio ativado</b> e JSON schema desligado, porque a variante gratuita do modelo principal não aceita schema.</li>
+  <li><b>Custo zero:</b> as duas execuções couberam nas cotas gratuitas, usando retomada quando elas esgotaram.</li>
+</ul>
+<p><b>Nenhuma resposta inválida em 472 chamadas.</b> O formato de saída não foi problema em momento algum; todo o erro medido aqui é de julgamento.</p>
+
+<h2>2. Resultado consolidado</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Métrica</th><th class="num">study0</th><th class="num">study1</th><th>Leitura</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Artigos comparados</td><td class="num">109</td><td class="num">363</td><td>study1 tem 404 registros, mas 363 títulos únicos</td></tr>
+    <tr><td>Relevantes no gabarito</td><td class="num">10</td><td class="num">27</td><td>9,2% e 7,4% do total</td></tr>
+    <tr><td><b>Recall</b></td><td class="num bad">0,600</td><td class="num bad">0,333</td><td>a métrica que importa em triagem</td></tr>
+    <tr><td>Precision</td><td class="num">0,375</td><td class="num">0,290</td><td>custo de leitura extra</td></tr>
+    <tr><td>F1</td><td class="num">0,462</td><td class="num">0,310</td><td></td></tr>
+    <tr><td>Accuracy</td><td class="num">0,872</td><td class="num">0,890</td><td>enganosa: excluir tudo daria 0,908 e 0,926</td></tr>
+    <tr><td>Respostas inválidas</td><td class="num ok">0</td><td class="num ok">0</td><td></td></tr>
+  </tbody>
+</table>
+</div>
+<blockquote>Accuracy alta não significa nada aqui. Como menos de 10% dos artigos entram na revisão, um classificador que responde "excluir" para tudo supera a LLM nessa métrica nos dois estudos. O que decide a utilidade da ferramenta é o recall: cada artigo relevante descartado é cobertura perdida na revisão.</blockquote>
+
+<h2>3. study0 — sistemas de software configuráveis</h2>
+<p>109 artigos, 3 critérios de inclusão e 4 de exclusão. O gabarito traz veredito por critério, o que permite medir concordância critério a critério.</p>
+
+<div class="cards">
+  <div class="card key"><span class="k">Recall</span><span class="v">60%</span><span class="d">6 dos 10 relevantes</span></div>
+  <div class="card"><span class="k">Precision</span><span class="v">37,5%</span><span class="d">16 indicados, 6 certos</span></div>
+  <div class="card"><span class="k">F1</span><span class="v">0,46</span><span class="d"></span></div>
+  <div class="card"><span class="k">Accuracy</span><span class="v">87,2%</span><span class="d">baseline trivial: 90,8%</span></div>
+</div>
+
+<div class="matrix">
+  <div class="cell hit"><span class="k">Incluídos pelos dois</span><span class="n">6</span></div>
+  <div class="cell err"><span class="k">Só a LLM incluiu</span><span class="n">10</span></div>
+  <div class="cell err"><span class="k">Só o gabarito incluiu</span><span class="n">4</span></div>
+  <div class="cell"><span class="k">Excluídos pelos dois</span><span class="n">89</span></div>
+</div>
+
+<h3>Concordância por critério</h3>
+<p class="legend">Barras azuis acima de 80%, laranja abaixo. A linha tracejada marca 90%.</p>
+<div class="bars">
+  <div class="bar-row"><span class="id">EC1</span><div class="track"><div class="fill" style="width:97.25%"></div></div><span class="n">97,25% · 3 dif.</span></div>
+  <div class="bar-row"><span class="id">IC1</span><div class="track"><div class="fill" style="width:96.33%"></div></div><span class="n">96,33% · 4 dif.</span></div>
+  <div class="bar-row"><span class="id">EC3</span><div class="track"><div class="fill" style="width:95.41%"></div></div><span class="n">95,41% · 5 dif.</span></div>
+  <div class="bar-row"><span class="id">EC2</span><div class="track"><div class="fill" style="width:89.91%"></div></div><span class="n">89,91% · 11 dif.</span></div>
+  <div class="bar-row"><span class="id">IC3</span><div class="track"><div class="fill" style="width:84.40%"></div></div><span class="n">84,40% · 17 dif.</span></div>
+  <div class="bar-row low"><span class="id">IC2</span><div class="track"><div class="fill" style="width:72.48%"></div></div><span class="n">72,48% · 30 dif.</span></div>
+  <div class="bar-row low"><span class="id">EC4</span><div class="track"><div class="fill" style="width:67.89%"></div></div><span class="n">67,89% · 35 dif.</span></div>
+</div>
+<p>Cinco critérios passam de 89% de concordância. Os dois piores são os de enunciado mais longo:</p>
+<blockquote class="warn"><b>EC4 (67,89%)</b> — “Estudos secundários não foram incluídos nesta revisão, como revisões de literatura, artigos comparativos, lições aprendidas, artigos de posição ou filosóficos, sem contribuição técnica. <i>Porém, as referências desses estudos foram lidas para identificar outros estudos primários relevantes... Além disso, consideramos estudos secundários na seção de trabalhos relacionados.</i>” Duas ressalvas contradizem a regra principal dentro do mesmo critério.</blockquote>
+<blockquote class="warn"><b>IC2 (72,48%)</b> — “O artigo deve ser sobre sistemas de software configuráveis.” Enunciado amplo: a LLM responde "Yes" em 97 dos 109 artigos, bem mais generosa que o revisor. Daí vêm quase todos os falsos positivos.</blockquote>
+
+<h3>Os 4 artigos relevantes descartados</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Artigo</th><th>Critério que causou</th></tr></thead>
+  <tbody>
+    <tr><td>Transfer learning across variants and versions: The case of linux kernel size</td><td class="key bad">IC1 = No</td></tr>
+    <tr><td>On Programming Variability with Large Language Model-based Assistant</td><td class="key bad">IC3 = No</td></tr>
+    <tr><td>Configuration optimization with limited functional impact</td><td class="key bad">IC3 = No</td></tr>
+    <tr><td>Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool</td><td class="key bad">IC3 = No</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Três dos quatro caíram no IC3, que é definido por contraposição: “técnicas que aprendem estatisticamente a partir de uma amostra de configurações, <i>em oposição a</i>, por exemplo, o uso isolado de técnicas de otimização para buscar a melhor configuração”. Enunciados assim exigem que o modelo entenda o que <i>não</i> conta, e é onde ele mais escorrega.</p>
+
+<h3>Os 10 falsos positivos</h3>
+<ol>
+  <li>Unicorn: Reasoning about configurable system performance through the lens of causality</li>
+  <li>Feature-oriented defect prediction</li>
+  <li>CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots</li>
+  <li>Automated identification of security-relevant configuration settings using NLP</li>
+  <li>Regression model trees: Compact energy models for complex IoT devices</li>
+  <li>Performance health index for complex cyber infrastructures</li>
+  <li>Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains</li>
+  <li>kconfig-webconf: retrofitting performance models onto kconfig-based software product lines</li>
+  <li>Reducing the Length of Field-replay Based Load Testing</li>
+  <li>Scalable sampling of highly-configurable systems: Generating random instances of the Linux kernel</li>
+</ol>
+<p>Todos tratam de sistemas configuráveis e foram excluídos pelo gabarito por outro motivo. São 10 leituras a mais para o revisor, não alucinação.</p>
+
+<h2>4. study1 — predição de defeitos com aprendizado de máquina</h2>
+<p>363 títulos únicos, mesmos 3 critérios de inclusão e 4 de exclusão em quantidade, porém com enunciados mais restritivos. O gabarito traz apenas a decisão final.</p>
+
+<div class="cards">
+  <div class="card key"><span class="k">Recall</span><span class="v">33%</span><span class="d">9 dos 27 relevantes</span></div>
+  <div class="card"><span class="k">Precision</span><span class="v">29%</span><span class="d">31 indicados, 9 certos</span></div>
+  <div class="card"><span class="k">F1</span><span class="v">0,31</span><span class="d"></span></div>
+  <div class="card"><span class="k">Accuracy</span><span class="v">89,0%</span><span class="d">baseline trivial: 92,6%</span></div>
+</div>
+
+<div class="matrix">
+  <div class="cell hit"><span class="k">Incluídos pelos dois</span><span class="n">9</span></div>
+  <div class="cell err"><span class="k">Só a LLM incluiu</span><span class="n">22</span></div>
+  <div class="cell err"><span class="k">Só o gabarito incluiu</span><span class="n">18</span></div>
+  <div class="cell"><span class="k">Excluídos pelos dois</span><span class="n">314</span></div>
+</div>
+
+<h3>Qual critério causou cada descarte</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Critério</th><th class="num">Falsos negativos causados</th><th>Enunciado</th></tr></thead>
+  <tbody>
+    <tr><td class="key bad">IC3</td><td class="num">15</td><td>Uso de predição de defeitos <b>em ambiente industrial, com base de dados industrial</b></td></tr>
+    <tr><td class="key bad">IC2</td><td class="num">6</td><td>Foco em prever defeitos usando aprendizado de máquina</td></tr>
+    <tr><td class="key bad">EC3</td><td class="num">2</td><td>Publicado antes de 01/01/2015 ou indexado depois de 08/04/2022</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Um mesmo artigo pode ser descartado por mais de um critério, por isso a soma passa de 18.</p>
+
+<h3>O quanto a LLM aceita cada critério</h3>
+<p class="legend">Percentual de artigos em que a resposta foi "Yes", nos 363 artigos.</p>
+<div class="bars">
+  <div class="bar-row"><span class="id">IC1</span><div class="track"><div class="fill" style="width:70.5%"></div></div><span class="n">70,5% · 256/363</span></div>
+  <div class="bar-row"><span class="id">IC2</span><div class="track"><div class="fill" style="width:37.2%"></div></div><span class="n">37,2% · 135/363</span></div>
+  <div class="bar-row low"><span class="id">IC3</span><div class="track"><div class="fill" style="width:9.9%"></div></div><span class="n">9,9% · 36/363</span></div>
+  <div class="bar-row"><span class="id">EC1</span><div class="track"><div class="fill" style="width:0.6%"></div></div><span class="n">0,6% · 2/363</span></div>
+  <div class="bar-row"><span class="id">EC2</span><div class="track"><div class="fill" style="width:0%"></div></div><span class="n">0% · 0/363</span></div>
+  <div class="bar-row low"><span class="id">EC3</span><div class="track"><div class="fill" style="width:16.3%"></div></div><span class="n">16,3% · 59/363</span></div>
+  <div class="bar-row"><span class="id">EC4</span><div class="track"><div class="fill" style="width:0%"></div></div><span class="n">0% · 0/363</span></div>
+</div>
+
+<p>Dois números explicam o recall baixo:</p>
+<ul>
+  <li><b>IC3 aceito em apenas 9,9% dos artigos.</b> Um abstract quase nunca afirma que a base de dados é industrial. Sem essa afirmação explícita, a LLM responde "No" e o artigo cai. O revisor humano infere o contexto industrial pelo nome da empresa, pelo dataset citado ou pelo desenho do estudo.</li>
+  <li><b>EC3 marcado "Yes" em 59 artigos sem que o dado exista.</b> Os artigos do study1 têm apenas título e abstract: não há campo de ano. Ainda assim o modelo decidiu sobre data de publicação em 16% dos casos, e isso derrubou 2 artigos relevantes.</li>
+</ul>
+
+<blockquote class="warn">Esse comportamento é consequência direta de uma mudança deliberada no prompt. A versão anterior mandava favorecer a inclusão quando a evidência fosse ambígua ou ausente; a versão atual busca a resposta correta sem inclinar para nenhum lado. No study0 o efeito foi pequeno. No study1, onde um critério depende de informação quase nunca explícita, o custo foi alto.</blockquote>
+
+<h3>Amostra dos falsos positivos</h3>
+<ul>
+  <li>An investigation of cross-project learning in online just-in-time software defect prediction</li>
+  <li>Automated defect prioritization based on defects resolved at various project periods</li>
+  <li>Automatically identifying code features for software defect prediction: Using AST N-grams</li>
+  <li>Continuous Build Outcome Prediction: A Small-N Experiment in Settings of a Real Software Project</li>
+  <li>Domain Adaptation for Test Report Classification in Crowdsourced Testing</li>
+</ul>
+
+<h2>5. Um achado sobre o gabarito</h2>
+<p>O arquivo do study1 tem <b>404 registros para 363 títulos únicos</b>. Em pelo menos um caso, o mesmo artigo aparece duas vezes com rótulos opostos, mudando apenas a capitalização do título:</p>
+<blockquote class="warn">“Classification based software defect prediction model for finance software system - An industry study” aparece como <b>excluído</b>, e “Classification Based Software Defect Prediction Model for Finance Software System - An Industry Study” aparece como <b>incluído</b>. Esse artigo entra ao mesmo tempo na lista de falsos positivos e na de falsos negativos, aconteça o que acontecer na triagem.</blockquote>
+<p>Vale limpar o gabarito antes da próxima rodada: duplicatas com rótulos divergentes colocam um teto artificial nas métricas, qualquer que seja o modelo.</p>
+
+<h2>6. O que os dois estudos mostram juntos</h2>
+<ol>
+  <li><b>A engenharia não é o gargalo.</b> 472 artigos, zero respostas inválidas, com três provedores se revezando e retomada automática quando a cota acabou.</li>
+  <li><b>O gargalo é o enunciado do critério.</b> Critérios curtos e verificáveis passam de 95% de concordância. Os que erram são os longos, com ressalva interna, definição por contraposição ou que dependem de informação ausente do abstract.</li>
+  <li><b>O prompt precisa tratar ausência de evidência de forma explícita.</b> Hoje o modelo decide sobre metadado que não recebeu, como o ano no study1.</li>
+  <li><b>Boa parte das execuções saiu de modelos gratuitos</b>, incluindo um modelo "lite" quando a cota principal esgotou. A comparação com um modelo mais forte ainda não foi feita.</li>
+</ol>
+
+<h2>7. Próximos passos sugeridos</h2>
+<ol>
+  <li><b>Regra de ausência de evidência:</b> quando o artigo não traz informação sobre o que o critério pergunta, responder a favor de manter. Medir nos dois estudos contra estes números, que passam a ser a linha de base.</li>
+  <li><b>Proibir decisão sobre metadado ausente</b>, em especial critérios de data quando o campo de ano não é enviado.</li>
+  <li><b>Rodar com modelo pago e JSON schema ligado</b> (Nemotron pago ou Gemini 3.7 Flash), para separar limitação de modelo de limitação de prompt.</li>
+  <li><b>Limpar o gabarito do study1</b>, removendo duplicatas com rótulos divergentes.</li>
+  <li><b>Testar uma chamada por critério</b> nos dois critérios mais problemáticos, IC3 e EC4, em vez de todos de uma vez.</li>
+</ol>
+
+<h2>8. Como reproduzir</h2>
+<pre>python LLMs_Analysis/code/run_screening.py study0
+python LLMs_Analysis/code/compare.py study0</pre>
+<p>Os resultados de cada execução ficam em <code>LLMs_Analysis/studies/&lt;estudo&gt;/runs/&lt;execução&gt;/</code>, com <code>results.json</code> (veredito por critério de cada artigo, mais modelo, provedores e impressão digital do prompt) e <code>comparison.txt</code> (o relatório que originou os números acima).</p>
+<p>As execuções deste relatório são <code>study0/nemotron-baseline</code> e <code>study1/baseline</code>, ambas com o prompt <code>2ddcf92d0373</code>.</p>
+
+<footer>
+  Gerado a partir das execuções registradas em <code>LLMs_Analysis/studies/</code>. Para atualizar este relatório, rode novamente as execuções e revise os números aqui.
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+Comparacao com o gabarito - study1
+
+Execucao
+- run: baseline
+- modelo: nvidia/nemotron-3-ultra-550b-a55b:free
+- fallback Gemini: gemini-3.7-flash,gemini-3.5-flash-lite
+- prompt: 2ddcf92d0373
+- raciocinio: true | json schema: false | temperatura: 0
+
+Resumo
+- artigos no gabarito: 363
+- artigos na execucao: 363
+- artigos comparados: 363
+- artigos com erro na execucao: 0
+
+Decisao final (gabarito como referencia)
+- precision: 0.2903
+- recall: 0.3333
+- f1: 0.3103
+- accuracy: 0.8898
+
+Matriz
+- true positives: 9
+- false positives: 22
+- false negatives: 18
+- true negatives: 314
+
+Incluidos pela LLM e excluidos no gabarito (falsos positivos)
+- An investigation of cross-project learning in online just-in-time sotfware defect prediction
+- Automated defect prioritization based on defects resolved at various project periods
+- Automatically identifying code features for software defect prediction: Using AST N-grams
+- Classification based software defect prediction model for finance software system - An industry study
+- Continuous Build Outcome Prediction: A Small-N Experiment in Settings of a Real Software Project
+- Cost Effectiveness of Software Defect Prediction in an
+Industrial Project
+- Design of machine learning models with domain experts for automated sensor selection for energy fault detection
+- Domain Adaptation for Test Report Classification in Crowdsourced Testing
+- Domain adaptation for test report classification in crowdsourced testing
+- Exploration of Machine Learning Techniques for Defect Classification
+- Fault Prediction for Large Scale Projects Using Deep Learning Techniques
+- Getting Defect Prediction Into Industrial Practice: the ELFF Tool
+- Health Status Assessment and Failure Prediction for Hard Drives with Recurrent Neural Networks
+- Implementation of cyber-physical production systems for quality prediction and operation control in metal casting
+- Learning Feature Representations from Change Dependency Graphs for Defect Prediction
+- Local-based active classification of test report to assist crowdsourced testing
+- On the Defect Prediction for Large Scale Software Systems â€“ From Defect Density to Machine Learning
+- PABLO: Helping Novices Debug Python Code Through Data-Driven Fault Localization
+- Predicting Node failure in cloud service systems
+- Production fault simulation and forecasting from time series data with machine learning in glove textile industry
+- ... e mais 2
+
+Excluidos pela LLM e incluidos no gabarito (falsos negativos)
+- A practical guide to support change-proneness prediction
+- Analyzing machine learning techniques for fault prediction using web applications
+- Classification Based Software Defect Prediction Model for Finance Software System - An Industry Study
+- Conpredictor: Concurrency defect prediction in real-world applications
+- Convolutional Neural Networks over Control Flow Graphs for Software Defect Prediction
+- Convolutional neural networks on assembly code for predicting software defects
+- DeepBugs: a learning approach to name-based bug detection
+- DeepWukong: Statically Detecting Software Vulnerabilities Using Deep Graph Neural Network
+- Getting defect prediction into industrial practice: The ELFF tool
+- How incidental are the incidents? characterizing and prioritizing incidents for large-scale online service systems
+- Leopard: identifying vulnerable code for vulnerability assessment through program metrics
+- MTFuzz: Fuzzing with a multi-task neural network
+- OffSide: Learning to Identify Mistakes in Boundary Conditions
+- On the prediction of long-lived bugs: An analysis and comparative study using FLOSS projects
+- Precise learn-to-rank fault localization using dynamic and static features of target programs
+- Studying aging-related bug prediction using cross-project models
+- The importance of accounting for real-world labelling when predicting software vulnerabilities
+- Transductive Instance Transfer Learning for Cross-Language Defect Prediction
+
+Artigos do gabarito sem resultado na execucao
+- nenhum
+
+Artigos da execucao ausentes no gabarito
+- nenhum
+
+Titulos duplicados
+- A Deep Introduction to AI Based Software Defect Prediction (SDP) and its Current Challenges
+- A Deterministic-Statistical Multiple-Defect Diagnosis Methodology
+- A Fault Diagnosis Method of Tread Production Line Based on Convolutional Neural Network
+- A machine learning approach for vibration-based multipoint tool insert health prediction on vertical machining centre (VMC)
+- A novel probabilistic-ABC based boosting model for software defect detection
+- ACT Testbot and 4S Quality Metrics in XAAS Framework
+- An Empirical Study on Spectral Clustering-based Software Defect Detection
+- Automated bug assignment: Ensemble-based machine learning in large scale industrial contexts
+- Automatically identifying code features for software defect prediction: Using AST N-grams
+- Balancing the trade-off between accuracy and interpretability in software defect prediction
+- Classification with reject option for software defect prediction
+- Combining spreadsheet smells for improved fault prediction
+- ConPredictor: Concurrency Defect Prediction in Real-World Applications
+- Convolutional neural networks on assembly code for predicting software defects
+- Convolutional neural networks over control flow graphs for software defect prediction
+- DeepOrder: Deep Learning for Test Case Prioritization in Continuous Integration Testing
+- Domain adaptation for test report classification in crowdsourced testing
+- Enhancing PowerFactory Dynamic Models with Python for Rapid Prototyping
+- Failure of One, Fall of Many: An Exploratory Study of Software Features for Defect Prediction
+- Fast Detection of Duplicate Bug Reports using LDA-based Topic Modeling and Classification
+- ... e mais 21

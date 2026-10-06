@@ -21,6 +21,8 @@ LLMs_Analysis/
 │   │   ├── runs/          # uma pasta por execução: results.json e comparison.txt
 │   │   └── history/       # relatórios das rodadas antigas (Gemini e Gemma)
 │   └── study1/            # mesma estrutura
+├── reports/
+│   └── analise-triagem-llm.html  # análise dos dois estudos, para leitura e apresentação
 └── history/
     └── prompts_legacy.txt # prompts usados nos experimentos antigos
 ```
@@ -80,3 +82,11 @@ para usar outro gabarito. O relatório fica em `runs/<execução>/comparison.txt
 
 Em revisão sistemática, recall costuma pesar mais que precision: perder um artigo relevante
 custa mais caro do que revisar um a mais na leitura completa.
+
+## Análise consolidada
+
+`reports/analise-triagem-llm.html` reúne os dois estudos num só documento: métricas lado a
+lado, concordância por critério, qual critério causou cada descarte, os problemas de
+enunciado que explicam os erros, um achado sobre duplicatas no gabarito do study1 e os
+próximos passos sugeridos. É um arquivo único, sem dependência externa: basta abrir no
+navegador. Ao rodar novas execuções, atualize os números de lá.
