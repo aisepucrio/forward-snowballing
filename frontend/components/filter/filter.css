@@ -17,6 +17,31 @@
   white-space: nowrap;
 }
 
+.filter-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-by-label {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+}
+
+.order-by-dropdown {
+  gap: 4px;
+  padding: 6px 8px;
+}
+
+.order-by-dropdown select {
+  width: 112px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* YEAR RANGE FILTER */
 
 .submenu.hidden {

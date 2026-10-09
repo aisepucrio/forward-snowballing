@@ -31,8 +31,47 @@ const FilterComponent = (function () {
     years: [],
     authors: [], 
     venues: [],
-    citationCount: null
+    citationCount: null,
+    orderBy: ''
   };
+
+  function getCitationCount(item) {
+    const value = item.citations_count ?? item.citationCount ?? item.cited_by_count;
+    if (value === '' || value === '-') return null;
+    const count = Number(value);
+    return Number.isFinite(count) ? count : null;
+  }
+
+  function getChronologicalValue(item) {
+    const dateValue = item.publication_date ?? item.publicationDate ?? item.published_date ?? item.publishedDate;
+    if (dateValue) {
+      const timestamp = Date.parse(String(dateValue));
+      if (!Number.isNaN(timestamp)) return timestamp;
+    }
+
+    const year = Number.parseInt(item.year, 10);
+    return Number.isFinite(year) ? year : null;
+  }
+
+  function sortResults(result) {
+    const orderBy = activeFilters.orderBy;
+    if (!orderBy) return result;
+
+    const direction = orderBy.endsWith('-desc') ? -1 : 1;
+    const valueGetter = orderBy.startsWith('citations')
+      ? getCitationCount
+      : getChronologicalValue;
+
+    return result
+      .map((item, index) => ({ item, index, value: valueGetter(item) }))
+      .sort((a, b) => {
+        if (a.value === null && b.value === null) return a.index - b.index;
+        if (a.value === null) return 1;
+        if (b.value === null) return -1;
+        return (a.value - b.value) * direction || a.index - b.index;
+      })
+      .map(entry => entry.item);
+  }
 
   function applyCombinedFilters() {
     const baseDados = getBaseData() || [];
@@ -68,6 +107,7 @@ const FilterComponent = (function () {
       });
     } 
 
+    result = sortResults(result);
     try { window.citationsData = result; } catch (err) {}
     if (typeof mostrarCitacoes === 'function') mostrarCitacoes(result);
     else console.warn('mostrarCitacoes não encontrada para renderizar resultados');
@@ -280,7 +320,7 @@ const FilterComponent = (function () {
     const wrapper = document.getElementById('filterWrapper');
     if (!wrapper) return;
     wrapper.insertAdjacentHTML('afterbegin', `
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div class="filter-controls">
         <div class="filter-dropdown">
           <i class="bi bi-filter"></i>
           <span style="font-family: 'Poppins', sans-serif;">Filter By</span>
@@ -289,6 +329,17 @@ const FilterComponent = (function () {
             <option value="year-range">Year Range</option>
             <option value="author">Author</option>
             <option value="venue">Venue</option>
+          </select>
+        </div>
+        <div class="filter-dropdown order-by-dropdown">
+          <i class="bi bi-sort-down"></i>
+          <label for="orderBy" class="order-by-label">Order By</label>
+          <select id="orderBy" name="orderBy" aria-label="Order results by">
+            <option value="">Default</option>
+            <option value="citations-asc">Citations (low to high)</option>
+            <option value="citations-desc">Citations (high to low)</option>
+            <option value="chronological-asc">Chronological (oldest first)</option>
+            <option value="chronological-desc">Chronological (newest first)</option>
           </select>
         </div>
       </div>
@@ -361,6 +412,7 @@ const FilterComponent = (function () {
     }, options);
 
     const statusSelect = document.getElementById(selectors.status);
+    const orderBySelect = document.getElementById('orderBy');
     const decadeSubMenu = document.getElementById(selectors.decadeSubMenu);
     const authorSubMenu = document.getElementById('authorSubMenu');
     const venueSubMenu = document.getElementById('venueSubMenu');
@@ -399,6 +451,13 @@ const FilterComponent = (function () {
           const hasVenues = venueSubMenu && venueSubMenu.querySelector('.btn-venue');
           if (hasVenues) venueSubMenu.classList.remove('hidden');
         }
+      });
+    }
+
+    if (orderBySelect) {
+      orderBySelect.addEventListener('change', event => {
+        activeFilters.orderBy = event.target.value || '';
+        applyCombinedFilters();
       });
     }
 
