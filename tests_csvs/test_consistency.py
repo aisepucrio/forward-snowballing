@@ -1,9 +1,11 @@
 import os
 import csv
+import difflib
 import json
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -26,6 +28,27 @@ TIMEOUT_POR_BUSCA = float(os.getenv("TIMEOUT_POR_BUSCA", "300"))
 
 USER_AGENT = "forward-snowballing-app/1.0"
 OPENALEX_MAILTO = os.getenv("OPENALEX_MAILTO", "").strip()
+
+# O pipeline (services/search.py) lê SEMANTIC_API_KEY; aceitamos também o nome
+# SEMANTIC_SCHOLAR_API_KEY. Como o ambiente é repassado ao subprocesso, uma única
+# variável serve ao pipeline e a este teste.
+SEMANTIC_API_KEY = (
+    os.getenv("SEMANTIC_API_KEY") or os.getenv("SEMANTIC_SCHOLAR_API_KEY") or ""
+).strip()
+if SEMANTIC_API_KEY:
+    os.environ.setdefault("SEMANTIC_API_KEY", SEMANTIC_API_KEY)
+SEMANTIC_BASE_URL = "https://api.semanticscholar.org/graph/v1"
+SEMANTIC_FIELDS = "title,citationCount,referenceCount"
+SEMANTIC_MAX_TENTATIVAS = int(os.getenv("SEMANTIC_MAX_TENTATIVAS", "4"))
+SEMANTIC_TITLE_MATCH_MIN = float(os.getenv("SEMANTIC_TITLE_MATCH_MIN", "0.90"))
+# Diferença percentual máxima (em relação ao valor do Semantic Scholar) aceita
+# para considerar os dados consistentes. Padrão: 10%.
+TOLERANCIA_PERCENTUAL = float(os.getenv("TOLERANCIA_PERCENTUAL", "10"))
+
+# Trecho (em minúsculas) da mensagem emitida pelo pipeline quando o Semantic Scholar falha
+MSG_SEMANTIC_INDISPONIVEL = "semantic scholar indispon"
+# Trecho (em minúsculas) do aviso de bloqueio da lista de referências pela editora
+MSG_LISTA_BLOQUEADA = "disponibiliza a lista"
 
 
 def is_doi(value):
@@ -148,6 +171,163 @@ def fetch_openalex_counts(doi):
     }
 
 
+def _semantic_vazio(status, lookup=None):
+    return {
+        "semantic_citation_count": None,
+        "semantic_reference_count": None,
+        "semantic_lookup": lookup,
+        "semantic_status": status,
+    }
+
+
+def _semantic_get(url):
+    """GET com retry/backoff para 429 e erros 5xx. Retorna (json, status)."""
+    headers = {"User-Agent": USER_AGENT}
+    if SEMANTIC_API_KEY:
+        headers["x-api-key"] = SEMANTIC_API_KEY
+
+    espera = 2.0
+    for tentativa in range(1, SEMANTIC_MAX_TENTATIVAS + 1):
+        try:
+            request = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(request, timeout=20) as response:
+                return json.loads(response.read().decode("utf-8")), "OK"
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None, "NOT_FOUND"
+            if e.code == 429 or e.code >= 500:
+                if tentativa < SEMANTIC_MAX_TENTATIVAS:
+                    # Respeita o cabeçalho Retry-After (segundos), se enviado
+                    retry_after = e.headers.get("Retry-After") if e.headers else None
+                    try:
+                        pausa = min(float(retry_after), 120.0) if retry_after else espera
+                    except ValueError:
+                        pausa = espera
+                    print(f"    [Semantic] HTTP {e.code}; nova tentativa em {pausa:.0f}s "
+                          f"({tentativa}/{SEMANTIC_MAX_TENTATIVAS})")
+                    time.sleep(pausa)
+                    espera *= 2
+                    continue
+                return None, "RATE_LIMITED" if e.code == 429 else f"HTTP_{e.code}"
+            return None, f"HTTP_{e.code}"
+        except Exception as e:
+            if tentativa < SEMANTIC_MAX_TENTATIVAS:
+                time.sleep(espera)
+                espera *= 2
+                continue
+            return None, f"ERROR: {str(e)[:60]}"
+    return None, "ERROR"
+
+
+def _normaliza_titulo(t):
+    return " ".join((t or "").lower().split())
+
+
+def fetch_semantic_counts(doi, title):
+    """
+    Consulta o Semantic Scholar (Graph API) diretamente.
+    Prioridade: DOI; se não houver DOI (ou não for encontrado), busca por título
+    e só aceita o resultado se o título for suficientemente parecido.
+    """
+    doi = (doi or "").strip()
+    title = (title or "").strip()
+
+    if not doi and not title:
+        return _semantic_vazio("NO_INPUT")
+
+    if doi:
+        url = (f"{SEMANTIC_BASE_URL}/paper/DOI:{urllib.parse.quote(doi, safe='/')}"
+               f"?fields={SEMANTIC_FIELDS}")
+        data, status = _semantic_get(url)
+        if data:
+            return {
+                "semantic_citation_count": data.get("citationCount"),
+                "semantic_reference_count": data.get("referenceCount"),
+                "semantic_lookup": "doi",
+                "semantic_status": "OK",
+            }
+        if status != "NOT_FOUND" or not title:
+            return _semantic_vazio(status, "doi")
+
+    query = urllib.parse.urlencode({"query": title, "limit": 1, "fields": SEMANTIC_FIELDS})
+    data, status = _semantic_get(f"{SEMANTIC_BASE_URL}/paper/search?{query}")
+    if status != "OK":
+        return _semantic_vazio(status, "title")
+
+    resultados = (data or {}).get("data") or []
+    if not resultados:
+        return _semantic_vazio("NOT_FOUND", "title")
+
+    paper = resultados[0]
+    similaridade = difflib.SequenceMatcher(
+        None, _normaliza_titulo(title), _normaliza_titulo(paper.get("title"))
+    ).ratio()
+    if similaridade < SEMANTIC_TITLE_MATCH_MIN:
+        return _semantic_vazio("TITLE_MISMATCH", "title")
+
+    return {
+        "semantic_citation_count": paper.get("citationCount"),
+        "semantic_reference_count": paper.get("referenceCount"),
+        "semantic_lookup": "title",
+        "semantic_status": "OK",
+    }
+
+
+def delta_pct(coletado, referencia):
+    """Diferença percentual em relação à referência (Semantic Scholar)."""
+    if coletado is None or referencia is None:
+        return None
+    if referencia == 0:
+        return 0.0 if coletado == 0 else None
+    return round((coletado - referencia) / referencia * 100, 2)
+
+
+def pipeline_usou_semantic(data_source):
+    """True se o pipeline obteve dados do Semantic Scholar nesta execução."""
+    if not data_source:
+        return None
+    return "semantic" in str(data_source).lower()
+
+
+def semantic_indisponivel(warning):
+    """True se o warning do pipeline contém 'Semantic Scholar indisponível'."""
+    return MSG_SEMANTIC_INDISPONIVEL in (warning or "").lower()
+
+
+def lista_referencias_bloqueada(warning):
+    """True se o warning indica que o Semantic Scholar não libera a lista (editora)."""
+    return MSG_LISTA_BLOQUEADA in (warning or "").lower()
+
+
+def consistencia(coletado, referencia, usou_semantic,
+                 somente_deficit=False, lista_bloqueada=False):
+    """
+    OK / DIVERGENT / N/A / N/A (fallback) / N/A (lista bloqueada).
+    - N/A: falta algum dos valores.
+    - N/A (fallback): o pipeline não usou o Semantic Scholar nesta execução,
+      então a comparação com ele não mede a consistência dos dados.
+    - N/A (lista bloqueada): o Semantic Scholar informa o total, mas não libera
+      a lista; o pipeline só tem as demais fontes, então a diferença é esperada.
+    - somente_deficit=True: o pipeline une várias fontes, então coletar MAIS que
+      o Semantic Scholar é esperado; só ficar abaixo (além da tolerância) é
+      DIVERGENT.
+    """
+    if coletado is None or referencia is None:
+        return "N/A"
+    if usou_semantic is False:
+        return "N/A (fallback)"
+    if lista_bloqueada:
+        return "N/A (lista bloqueada)"
+    if referencia == 0:
+        if somente_deficit:
+            return "OK"
+        return "OK" if coletado == 0 else "DIVERGENT"
+    diff_pct = (coletado - referencia) / referencia * 100
+    if somente_deficit:
+        return "OK" if diff_pct >= -TOLERANCIA_PERCENTUAL else "DIVERGENT"
+    return "OK" if abs(diff_pct) <= TOLERANCIA_PERCENTUAL else "DIVERGENT"
+
+
 def delta(coletado, referencia):
     if coletado is None or referencia is None:
         return None
@@ -256,13 +436,28 @@ def main():
         "openalex_referenced_works_count",
         "delta_citations_vs_openalex",
         "delta_references_vs_openalex",
+        "semantic_citation_count",
+        "semantic_reference_count",
+        "delta_citations_vs_semantic",
+        "delta_citations_reported_vs_semantic",
+        "delta_references_vs_semantic",
+        "delta_citations_vs_semantic_pct",
+        "delta_references_vs_semantic_pct",
+        "citations_consistent_semantic",
+        "references_consistent_semantic",
+        "semantic_lookup",
+        "semantic_status",
+        "pipeline_used_semantic",
+        "semantic_unavailable_warning",
+        "semantic_reference_list_blocked",
         "data_source",
         "resolved_doi",
         "status",
         "warning",
     ]
 
-    def linha(p_title, p_doi, execucao, res, openalex, backward_real):
+    def linha(p_title, p_doi, execucao, res, openalex, semantic, backward_real):
+        usou_semantic = pipeline_usou_semantic(res["data_source"])
         return {
             "input_title": p_title,
             "input_doi": p_doi,
@@ -282,6 +477,37 @@ def main():
             "delta_references_vs_openalex": delta(
                 res["references_retrieved"], openalex["openalex_referenced_works_count"]
             ),
+            "semantic_citation_count": semantic["semantic_citation_count"],
+            "semantic_reference_count": semantic["semantic_reference_count"],
+            "delta_citations_vs_semantic": delta(
+                res["citations_retrieved"], semantic["semantic_citation_count"]
+            ),
+            "delta_citations_reported_vs_semantic": delta(
+                res["citations_reported"], semantic["semantic_citation_count"]
+            ),
+            "delta_references_vs_semantic": delta(
+                res["references_retrieved"], semantic["semantic_reference_count"]
+            ),
+            "delta_citations_vs_semantic_pct": delta_pct(
+                res["citations_retrieved"], semantic["semantic_citation_count"]
+            ),
+            "delta_references_vs_semantic_pct": delta_pct(
+                res["references_retrieved"], semantic["semantic_reference_count"]
+            ),
+            "citations_consistent_semantic": consistencia(
+                res["citations_retrieved"], semantic["semantic_citation_count"],
+                usou_semantic, somente_deficit=True,
+            ),
+            "references_consistent_semantic": consistencia(
+                res["references_retrieved"], semantic["semantic_reference_count"],
+                usou_semantic,
+                lista_bloqueada=lista_referencias_bloqueada(res["warning"]),
+            ),
+            "semantic_lookup": semantic["semantic_lookup"],
+            "semantic_status": semantic["semantic_status"],
+            "pipeline_used_semantic": usou_semantic,
+            "semantic_unavailable_warning": semantic_indisponivel(res["warning"]),
+            "semantic_reference_list_blocked": lista_referencias_bloqueada(res["warning"]),
             "data_source": res["data_source"],
             "resolved_doi": res["resolved_doi"],
             "status": res["status"],
@@ -289,6 +515,7 @@ def main():
         }
 
     openalex_por_doi = {}
+    semantic_cache = {}
 
     total = 0
 
@@ -316,10 +543,22 @@ def main():
                     openalex_por_doi[chave] = fetch_openalex_counts(chave)
                 openalex = openalex_por_doi[chave]
 
+                # Consulta direta ao Semantic Scholar (cache por DOI/título)
+                chave_sem = (chave, "" if chave else (p_title or "").strip().lower())
+                if chave_sem in semantic_cache:
+                    semantic = semantic_cache[chave_sem]
+                else:
+                    semantic = fetch_semantic_counts(doi_referencia, p_title)
+                    # Só guarda em cache consultas bem-sucedidas; falhas são
+                    # tentadas de novo na próxima execução.
+                    if semantic["semantic_status"] == "OK":
+                        semantic_cache[chave_sem] = semantic
+                    time.sleep(1.0)  # respeita o rate limit da API
+
                 # Obtém o valor real de referência do artigo
                 b_real = get_valor_real(p_title, p_doi, resolved, reais_por_doi, reais_por_titulo)
 
-                row = linha(p_title, p_doi, execucao, res, openalex, b_real)
+                row = linha(p_title, p_doi, execucao, res, openalex, semantic, b_real)
                 writer.writerow(row)
                 f.flush()
                 total += 1
@@ -328,6 +567,11 @@ def main():
                       f"references={res['references_retrieved']} "
                       f"(real={b_real}, delta_real={row['delta_references_vs_real']}) "
                       f"source={res['data_source']}")
+                print(f"     Semantic: citations={semantic['semantic_citation_count']} "
+                      f"references={semantic['semantic_reference_count']} "
+                      f"[{semantic['semantic_status']}] "
+                      f"cit={row['citations_consistent_semantic']} "
+                      f"ref={row['references_consistent_semantic']}")
 
                 time.sleep(PAUSA_ENTRE_BUSCAS)
 
