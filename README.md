@@ -1,113 +1,243 @@
 # SnowMap: A Tool to Support the Snowballing Process in Literature Reviews
 
-SnowMap is a tool designed to support the snowballing process in secondary studies by assisting researchers in performing both backward and forward snowballing. This repository contains the SnowMap framework, the datasets collected from different academic sources, and the scripts used to reproduce the analyses reported in the associated publication.
+SnowMap supports the snowballing process in secondary studies, helping researchers perform
+both backward and forward snowballing. This repository contains the SnowMap application and
+the tooling used to evaluate its LLM-based screening against human ground truth.
 
-The repository aims to promote transparency, reproducibility, and reuse of the experimental artifacts generated during the evaluation of SnowMap and its comparison with other tools available in the literature.
+The repository aims to promote transparency, reproducibility, and reuse of the experimental
+artifacts generated during the evaluation of SnowMap and its comparison with other tools
+available in the literature.
 
-## Publication
+Deployed version: https://snowmap.aise-lab.com/
 
-The full paper describing SnowMap and the conducted experiments is available in this repository:
+## Key Features
 
-* [SnowMap: A Tool to Support the Snowballing Process in Literature Reviews](28231_Paper_.pdf)
+- **Citation Analysis**: forward and backward citation tracking using multiple APIs
+- **LLM Screening**: automated inclusion/exclusion screening through [OpenRouter](https://openrouter.ai), with a fallback to the Google Gemini API
+- **Persistence**: PostgreSQL for searches, papers and screening flags
+- **API Aggregation**: OpenAlex, Semantic Scholar and Crossref
+- **Web Interface**: HTML/CSS/JS frontend for configuration and result visualization
 
 ## Evaluated Tools
 
-The experiments and analyses included in this repository were conducted using data collected from the following academic indexing and snowballing tools:
-
-* Google Scholar
-* OpenAlex
-* Lens
-* Semantic Scholar
-* OpenCitations
-* Litmaps
-* ResearchRabbit
-* SnowMap
-
-These tools were evaluated and compared regarding metadata extraction, coverage, graph generation capabilities, and support for the snowballing process.
+The experiments reported in the publication compared data collected from Google Scholar,
+OpenAlex, Lens, Semantic Scholar, OpenCitations, Litmaps, ResearchRabbit and SnowMap,
+regarding metadata extraction, coverage, graph generation and support for the snowballing
+process.
 
 ## Repository Structure
 
-The repository is organized into three main directories:
-
 ```text
 .
-├── Backward_Analysis/
-├── Forward_Analysis/
-├── Framework_snowballing/
+├── frontend/             # HTML/CSS/JS user interface
+├── controllers/          # Express route handlers
+├── routes/               # API route definitions
+├── services/             # Session management, Python runner, search service
+├── server/               # Application bootstrap
+├── scripts/              # Python: citation analysis, LLM screening, database
+├── init/                 # SQL executed when the Postgres container is first created
+├── LLMs_Analysis/        # Evaluation of the LLM screening against human ground truth
+├── doc/                  # Process diagrams
+├── docker-compose.yml    # PostgreSQL container
+├── package.json          # Node.js dependencies
+├── requirements.txt      # Python dependencies
 ├── LICENSE
 └── README.md
 ```
 
-### Backward_Analysis
-
-Contains datasets, scripts, notebooks, and experimental artifacts related to the evaluation of **backward snowballing**. This directory includes analyses performed using data collected from multiple academic indexing and snowballing tools.
-
-Detailed instructions for reproducing the experiments are available in:
-
-```text
-Backward_Analysis/README.md
-```
-
-### Forward_Analysis
-
-Contains datasets, scripts, notebooks, and experimental artifacts related to the evaluation of **forward snowballing**. The analyses in this directory focus on the studies retrieved through forward citation tracking and their comparison across different tools.
-
-Detailed instructions for reproducing the experiments are available in:
-
-```text
-Forward_Analysis/README.md
-```
-
-### Framework_snowballing
-
-Contains the source code and scripts that implement the SnowMap framework.
-
-Detailed instructions for reproducing the experiments are available in:
-
-```text
-Framework_snowballing/README.md
-```
-
-## Getting Started
-
-Clone the repository:
-
-```bash
-git clone https://github.com/aisepucrio/forward-snowballing/tree/main
-cd forward-snowballing
-```
-
-Navigate to the directory of interest and follow the instructions provided in its corresponding `README.md` file.
-
-## Reproducibility
-
-This repository provides the datasets, scripts, and notebooks required to reproduce the analyses presented in the paper.
-
-The experimental workflow is divided according to the snowballing strategy being evaluated:
-
-* **Backward snowballing experiments:** `Backward_Analysis/`
-* **Forward snowballing experiments:** `Forward_Analysis/`
-* **Framework implementation:** `Framework_snowballing/`
-
-Each directory contains detailed documentation describing the required dependencies, execution steps, and expected outputs.
+---
 
 ## Requirements
 
-The dependencies required for each experiment are documented within the corresponding subdirectories.
+| Component | Required? | Used for |
+|---|---|---|
+| Node.js 14+ and npm | **Yes** | Web server and interface |
+| Python 3.8+ | **Yes** | Citation search and analysis |
+| Docker | No | PostgreSQL database |
+| OpenRouter API key | No | LLM-based screening |
 
-When available, install the required packages using:
+Only Node and Python are mandatory. Without Docker the application runs and searches
+normally — results simply are not persisted to PostgreSQL. Without an OpenRouter key,
+every step works except the automated criteria screening.
+
+---
+
+## Installation
+
+All commands below are run from the repository root.
+
+### 1. Node dependencies
+
+```bash
+npm install
+```
+
+### 2. Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Data Availability
+### 3. Configuration
 
-All datasets and experimental artifacts used in the study are provided within the repository unless otherwise stated in the corresponding documentation.
+Create a `.env` file in the repository root with the variables below:
 
-The repository includes data collected from multiple academic indexing and snowballing tools, supporting the reproducibility of the analyses presented in the publication.
+| Variable | Default | Notes |
+|---|---|---|
+| `DB_HOST` | `localhost` | |
+| `DB_PORT` | `5433` | Must match the host port in `docker-compose.yml` |
+| `DB_NAME` | `snowmap_bd` | |
+| `DB_USER` | `postgres` | |
+| `DB_PASSWORD` | `postgres` | |
+| `TEMP_USER_ID` | `00000000-0000-0000-0000-000000000001` | Fixed user until login exists |
+| `SEMANTIC_API_KEY` | — | Optional. Raises Semantic Scholar rate limits |
+| `PORT` | `3000` | Web server port |
+| `OPENROUTER_API_KEY` | — | Required for LLM screening. Server-side only |
+| `LLM_MODEL` | `openai/gpt-4o` | Any OpenRouter model that supports structured outputs |
+| `LLM_FALLBACK_MODELS` | — | Optional, comma-separated OpenRouter models tried when the main one fails. Each must accept the same parameters (reasoning, and the JSON schema when enabled) |
+| `GEMINI_API_KEY` | — | Optional. When OpenRouter fails, screening falls back to the Google Gemini API directly |
+| `GEMINI_MODEL` | `gemini-3.7-flash` | Fallback chain, comma-separated and tried in order (e.g. `gemini-3.7-flash,gemini-3.5-flash-lite`). Put the model with the larger free quota last |
+| `LLM_MAX_WORKERS` | `8` | Parallel LLM calls (one call per article, with all criteria) |
+| `LLM_TEMPERATURE` | `0` | |
+| `LLM_MAX_TOKENS` | `1000` | Upper bound per call. OpenRouter reserves credit for it; raise it for reasoning models |
+| `LLM_STRUCTURED_OUTPUT` | `true` | Sends the JSON schema. Set `false` for models without `structured_outputs` (e.g. most `:free` variants) |
+| `LLM_REASONING` | `false` | Enables reasoning (`reasoning: {enabled: true}`) |
+| `LLM_REASONING_EFFORT` | — | Optional: `low`, `medium` or `high` instead of the default effort |
+| `LLM_TIMEOUT_SECONDS` | `120` | Per call; 408/429/5xx are retried up to 3 times |
 
+`.env` is git-ignored and must never be committed.
 
+### 4. Database (optional)
+
+The database stores searches, papers, authors and screening flags. **The application runs
+without it** — you will see `[BD INDISPONIVEL]` in the terminal and nothing is persisted.
+
+To enable it:
+
+```bash
+docker compose up -d
+```
+
+This creates a PostgreSQL 18 container and runs the scripts in `init/`, which build the
+schema and insert the fixed user. It only takes effect the first time the volume is
+created.
+
+Verify:
+
+```bash
+docker compose ps
+```
+
+```bash
+docker compose exec db psql -U postgres -d snowmap_bd -c "\dt"
+```
+
+Eight tables should be listed: `criteria`, `criteria_logs`, `paper_authors`, `papers`,
+`search_results`, `searches`, `users`, `venues`.
+
+Everyday commands:
+
+| Task | Command |
+|---|---|
+| Start | `docker compose up -d` |
+| Stop (keeps data) | `docker compose stop` |
+| Status | `docker compose ps` |
+| Logs | `docker compose logs db` |
+| SQL shell | `docker compose exec db psql -U postgres -d snowmap_bd` |
+| Reset from scratch | `docker compose down -v` then `docker compose up -d` |
+
+> **Changing the schema later:** the files in `init/` only run when the volume is created
+> from scratch — adding a new `.sql` there has no effect on an existing database. The
+> workflow is to apply the change in the container, regenerate `init/01-schema.sql` with
+> `pg_dump --schema-only --no-owner --no-privileges`, commit it, and have the team run
+> `docker compose down -v && docker compose up -d`. Note that schema changes usually
+> require matching changes in `scripts/services/snowmap_bd.py`, which lists columns
+> explicitly in its SQL.
+
+### 5. OpenRouter (optional)
+
+Required only for the automated screening on the Criteria page. Create a key at
+<https://openrouter.ai/settings/keys> and set `OPENROUTER_API_KEY` in `.env`. The model and
+all LLM parameters are configured only in `.env`; the interface never sends them. Token
+usage and cost of each call are printed to the server log as `[LLM USAGE]`.
+
+The screening prompt, response schema and selection rule live in
+`scripts/services/prompt.py`. The evaluation tools in `LLMs_Analysis/` run through this same
+module and through `scripts/analisys_LLM.py`, so they measure what the application actually
+does.
+
+---
+
+## Running
+
+```bash
+npm start
+```
+
+Available at `http://localhost:3000`.
+
+For auto-reload during development:
+
+```bash
+npm run dev
+```
+
+---
+
+## Usage
+
+1. Enter the **DOI or title** of the seed article and click **Search**.
+2. The results table shows **Cited By** (forward). Switch to **References** (backward) using
+   the toggle in the navigation bar.
+3. Mark articles with **Include** / **Exclude**, use **Remove Duplicates** to review
+   near-identical entries, and **Export** to download a CSV.
+4. Go to **Criteria Applications** to define inclusion and exclusion criteria and run the LLM
+   screening over the selected articles.
+
+---
+
+## Evaluating the LLM screening
+
+`LLMs_Analysis/` holds the studies with human ground truth and two tools that run through the
+same prompt and client the application uses:
+
+```bash
+python LLMs_Analysis/code/run_screening.py study0
+```
+
+```bash
+python LLMs_Analysis/code/compare.py study0
+```
+
+The report brings precision, recall, F1, the confusion matrix and, when the ground truth has
+per-criterion verdicts, the agreement for each criterion. See `LLMs_Analysis/README.md`.
+
+---
+
+## Troubleshooting
+
+**`[BD INDISPONIVEL]` in the terminal**
+The `psycopg2` driver is not installed, or the database is not running. Run
+`pip install -r requirements.txt` and `docker compose up -d`. Harmless if you do not need
+persistence.
+
+**`[ERRO CRITICO BD]` in the terminal**
+The driver is installed but the connection failed. Check that `DB_PORT` in `.env` matches the
+host port published in `docker-compose.yml`, and that `docker compose ps` shows `healthy`.
+
+**`port is already allocated` when starting the container**
+Another PostgreSQL is using the port. Change `DB_PORT` in `.env` and restart the container.
+
+**Search returns an error**
+The external APIs (OpenAlex, Semantic Scholar, Crossref) impose rate limits. Setting
+`SEMANTIC_API_KEY` reduces throttling. Results are cached in `cache/snowballing_cache.db`, so
+repeating a search is fast.
+
+**LLM screening fails with `OpenRouter recusou a requisicao`**
+HTTP 401 means an invalid `OPENROUTER_API_KEY`, 402 means no credits left, and 404 usually
+means `LLM_MODEL` does not exist or does not support structured outputs.
+
+---
 
 ## License
 
