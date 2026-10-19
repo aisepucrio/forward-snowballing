@@ -88,9 +88,15 @@
         <div class="col-md-6 d-flex">
           <div class="quadro-conteudo w-100">
             <h4 class="mb-3">Yearly Distribution</h4>
-            <div class="alinhamento-checkbox">
-              <label for="checkbox">Select All</label>
-              <input type="checkbox" id="checkbox">
+            <div class="chart-controls">
+              <p class="chart-description">
+                Click a bar to select or deselect that year and the Venue Distribution chart will update accordingly. At least one year must remain
+                selected. Use <strong>Select All</strong> to restore every year and unchecking it keeps only the earliest year.
+              </p>
+              <div class="alinhamento-checkbox">
+                <label for="checkbox">Select All</label>
+                <input type="checkbox" id="checkbox">
+              </div>
             </div>
             <canvas id="graficoAno" height="300"></canvas>
           </div>

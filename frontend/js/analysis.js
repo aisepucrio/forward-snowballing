@@ -221,9 +221,7 @@
           .style("fill", () => coresNuvem[Math.floor(Math.random() * coresNuvem.length)])
           .attr("text-anchor", "middle")
           .attr("transform", d => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`)
-          .text(d => d.text)
-          .on("mouseover", function() { d3.select(this).style("opacity", "0.7"); })
-          .on("mouseout", function() { d3.select(this).style("opacity", "1"); });
+          .text(d => d.text);
       }
 
       window.removeEventListener('resize', forcarRecalculoNuvem);
@@ -806,6 +804,10 @@
           page-break-inside: avoid !important;
           break-inside: avoid !important;
           filter: grayscale(100%) !important;
+        }
+
+         .chart-controls {
+          display: none !important;
         }
       `;
       document.head.appendChild(estiloImpressao);
