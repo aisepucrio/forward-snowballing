@@ -113,80 +113,110 @@ const FilterComponent = (function () {
     else console.warn('mostrarCitacoes não encontrada para renderizar resultados');
   }
 
-  function renderYearRangeButtons() {
+    function getYearBounds(baseDados = getBaseData()) {
+    const years = (baseDados || [])
+      .map(c => parseInt(c.year, 10))
+      .filter(year => !Number.isNaN(year));
+
+    if (!years.length) return null;
+    return { min: Math.min(...years), max: Math.max(...years) };
+  }
+
+    function renderYearRangeButtons() {
     const submenu = document.getElementById('decadeSubMenu');
     if (!submenu) return;
 
-    const buttonsContainer = submenu.querySelector('.decade-buttons');
-    if (!buttonsContainer) return;
+    const container = submenu.querySelector('.decade-buttons');
+    if (!container) return;
 
-    const ranges = getAvailableYearRanges();
+    const bounds = getYearBounds();
 
-    if (!ranges.length) {
+    if (!bounds) {
       submenu.classList.add('hidden');
-      buttonsContainer.innerHTML = '';
+      container.innerHTML = '';
       return;
     }
 
-    buttonsContainer.innerHTML = ranges.map(range => (
-      `<button type="button" class="btn-decade" data-start="${range.start}" data-end="${range.end}">${range.start} - ${range.end}</button>`
-    )).join('') + `
-      <div class="custom-range" style="display:inline-flex;align-items:center;gap:6px;margin-left:8px;">
-        <input id="startYear" type="number" placeholder="Year" style="width:90px;padding:4px;" />
-        <button id="filterBtn" type="button" class="btn btn-sm btn-primary">Apply</button>
+    container.innerHTML = `
+      <div class="custom-range">
+        <span class="custom-range-label">Year range</span>
+        <input id="startYear" class="custom-range-input" type="number" inputmode="numeric"
+               placeholder="${bounds.min}" title="Start year (blank = ${bounds.min})" aria-label="Start year" />
+        <span class="custom-range-sep">to</span>
+        <input id="endYear" class="custom-range-input" type="number" inputmode="numeric"
+               placeholder="${bounds.max}" title="End year (blank = ${bounds.max})" aria-label="End year" />
+        <button id="filterBtn" type="button" class="btn-apply-range">Apply</button>
+        <button id="clearRangeBtn" type="button" class="btn-clear-range">Clear</button>
+        <p id="yearRangeError" class="custom-range-error" role="alert" hidden></p>
       </div>
     `;
 
-    const decadeButtons = buttonsContainer.querySelectorAll('.btn-decade');
-    
-    // Remarca os botões ativos
-    if (activeFilters.years && activeFilters.years.length) {
-      decadeButtons.forEach(btn => {
-        const s = parseInt(btn.getAttribute('data-start'), 10);
-        const e = parseInt(btn.getAttribute('data-end'), 10);
-        const match = activeFilters.years.some(r => r.start === s && r.end === e);
-        if (match) btn.classList.add('active');
-      });
+    const startInput = document.getElementById('startYear');
+    const endInput = document.getElementById('endYear');
+    const filterBtn = document.getElementById('filterBtn');
+    const clearBtn = document.getElementById('clearRangeBtn');
+    const errorEl = document.getElementById('yearRangeError');
+
+    function showError(message) {
+      errorEl.textContent = message || '';
+      errorEl.hidden = !message;
     }
 
-    decadeButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        button.classList.toggle('active');
+    // Restaura o intervalo aplicado ao reabrir o submenu
+    const applied = (activeFilters.years || [])[0];
+    if (applied) {
+      startInput.value = applied.start;
+      endInput.value = applied.end;
+    }
 
-        const activeBtns = Array.from(buttonsContainer.querySelectorAll('.btn-decade.active'));
-        const selectedRanges = activeBtns.map(btn => ({
-          start: parseInt(btn.getAttribute('data-start'), 10),
-          end: parseInt(btn.getAttribute('data-end'), 10)
-        })).filter(r => !isNaN(r.start) && !isNaN(r.end));
+    function applyCustomRange() {
+      const rawStart = startInput.value.trim();
+      const rawEnd = endInput.value.trim();
 
-        activeFilters.years = selectedRanges;
-        applyCombinedFilters();
+      if (!rawStart && !rawEnd) {
+        showError('Enter at least one year.');
+        return;
+      }
+
+      // Campo em branco = sem limite naquele lado
+      let start = rawStart ? parseInt(rawStart, 10) : bounds.min;
+      let end = rawEnd ? parseInt(rawEnd, 10) : bounds.max;
+
+      if (isNaN(start) || isNaN(end) || start < 1000 || start > 9999 || end < 1000 || end > 9999) {
+        showError('Enter valid 4-digit years.');
+        return;
+      }
+
+      // Se vier invertido (ex.: 2024 até 2018), troca em vez de dar erro
+      if (start > end) {
+        [start, end] = [end, start];
+        startInput.value = start;
+        endInput.value = end;
+      }
+
+      showError('');
+      activeFilters.years = [{ start, end }];
+      applyCombinedFilters();
+    }
+
+    filterBtn.addEventListener('click', applyCustomRange);
+
+    [startInput, endInput].forEach(input => {
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          applyCustomRange();
+        }
       });
     });
 
-    const filterBtn = document.getElementById('filterBtn');
-    if (filterBtn) {
-      filterBtn.addEventListener('click', () => {
-        const startInput = document.getElementById('startYear');
-        if (!startInput) return;
-
-        const s = parseInt(startInput.value, 10);
-        if (isNaN(s)) return;
-
-        activeFilters.years = [{ start: s, end: s }];
-        applyCombinedFilters();
-      });
-
-      const startInputEl = document.getElementById('startYear');
-      if (startInputEl) {
-        startInputEl.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter') {
-            ev.preventDefault();
-            filterBtn.click();
-          }
-        });
-      }
-    }
+    clearBtn.addEventListener('click', () => {
+      startInput.value = '';
+      endInput.value = '';
+      showError('');
+      activeFilters.years = [];
+      applyCombinedFilters();
+    });
   }
 
   function getAuthorsFromData(baseDados = getBaseData()) {
@@ -336,10 +366,10 @@ const FilterComponent = (function () {
           <label for="orderBy" class="order-by-label">Order By</label>
           <select id="orderBy" name="orderBy" aria-label="Order results by">
             <option value="">Default</option>
-            <option value="citations-asc">Citations (low to high)</option>
-            <option value="citations-desc">Citations (high to low)</option>
-            <option value="chronological-asc">Chronological (oldest first)</option>
-            <option value="chronological-desc">Chronological (newest first)</option>
+            <option value="citations-asc">Least to most Cited</option>
+            <option value="citations-desc">Most to least Cited</option>
+            <option value="chronological-asc">Oldest to newest</option>
+            <option value="chronological-desc">Newest to oldest</option>
           </select>
         </div>
       </div>
@@ -401,6 +431,160 @@ const FilterComponent = (function () {
     if (render) render();
   }
 
+  const selectDropdowns = new Set();
+
+  function closeOtherSelectDropdowns(current) {
+    selectDropdowns.forEach(dropdown => {
+      if (dropdown !== current) dropdown.close();
+    });
+  }
+
+ 
+  function enhanceSelect(select, options = {}) {
+    if (!select || select.dataset.enhanced === 'true') return;
+    select.dataset.enhanced = 'true';
+
+    const { onOpen = null, emitOnReselect = false } = options;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'select-dropdown';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    const ariaLabel = select.getAttribute('aria-label');
+    if (ariaLabel) trigger.setAttribute('aria-label', ariaLabel);
+
+    const triggerLabel = document.createElement('span');
+    triggerLabel.className = 'select-trigger-label';
+
+    const chevron = document.createElement('i');
+    chevron.className = 'bi bi-chevron-down select-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+
+    trigger.append(triggerLabel, chevron);
+
+    const menu = document.createElement('ul');
+    menu.className = 'select-menu hidden';
+    menu.setAttribute('role', 'listbox');
+
+    let focusedIndex = -1;
+
+    const items = Array.from(select.options).map((option, index) => {
+      const li = document.createElement('li');
+      li.className = 'select-option';
+      li.setAttribute('role', 'option');
+      li.textContent = option.textContent;
+      li.addEventListener('click', () => choose(index));
+      menu.appendChild(li);
+      return li;
+    });
+
+    function sync() {
+      const index = Math.max(select.selectedIndex, 0);
+      const current = select.options[index];
+      triggerLabel.textContent = current ? current.textContent : '';
+      items.forEach((li, i) => li.setAttribute('aria-selected', String(i === index)));
+    }
+
+    function setFocused(index) {
+      focusedIndex = Math.min(Math.max(index, 0), items.length - 1);
+      items.forEach((li, i) => li.classList.toggle('is-focused', i === focusedIndex));
+      items[focusedIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function isOpen() {
+      return !menu.classList.contains('hidden');
+    }
+
+    function open() {
+      closeOtherSelectDropdowns(api);   // só um dropdown aberto por vez
+      if (onOpen) onOpen();
+      menu.classList.remove('hidden');
+      trigger.setAttribute('aria-expanded', 'true');
+      setFocused(Math.max(select.selectedIndex, 0));
+    }
+
+    function close() {
+      menu.classList.add('hidden');
+      trigger.setAttribute('aria-expanded', 'false');
+      items.forEach(li => li.classList.remove('is-focused'));
+    }
+
+    function choose(index) {
+      const changed = select.selectedIndex !== index;
+      select.selectedIndex = index;
+      sync();
+      close();
+      trigger.focus();
+      if (changed || emitOnReselect) {
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    const api = { close };
+    selectDropdowns.add(api);
+
+    // Sem stopPropagation: o clique precisa chegar ao document para que os
+    // outros dropdowns (e os submenus) saibam que o clique foi fora deles.
+    trigger.addEventListener('click', () => {
+      isOpen() ? close() : open();
+    });
+
+    trigger.addEventListener('keydown', (event) => {
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          if (!isOpen()) open(); else setFocused(focusedIndex + 1);
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          if (!isOpen()) open(); else setFocused(focusedIndex - 1);
+          break;
+        case 'Home':
+          if (isOpen()) { event.preventDefault(); setFocused(0); }
+          break;
+        case 'End':
+          if (isOpen()) { event.preventDefault(); setFocused(items.length - 1); }
+          break;
+        case 'Enter':
+        case ' ':
+          event.preventDefault();
+          if (isOpen()) choose(focusedIndex); else open();
+          break;
+        case 'Escape':
+          if (isOpen()) { event.preventDefault(); close(); }
+          break;
+        case 'Tab':
+          close();
+          break;
+      }
+    });
+
+    // Fecha ao clicar fora
+    document.addEventListener('click', (event) => {
+      if (!wrapper.contains(event.target)) close();
+    });
+
+    // Clicar no <label> (ex.: "Order By") foca o novo botão
+    if (select.id) {
+      const label = document.querySelector(`label[for="${select.id}"]`);
+      if (label) {
+        label.addEventListener('click', (event) => {
+          event.preventDefault();
+          trigger.focus();
+        });
+      }
+    }
+
+    select.classList.add('select-native-hidden');
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.append(trigger, menu, select);
+    sync();
+  }
+
   function setupUiListeners(options = {}) {
     ensureMarkup();
 
@@ -425,6 +609,9 @@ const FilterComponent = (function () {
       venueSubMenu && venueSubMenu.classList.add('hidden');
     }
 
+    enhanceSelect(statusSelect, { emitOnReselect: true });
+    enhanceSelect(orderBySelect, { onOpen: hideAllSubmenus });
+
     if (statusSelect) {
       statusSelect.addEventListener('change', (event) => {
         const selectedOption = (event.target.value || '').toString();
@@ -438,9 +625,8 @@ const FilterComponent = (function () {
 
         if (selectedOption === 'year-range') {
           renderYearRangeButtons();
-          const hasDecades = decadeSubMenu && decadeSubMenu.querySelector('.btn-decade');
-          if (hasDecades) decadeSubMenu.classList.remove('hidden');
-
+          const hasRange = decadeSubMenu && decadeSubMenu.querySelector('.custom-range');
+          if (hasRange) decadeSubMenu.classList.remove('hidden');
         } else if (selectedOption === 'author') {
           renderAuthorList();
           const hasAuthors = authorSubMenu && authorSubMenu.querySelector('.btn-author');
