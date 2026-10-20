@@ -35,6 +35,7 @@ process.
 ├── services/             # Session management, Python runner, search service
 ├── server/               # Application bootstrap
 ├── scripts/              # Python: citation analysis, LLM screening, database
+├── tests/                # Node tests (npm test); Python tests are in scripts/tests
 ├── init/                 # SQL executed when the Postgres container is first created
 ├── LLMs_Analysis/        # Evaluation of the LLM screening against human ground truth
 ├── doc/                  # Process diagrams
@@ -104,15 +105,20 @@ Create a `.env` file in the repository root with the variables below:
 | `LLM_REASONING` | `false` | Enables reasoning (`reasoning: {enabled: true}`) |
 | `LLM_REASONING_EFFORT` | — | Optional: `low`, `medium` or `high` instead of the default effort |
 | `LLM_TIMEOUT_SECONDS` | `120` | Per call; 408/429/5xx are retried up to 3 times |
+| `SNOWMAP_ENABLE_DB` | off | Set to `1` to save searches to PostgreSQL. Off: no connection is attempted and **Save Research State** is hidden |
+| `SNOWMAP_ENABLE_CACHE` | off | Set to `1` to read and write the search cache in `cache/`. Off: every search goes to the APIs |
+| `SNOWMAP_MAX_SEEDS` | `20` | Maximum seeds per search (the interface caps the list at 20) |
 
 `.env` is git-ignored and must never be committed.
 
 ### 4. Database (optional)
 
-The database stores searches, papers, authors and screening flags. **The application runs
-without it** — you will see `[BD INDISPONIVEL]` in the terminal and nothing is persisted.
+The database stores searches, papers, authors and screening flags. **It is off by default**
+(`SNOWMAP_ENABLE_DB` unset): nothing is persisted and no connection is attempted. Searches
+with several seeds are not grouped in the schema yet — each seed is saved as its own pair of
+searches when the database is on.
 
-To enable it:
+To enable it, set `SNOWMAP_ENABLE_DB=1` and:
 
 ```bash
 docker compose up -d
@@ -186,13 +192,28 @@ npm run dev
 
 ## Usage
 
-1. Enter the **DOI or title** of the seed article and click **Search**.
-2. The results table shows **Cited By** (forward). Switch to **References** (backward) using
-   the toggle in the navigation bar.
-3. Mark articles with **Include** / **Exclude**, use **Remove Duplicates** to review
-   near-identical entries, and **Export** to download a CSV.
-4. Go to **Criteria Applications** to define inclusion and exclusion criteria and run the LLM
-   screening over the selected articles.
+1. Build the list of seed papers: choose **DOI** or **Title**, type the value and click
+   **Add** (or press Enter). Repeat for up to 20 seeds; DOIs and titles can be mixed. Then
+   click **Search**. Seeds are searched one at a time (about a minute each), and the
+   progress shows which seed is running.
+2. Every seed returns its **Cited By** (forward) and **References** (backward) lists. The
+   **Seed Paper Analysis** card has one tab per seed plus an **All seeds** tab with the
+   union of all lists, where a study found by several seeds appears once and is tagged
+   with the seeds that found it (S1, S2…). Switch to **References** using the toggle in the
+   navigation bar.
+3. A seed that is not found, fails, or is the same paper as another seed is reported in its
+   tab; the other seeds are not affected. Seeds that appear in another seed's lists are
+   left out of the lists.
+4. Mark articles with **Include** / **Exclude** (a mark is shared by every tab), use
+   **Remove Duplicates** to review near-identical entries, and **Export** to download a CSV
+   of the open tab (with `Seeds` and `Direction` columns).
+5. **Data Analysis** and **Criteria Applications** receive every included article, from all
+   tabs and both directions, without distinguishing seeds. Define inclusion and exclusion
+   criteria and run the LLM screening over them.
+
+The search API is `POST /api/articles/search/multi` with
+`{"seeds": [{"type": "doi" | "title", "value": "..."}]}`. The single-seed
+`GET /api/articles/search?doi=...&title=...` is unchanged.
 
 ---
 

@@ -18,33 +18,23 @@
       return '-';
     }
 
-    function mostrarResultado(artigo) {
+    // Uma linha por seed que deu resultado na busca. Os gráficos abaixo usam
+    // todos os estudos incluídos juntos, sem separar por seed.
+    function mostrarResultado(seeds) {
       const resultadoEl = document.getElementById('resultado');
       if (!resultadoEl) return;
 
-      if (!artigo || !artigo.title) {
+      const lista = (Array.isArray(seeds) ? seeds : [seeds]).filter(s => s && s.title);
+      if (lista.length === 0) {
         resultadoEl.innerHTML = '<p class="text-muted">Seed article data not found.</p>';
         return;
       }
 
-      const authors = formatAuthors(artigo.authors);
-      const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
+      const linhas = lista.map(artigo => {
+        const authors = formatAuthors(artigo.authors);
+        const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
 
-      resultadoEl.innerHTML = `
-      <div class="table-wrapper mb-4">
-        <div class="table-topbar">
-          <div class="table-info">
-            <span class="table-title">Seed Paper</span>
-          </div>
-        </div>
-
-        <table class="custom-table">
-          <thead>
-            <tr>
-              
-            </tr>
-          </thead>
-          <tbody>
+        return `
             <tr>
               <td>
                 <div class="paper-doi">
@@ -65,7 +55,25 @@
                   </div>
                 </div>
               </td>
+            </tr>`;
+      }).join('');
+
+      resultadoEl.innerHTML = `
+      <div class="table-wrapper mb-4">
+        <div class="table-topbar">
+          <div class="table-info">
+            <span class="table-title">${lista.length > 1 ? `Seed Papers (${lista.length})` : 'Seed Paper'}</span>
+          </div>
+        </div>
+
+        <table class="custom-table">
+          <thead>
+            <tr>
+
             </tr>
+          </thead>
+          <tbody>
+            ${linhas}
           </tbody>
         </table>
       </div>
@@ -488,9 +496,19 @@
     }
 
     function carregarArtigosLocal() {
+      // seedsData (lista) vem da busca com várias seeds; seedPaperData (um
+      // objeto) é o formato antigo, mantido para sessões abertas antes dela.
+      const seedsDataStorage = localStorage.getItem('seedsData');
       const seedDataStorage = localStorage.getItem('seedPaperData');
-      
-      if (seedDataStorage) {
+
+      if (seedsDataStorage) {
+        try {
+          mostrarResultado(JSON.parse(seedsDataStorage));
+        } catch (e) {
+          console.error("Error parsing seed papers data:", e);
+          document.getElementById('resultado').innerHTML = '<p class="text-muted">Error loading seed article data.</p>';
+        }
+      } else if (seedDataStorage) {
         try {
           const artigoSemente = JSON.parse(seedDataStorage);
           mostrarResultado(artigoSemente);

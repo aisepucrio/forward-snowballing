@@ -61,6 +61,15 @@ const TableComponent = (function () {
       tags.push(`<span class="paper-tag language-tag">${escapeHtml(item.language.toUpperCase())}</span>`);
     }
 
+    // De quais seeds o estudo veio (S1, S3...). Só a tela de busca liga isto
+    // (window.mostrarTagsSeed, e só com mais de uma seed): o dashboard e a
+    // triagem tratam os estudos sem distinção de seed.
+    if (window.mostrarTagsSeed && Array.isArray(item.found_via_seeds)) {
+      item.found_via_seeds.forEach(i => {
+        tags.push(`<span class="paper-tag seed-origin-tag" title="Found via seed S${i + 1}">S${i + 1}</span>`);
+      });
+    }
+
     return tags.join('');
   }
 

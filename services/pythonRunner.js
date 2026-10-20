@@ -64,7 +64,7 @@ class PythonRunner {
     }
   }
 
-  runJsonScript(scriptName, { args = [], input = null, timeoutMs = this.defaultTimeoutMs, abortEmitter = null, onStderrLine = null } = {}) {
+  runJsonScript(scriptName, { args = [], input = null, timeoutMs = this.defaultTimeoutMs, abortEmitter = null, onStderrLine = null, maxOutputBytes = MAX_OUTPUT_BYTES } = {}) {
     return new Promise((resolve, reject) => {
       const pythonPath = this.findExecutable();
       if (!pythonPath) {
@@ -127,7 +127,7 @@ class PythonRunner {
 
       pythonProcess.stdout.on('data', (data) => {
         output += data.toString();
-        if (output.length > MAX_OUTPUT_BYTES) {
+        if (output.length > maxOutputBytes) {
           onMaxBufferExceeded();
         }
       });
@@ -161,7 +161,7 @@ class PythonRunner {
           }
         }
 
-        if (errorOutput.length > MAX_OUTPUT_BYTES) {
+        if (errorOutput.length > maxOutputBytes) {
           onMaxBufferExceeded();
         }
       });

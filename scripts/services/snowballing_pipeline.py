@@ -9,6 +9,7 @@ import requests
 from services.cache import get_cached, init_db, save_to_cache
 from services.deduplication import deduplicate_citations
 from services.normalize import normalize_doi
+from services.settings import cache_enabled, database_enabled
 from services.search import (
     build_pages,
     collapse_duplicates_by_key,
@@ -287,15 +288,18 @@ class SnowballingResultBuilder:
 
 
 class SnowballingPipeline:
-    def __init__(self, reference_provider=None, result_builder=None):
+    def __init__(self, reference_provider=None, result_builder=None, write_debug_output=True):
         self.reference_provider = reference_provider or OpenAlexReferenceProvider()
         self.result_builder = result_builder or SnowballingResultBuilder()
+        self.write_debug_output = write_debug_output
 
     def run_forward(self, search_input):
         search_input.validate()
-        init_db()
 
-        cached = get_cached(doi=search_input.doi, title=search_input.title, mode="forward")
+        cached = None
+        if cache_enabled():
+            init_db()
+            cached = get_cached(doi=search_input.doi, title=search_input.title, mode="forward")
         if (
             cached
             and cached.get("citations")
@@ -468,12 +472,16 @@ class SnowballingPipeline:
         O schema guarda a direção em searches.direction, ou seja, por busca e não
         por resultado — então cada lista precisa da sua própria linha. Falha aqui
         nunca derruba a busca: o snowballing continua funcionando sem banco.
+
+        Desligado por padrão (SNOWMAP_ENABLE_DB): sem a chave, nem tenta
+        conectar e os ids saem como None.
         """
-        try:
-            save_full_result, user_id = _load_database_layer()
-        except ImportError as import_error:
-            print(f"[BD INDISPONIVEL] {import_error}", file=sys.stderr)
-            save_full_result = None
+        save_full_result = None
+        if database_enabled():
+            try:
+                save_full_result, user_id = _load_database_layer()
+            except ImportError as import_error:
+                print(f"[BD INDISPONIVEL] {import_error}", file=sys.stderr)
 
         paper_id_map = {}
 
@@ -515,11 +523,15 @@ class SnowballingPipeline:
         # frontend perde a capacidade de atualizar flags.
         self._persist_to_database(result)
 
-        print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
-        save_to_cache(doi=doi, title=result.get("title"), data=result)
+        if cache_enabled():
+            print("[SALVANDO NO CACHE]", result.get("resolved_doi"), file=sys.stderr)
+            save_to_cache(doi=doi, title=result.get("title"), data=result)
 
-        with open("output.json", "w", encoding="utf-8") as output_file:
-            json.dump(result, output_file, ensure_ascii=False, indent=2)
+        # output.json é cópia de depuração da última busca de uma seed só;
+        # numa busca com várias seeds cada uma sobrescreveria a anterior.
+        if self.write_debug_output:
+            with open("output.json", "w", encoding="utf-8") as output_file:
+                json.dump(result, output_file, ensure_ascii=False, indent=2)
 
 
 def run_cli():
