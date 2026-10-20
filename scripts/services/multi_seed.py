@@ -36,13 +36,13 @@ MULTI_SEED_FORMAT_VERSION = 1
 DEFAULT_MAX_SEEDS = 20
 SEED_TYPES = ("doi", "title")
 DOI_PATTERN = re.compile(r"^10\.\d{4,9}/\S+$", re.IGNORECASE)
+DOI_IN_TEXT = re.compile(r"10\.\d{4,9}/\S+$", re.IGNORECASE)
 
 STATUS_OK = "ok"
-STATUS_PARTIAL = "partial"
 STATUS_NOT_FOUND = "not_found"
 STATUS_ERROR = "error"
 STATUS_DUPLICATE = "duplicate"
-SUCCESS_STATUSES = {STATUS_OK, STATUS_PARTIAL}
+SUCCESS_STATUSES = {STATUS_OK}
 
 # Campos do resultado de uma seed que a interface usa no card da aba.
 SEED_FIELDS = (
@@ -89,7 +89,10 @@ def parse_seeds(raw_seeds):
             raise ValueError(f"Seed {position}: valor vazio.")
 
         if seed_type == "doi":
-            doi = normalize_doi(value)
+            # normalize_doi não limpa variantes como https://dx.doi.org/10...;
+            # o DOI em si é o trecho que começa em "10.".
+            embedded = DOI_IN_TEXT.search(value)
+            doi = normalize_doi(embedded.group(0) if embedded else value)
             if not doi or not DOI_PATTERN.match(doi):
                 raise ValueError(f"Seed {position}: '{value}' não é um DOI válido.")
             value = doi
@@ -191,7 +194,7 @@ class MultiSeedSnowballing:
             seed.update(status=STATUS_NOT_FOUND, error=(result or {}).get("error"))
             return None
 
-        seed["status"] = STATUS_PARTIAL if result.get("partial_result") else STATUS_OK
+        seed["status"] = STATUS_OK
         seed["error"] = None
         return result
 
@@ -269,7 +272,7 @@ class MultiSeedSnowballing:
             "references_retrieved": len(unions["references"]),
             "seeds_succeeded": len(succeeded),
             "seeds_failed": len(failed),
-            "partial_result": bool(failed) or any(s["status"] == STATUS_PARTIAL for s in seeds),
+            "partial_result": bool(failed),
             "seed_hits_removed": removed_seed_hits,
             # Sem banco (SNOWMAP_ENABLE_DB desligado) não há search_id; a
             # interface usa isso para esconder o "Save Research State".

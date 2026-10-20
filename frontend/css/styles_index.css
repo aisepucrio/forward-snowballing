@@ -772,11 +772,6 @@ body.busca-realizada #seedBuilder {
   color: #047857;
 }
 
-.seed-status-partial {
-  background: #fffbeb;
-  color: #b45309;
-}
-
 .seed-status-not_found,
 .seed-status-error {
   background: #fef2f2;

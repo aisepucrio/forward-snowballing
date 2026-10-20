@@ -50,6 +50,14 @@ class ParseSeedsTests(unittest.TestCase):
         self.assertEqual(seeds[0]["input_value"], "10.1000/abc")
         self.assertEqual(seeds[1], {"index": 1, "input_type": "title", "input_value": "A Title"})
 
+    def test_accepts_doi_link_variants(self):
+        # A interface aceita qualquer link doi.org; normalize_doi sozinho
+        # deixaria "https://dx.10.1000/abc" e a busca inteira cairia.
+        for raw in ("https://dx.doi.org/10.1000/ABC", "http://doi.org/10.1000/abc", "doi:10.1000/abc"):
+            with self.subTest(raw=raw):
+                seeds = parse_seeds([{"type": "doi", "value": raw}])
+                self.assertEqual(seeds[0]["input_value"], "10.1000/abc")
+
     def test_rejects_invalid_input(self):
         invalid = [
             None,
@@ -166,12 +174,12 @@ class MultiSeedRunTests(unittest.TestCase):
         self.assertEqual(result["citations"], [])
         self.assertEqual(result["seed_hits_removed"], 2)
 
-    def test_partial_seed_is_success_but_flags_result(self):
+    def test_seed_with_partial_sources_is_just_ok(self):
         responses = {"10.1000/a": paper("10.1000/a", "Seed A", partial=True)}
         result, _ = self.run_multi(responses, [{"type": "doi", "value": "10.1000/a"}])
-        self.assertEqual(result["seeds"][0]["status"], "partial")
+        self.assertEqual(result["seeds"][0]["status"], "ok")
         self.assertEqual(result["seeds_failed"], 0)
-        self.assertTrue(result["partial_result"])
+        self.assertFalse(result["partial_result"])
 
 
 class PersistenceFlagsTests(unittest.TestCase):

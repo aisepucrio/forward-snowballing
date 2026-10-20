@@ -228,6 +228,11 @@ function looksLikeDOI(value) {
   return /^10\.\d{4,9}\/\S+$/i.test(text) || /doi\.org\/10\.\d{4,9}\/\S+/i.test(text);
 }
 
+function extrairDoi(value) {
+  const match = String(value || '').trim().match(/10\.\d{4,9}\/\S+$/i);
+  return match ? match[0] : String(value || '').trim();
+}
+
 // ---------------------------------------------------------------------------
 // Seeds de entrada
 //
@@ -238,7 +243,7 @@ function looksLikeDOI(value) {
 // ---------------------------------------------------------------------------
 const MAX_SEEDS = 20;
 const SEEDS_STORAGE_KEY = 'snowmapSeeds';
-const SEED_STATUS_OK = ['ok', 'partial'];
+const SEED_STATUS_OK = ['ok'];
 
 window.seedInputs = [];
 
@@ -292,18 +297,22 @@ function adicionarSeed() {
     mostrarErroSeed(`"${value}" is not a DOI. Choose "Title" to search by title.`);
     return false;
   }
+  // Guarda só o DOI (10.xxxx/...): looksLikeDOI aceita links como
+  // https://dx.doi.org/10..., que o normalize_doi do Python não limpa — e uma
+  // seed com DOI inválido derruba a busca inteira no parse_seeds.
+  const seedValue = type === 'doi' ? extrairDoi(value) : value;
+
+  const chave = chaveSeed(type, seedValue);
+  if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
+    mostrarErroSeed('This seed is already in the list.');
+    return false;
+  }
   if (window.seedInputs.length >= MAX_SEEDS) {
     mostrarErroSeed(`Up to ${MAX_SEEDS} seeds per search.`);
     return false;
   }
 
-  const chave = chaveSeed(type, value);
-  if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
-    mostrarErroSeed('This seed is already in the list.');
-    return false;
-  }
-
-  window.seedInputs.push({ type, value });
+  window.seedInputs.push({ type, value: seedValue });
   input.value = '';
   mostrarErroSeed('');
   salvarSeedsLocal();
@@ -600,8 +609,6 @@ function aplicarResultadoBusca(resultado) {
     title: 'All seeds',
     citations_retrieved: window.forwardData.length,
     references_retrieved: window.backwardData.length,
-    seeds_failed: resultado.seeds_failed || 0,
-    partial_result: !!resultado.partial_result,
   };
 
   // Com uma seed só não há o que alternar: o card é o da própria seed, como
@@ -638,8 +645,17 @@ async function buscarArtigo() {
 
     // Valor digitado e não adicionado entra na lista antes de buscar — é o
     // caso de quem busca uma seed só e clica direto em Search.
-    if (input && input.value.trim() && !adicionarSeed()) {
-      return;
+    // Se o texto já está na lista (ex.: veio da busca da navbar), não é erro:
+    // limpa o campo e busca a lista como está.
+    if (input && input.value.trim()) {
+      const tipo = tipoSeedSelecionado();
+      const valor = tipo === 'doi' ? extrairDoi(input.value) : input.value.trim();
+      const chave = chaveSeed(tipo, valor);
+      if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
+        input.value = '';
+      } else if (!adicionarSeed()) {
+        return;
+      }
     }
 
     const seeds = window.seedInputs || [];
@@ -733,16 +749,11 @@ function buscarArtigoNavbar() {
 // citações dependendo do dia, sem nada na interface indicando que o resultado
 // tinha vindo de uma fonte só.
 function construirAvisoResultadoParcial(artigo) {
-  if (!artigo) return '';
+  // O card "All seeds" já lista o status de cada seed; aviso ali é redundante.
+  if (!artigo || artigo.isSummary) return '';
 
   let texto = null;
-  if (artigo.isSummary) {
-    if (artigo.seeds_failed > 0) {
-      texto = `${artigo.seeds_failed} ${artigo.seeds_failed === 1 ? 'seed returned' : 'seeds returned'} no results — see the seed tabs.`;
-    } else if (artigo.partial_result) {
-      texto = "Some sources didn't respond for some seeds — the counts below may be incomplete.";
-    }
-  } else if (artigo.partial_result || artigo.warning) {
+  if (artigo.partial_result || artigo.warning) {
     // O texto detalhado do pipeline (quais fontes falharam, quantos IDs não
     // resolveram) continua no JSON, no log e nos testes — não na tela. Aqui só
     // o que muda a leitura do resultado: os números podem estar incompletos.
@@ -793,7 +804,6 @@ function rotuloStatusSeed(seed) {
   if (seed.status === 'not_found') return 'Not found';
   if (seed.status === 'duplicate') return `Same paper as S${(seed.duplicate_of ?? 0) + 1}`;
   if (seed.status === 'error') return 'Search failed';
-  if (seed.status === 'partial') return 'Partial';
   return 'OK';
 }
 
@@ -1388,12 +1398,9 @@ function finishDedupReview() {
         return;
       }
 
+      // Só enfileira: vai para o banco no "Save Research State".
       queueFlagChange({ searchId, paperId: paperIdBd, excludedDuplicate: true });
     });
-
-    Promise.all(updates)
-      .then(() => console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.'))
-      .catch(err => console.error('[ERRO DB] Falha ao gravar excluded_duplicate:', err));
   }
 
   // A remoção precisa valer também na base que o filtro usa. Sem isso, aplicar
