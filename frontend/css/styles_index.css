@@ -815,3 +815,8 @@ body.busca-realizada #seedBuilder {
 #addSeedBtn {
   flex-shrink: 0;
 }
+
+/* Citations/References só faz sentido depois que há resultado. */
+body:not(.busca-realizada) #snowballModeToggle {
+  display: none;
+}

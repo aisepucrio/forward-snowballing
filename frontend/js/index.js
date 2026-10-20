@@ -1430,9 +1430,7 @@ window.addEventListener('beforeunload', (e) => {
 
 document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
   radio.addEventListener('change', () => {
-    const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
-    if (navRadio) navRadio.checked = true;
-    if (window.forwardData !== null && window.backwardData !== null) trocarModo();
+    if (window.forwardData !== null || window.backwardData !== null) trocarModo();
   });
 });
 
