@@ -4,7 +4,7 @@ body {
 }
 
 body {
-  background-color: #f2f2f2;
+  background-color: #fff;
   font-family: 'Poppins', sans-serif;
   margin: 0;
   min-height: 100vh;
@@ -67,76 +67,236 @@ main button {
    CRITERIA BOX
 ========================= */
 
+/* Duas colunas de largura igual: um critério longo quebra linha em vez de
+   esticar a coluna e empurrar a outra para fora da tela. */
 .criteria-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   margin-top: 20px;
-  min-height: 140px;
 }
 
 .criteria-box {
-  flex: 1;
+  --criteria-accent: #00693D;
+  --criteria-soft: #e8f5ee;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
   background: #fff;
   border-radius: 12px;
   padding: 18px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   border: 1px solid #e9ecef;
-  min-height: 140px;
+  border-top: 3px solid var(--criteria-accent);
 }
 
-.criteria-box .form-label {
+.criteria-exclusion {
+  --criteria-accent: #9B3B42;
+  --criteria-soft: #fbeced;
+}
+
+/* main button/.form-control ganham margin-bottom global no topo do arquivo */
+.criteria-box button {
+  margin-bottom: 0;
+}
+
+.criteria-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.criteria-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--criteria-accent);
+  font-size: 13px;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* INPUT BOX */
-.criteria-box .form-control {
-  border: 1px solid #dee2e6;
+.criteria-count {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--criteria-soft);
+  color: var(--criteria-accent);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.criteria-list:not(:empty) + .criteria-empty {
+  display: none;
+}
+
+.criteria-empty {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed #dee2e6;
   border-radius: 10px;
-  padding: 10px;
-  min-height: 140px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  background: #f8f9fa;
-
-  height: 220px !important;
-  min-height: 220px !important;
-  align-items: flex-start !important;
-  align-content: flex-start !important;
+  color: #6c757d;
+  font-size: 13px;
+  text-align: center;
 }
 
-.criteria-box .form-control:focus-within {
-  border-color: #198754;
-  background-color: #F3F4F5;
+.criterion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid #e9ecef;
+  border-left: 3px solid var(--criteria-accent);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.criterion-item:hover,
+.criterion-item.editing {
+  background: #fbfcfc;
+}
+
+/* O código e a primeira linha do texto ficam centrados na altura dos botões
+   de editar/remover (28px); critérios longos continuam crescendo para baixo. */
+.criterion-id {
+  flex-shrink: 0;
+  min-width: 34px;
+  margin-top: 3px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--criteria-soft);
+  color: var(--criteria-accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.criterion-text {
+  flex: 1;
+  min-width: 0;
+  margin: 4px 0 0;
+  color: #1f2933;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.criterion-editor,
+.criteria-add textarea {
+  width: 100%;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: vertical;
+  background: #fff;
+}
+
+.criterion-editor:focus,
+.criteria-add textarea:focus {
+  outline: none;
+  border-color: var(--criteria-accent);
   box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.15);
 }
 
-.criteria-box input {
+.criteria-exclusion .criterion-editor:focus,
+.criteria-exclusion .criteria-add textarea:focus {
+  box-shadow: 0 0 0 0.15rem rgba(155, 59, 66, 0.15);
+}
+
+.criterion-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+}
+
+.criterion-action {
+  width: 28px;
+  height: 28px;
   border: none;
-  outline: none;
-  background: transparent;
-  flex: 1;
-  min-width: 150px;
-}
-
-.criteria-box input:focus {
-  outline: 2px solid rgba(25, 135, 84, 0.3);
   border-radius: 6px;
+  background: transparent;
+  color: #6c757d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
 }
 
-label[for="inclusao"] {
-  color: #00693D;
-  font-weight: 600;
+.criterion-action:hover {
+  background: #f1f3f5;
+  color: #1f2933;
 }
 
-label[for="exclusao"] {
+.criterion-remove:hover {
+  background: #fbeced;
   color: #9B3B42;
-  font-weight: 600;
+}
+
+.criterion-item.editing .criterion-actions {
+  visibility: hidden;
+}
+
+.criteria-add {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Uma linha que cresce com o texto (autoAjustarAltura em criterios.js);
+   o botão tem a mesma altura da linha. */
+.criteria-add textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  max-height: 160px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  resize: none;
+  overflow-y: auto;
+}
+
+.criteria-add-btn {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: var(--criteria-accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.criteria-add-btn:hover {
+  filter: brightness(0.9);
+}
+
+@media (max-width: 768px) {
+  .criteria-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* =========================
@@ -158,117 +318,114 @@ td.col-ec {
   background-color: #fdecea;
 }
 /* =========================
-   TAGS
+   ANALYSIS PROGRESS
 ========================= */
 
-.badge.ic-tag,
-.ic-tag {
-  background: #d8f8e5 !important;
-  color: #007a45 !important;
-  border-radius: 999px;
-  padding: 6px 12px !important;
+.analysis-progress {
+  --progress-color: #198754;
+  margin: 0 auto 24px;
+  max-width: 720px;
+  padding: 14px 18px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
 
-  font-size: 11px !important;
-  font-weight: 600;
-  line-height: 1;
+.analysis-progress.is-error {
+  --progress-color: #9B3B42;
+  border-color: #f1c9cc;
+  background: #fdf6f6;
+}
 
+.analysis-progress-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.analysis-progress-icon {
+  flex-shrink: 0;
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  box-shadow: none;
-  border: none;
+  width: 18px;
+  justify-content: center;
+  padding-top: 2px;
+  color: var(--progress-color);
 }
 
-.badge.ec-tag,
-.ec-tag {
-  background: #ffd6d6 !important;
-  color: #9b2f38 !important;
-  border-radius: 999px;
-  padding: 6px 12px !important;
-
-  font-size: 11px !important;
-  font-weight: 600;
-  line-height: 1;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  box-shadow: none;
-  border: none;
-}
-.ic-tag .btn-close,
-.ec-tag .btn-close,
-.badge .btn-close {
-  width: 12px;
-  height: 12px;
-  padding: 0;
-  margin-left: 6px !important;
-
-  opacity: 0.55;
-  filter: none;
-  transform: scale(1);
+.analysis-progress-icon > * {
+  display: none;
 }
 
-.ic-tag .btn-close:hover,
-.ec-tag .btn-close:hover,
-.badge .btn-close:hover {
-  opacity: 0.8;
+.analysis-progress.is-running .icon-running,
+.analysis-progress.is-done .icon-done,
+.analysis-progress.is-error .icon-error {
+  display: inline-block;
 }
 
-/* =========================
-   METADATA FILTER DROPDOWN
-========================= */
-
-.metadata-dropdown-wrapper {
-  position: relative;
-}
-
-.metadata-toggle-btn {
-  border: none;
-  background: transparent;
-  color: inherit;
-  opacity: 0.7;
-  padding: 0 2px;
-  font-size: 0.7rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.metadata-toggle-btn:hover {
-  opacity: 1;
-}
-
-.metadata-menu {
-  min-width: 210px;
-  font-size: 0.8rem;
-}
-
-.metadata-menu .form-check {
-  padding-left: 1.6em;
-}
-
-.metadata-menu .form-check-input {
-  flex: none;
+.analysis-progress-status {
+  flex: 1;
   min-width: 0;
-  width: 1em;
-  height: 1em;
+  margin: 0;
+  color: #1f2933;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
-.metadata-menu .form-check-input:not(:checked) {
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  background-color: #fff;
+.analysis-progress.is-error .analysis-progress-status {
+  color: #9B3B42;
 }
 
-.metadata-menu .form-check-input:checked {
-  background-color: #198754;
-  border-color: #198754;
+.analysis-progress-count {
+  flex-shrink: 0;
+  color: #6c757d;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
-.metadata-menu .form-check-input:focus {
-  border-color: #198754;
-  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+.analysis-progress-track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9ecef;
+}
+
+.analysis-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--progress-color);
+  transition: width 0.4s ease;
+}
+
+/* Brilho correndo na trilha enquanto o lote está na LLM: a barra só anda
+   quando um lote termina, e cada lote leva dezenas de segundos. */
+.analysis-progress.is-running .analysis-progress-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: analysis-progress-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes analysis-progress-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(340%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-progress.is-running .analysis-progress-track::after {
+    animation: none;
+  }
+
+  .analysis-progress-fill {
+    transition: none;
+  }
 }
 
 /* =========================

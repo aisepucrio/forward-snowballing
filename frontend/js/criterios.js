@@ -1,18 +1,5 @@
 let artigosIncluidos = [];
 
-const METADATA_FIELDS = [
-  { key: 'language', label: 'Language' },
-  { key: 'year', label: 'Year' },
-  { key: 'venue', label: 'Venue' },
-  { key: 'open_access', label: 'Open Access' },
-  { key: 'keywords', label: 'Keywords' },
-  { key: 'pages', label: 'Pages' },
-  { key: 'numpages', label: 'Number of Pages' },
-  { key: 'citationCount', label: 'Citation Count' },
-];
-
-let metadataUidCounter = 0;
-
 // Modelo, chave, temperatura e paralelismo da LLM ficam só no .env do
 // servidor; o frontend envia apenas critérios, artigos e prompt extra.
 // Artigos por requisição ao servidor (cada artigo é uma chamada à LLM). Com
@@ -51,6 +38,10 @@ window.addEventListener('load', () => {
   // analysis.html também lê) — index.js grava ele à parte no localStorage
   // antes de navegar pra cá, então lemos de lá.
   window.currentSearchId = localStorage.getItem('currentSearchId') || null;
+
+  // Os artigos chegam com found_via_seeds desde a busca; a tag "Seed N" ajuda
+  // a saber de qual seed veio cada um na hora de aplicar os critérios.
+  window.mostrarTagsSeed = true;
 
   mostrarTabelaArtigos(artigosIncluidos);
 });
@@ -251,7 +242,6 @@ async function analisarEmLotes(
   artigos,
   criteriosInclusao,
   criteriosExclusao,
-  criteriaMetadata = {},
   { extraPrompt = '', resultadosIniciais = [], onLoteConcluido = () => {} } = {}
 ) {
   const artigosLimpos = prepararArtigosParaAnalise(artigos);
@@ -259,31 +249,19 @@ async function analisarEmLotes(
   const resultadosFinais = [...resultadosIniciais];
   const lotes = dividirEmLotes(artigosLimpos.slice(resultadosFinais.length), ANALYSIS_BATCH_SIZE);
 
-  const statusEl = document.getElementById('statusAnalise');
-  const progressoEl = document.getElementById('progressoAnalise');
-  const progressContainer = document.querySelector('.progress');
-
-  const atualizarProgresso = (texto) => {
-    const percentual = Math.round((resultadosFinais.length / total) * 100);
-    statusEl.textContent = texto;
-    progressoEl.style.width = `${percentual}%`;
-    progressoEl.textContent = `${percentual}%`;
-  };
-
-  if (progressContainer) {
-    progressContainer.style.display = '';
-  }
-  statusEl.style.display = '';
-  statusEl.classList.remove('text-danger');
-  statusEl.classList.add('text-muted');
-  atualizarProgresso(resultadosFinais.length > 0
-    ? `Resuming analysis... ${resultadosFinais.length}/${total}`
-    : `Starting analysis... 0/${total}`);
+  mostrarPainelProgresso('running');
+  const atualizarProgresso = texto => atualizarPainelProgresso(texto, resultadosFinais.length, total);
 
   for (const lote of lotes) {
     const primeiro = resultadosFinais.length + 1;
     const ultimo = resultadosFinais.length + lote.length;
     let resultadosLote;
+
+    // Cada lote leva dezenas de segundos: dizer quais artigos estão na LLM
+    // agora é o que mostra que a análise está andando.
+    atualizarProgresso(primeiro === ultimo
+      ? `Analyzing article ${primeiro} of ${total}...`
+      : `Analyzing articles ${primeiro}–${ultimo} of ${total}...`);
 
     try {
       const res = await fetch('/api/articles/analisar', {
@@ -292,7 +270,6 @@ async function analisarEmLotes(
         body: JSON.stringify({
           criteriosInclusao: criteriosInclusao,
           criteriosExclusao: criteriosExclusao,
-          criteriaMetadata: criteriaMetadata,
           artigos: lote,
           extraPrompt: extraPrompt,
         })
@@ -318,18 +295,35 @@ async function analisarEmLotes(
 
     resultadosFinais.push(...resultadosLote);
     onLoteConcluido(resultadosFinais);
-    atualizarProgresso(`Analyzing articles... ${resultadosFinais.length}/${total}`);
   }
 
-  atualizarProgresso(`Analysis finished: ${total}/${total}`);
-  setTimeout(() => {
-    if (progressContainer) {
-      progressContainer.style.display = 'none';
-    }
-    statusEl.style.display = 'none';
-  }, 800);
+  mostrarPainelProgresso('done');
+  atualizarProgresso('Analysis finished');
+  setTimeout(esconderPainelProgresso, 1500);
 
   return resultadosFinais;
+}
+
+// Painel de progresso da análise: escondido até a primeira análise, com um
+// estado por vez (running, done, error) que troca ícone e cor da barra.
+function mostrarPainelProgresso(estado) {
+  const painel = document.getElementById('analysisProgress');
+  painel.classList.remove('d-none', 'is-running', 'is-done', 'is-error');
+  painel.classList.add(`is-${estado}`);
+}
+
+function esconderPainelProgresso() {
+  // Uma análise nova pode ter começado nesse meio-tempo.
+  const painel = document.getElementById('analysisProgress');
+  if (painel.classList.contains('is-done')) painel.classList.add('d-none');
+}
+
+function atualizarPainelProgresso(texto, feitos, total) {
+  const percentual = total ? Math.round((feitos / total) * 100) : 0;
+  document.getElementById('statusAnalise').textContent = texto;
+  document.getElementById('progressoContagem').textContent = `${feitos}/${total} · ${percentual}%`;
+  document.getElementById('progressoAnalise').style.width = `${percentual}%`;
+  document.getElementById('progressoTrilha').setAttribute('aria-valuenow', percentual);
 }
 
 function exibirResultados(resultados) {
@@ -344,30 +338,17 @@ function exibirResultados(resultados) {
 }
 
 function mostrarErroAnalise(mensagem) {
-  const statusEl = document.getElementById('statusAnalise');
-  statusEl.style.display = '';
-  statusEl.style.whiteSpace = 'pre-line';
-  statusEl.classList.remove('text-muted');
-  statusEl.classList.add('text-danger');
+  mostrarPainelProgresso('error');
   // textContent: a mensagem pode trazer texto vindo do provedor da LLM.
-  statusEl.textContent = mensagem;
+  document.getElementById('statusAnalise').textContent = mensagem;
 }
 
 document.getElementById('criteriosForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const inclusaoInput = document.getElementById('inclusaoInput');
-  const exclusaoInput = document.getElementById('exclusaoInput');
-
-  if (inclusaoInput.value.trim()) {
-    criarTag(document.getElementById('inclusaoBox'), inclusaoInput.value.trim(), 'bg-success');
-    inclusaoInput.value = '';
-  }
-
-  if (exclusaoInput.value.trim()) {
-    criarTag(document.getElementById('exclusaoBox'), exclusaoInput.value.trim(), 'bg-danger');
-    exclusaoInput.value = '';
-  }
+  // Texto digitado e não adicionado entra como critério antes de analisar.
+  adicionarCriterio('inclusao');
+  adicionarCriterio('exclusao');
 
   const inclusao = obterTags('inclusaoBox')
     .map((c, i) => `${i + 1}. ${c}`)
@@ -376,11 +357,6 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
   const exclusao = obterTags('exclusaoBox')
     .map((c, i) => `${i + 1}. ${c}`)
     .join('\n');
-
-  const criteriaMetadata = {
-    ...obterCriteriaMetadata('inclusaoBox'),
-    ...obterCriteriaMetadata('exclusaoBox'),
-  };
 
   const btnTexto = document.getElementById('btnTexto');
   const btnLoading = document.getElementById('btnLoading');
@@ -428,7 +404,6 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
       artigosIncluidos,
       inclusao,
       exclusao,
-      criteriaMetadata,
       {
         extraPrompt,
         resultadosIniciais,
@@ -494,120 +469,149 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+// ---------------------------------------------------------------------------
+// Critérios de inclusão/exclusão
+//
+// Cada coluna é uma lista (IC1, IC2... / EC1, EC2...) com um campo de
+// adicionar sempre visível embaixo.
+// ---------------------------------------------------------------------------
+const CRITERIOS = {
+  inclusao: { prefixo: 'IC', lista: 'inclusaoBox', input: 'inclusaoInput', contador: 'inclusaoCount' },
+  exclusao: { prefixo: 'EC', lista: 'exclusaoBox', input: 'exclusaoInput', contador: 'exclusaoCount' },
+};
+
+function configDaLista(containerId) {
+  return Object.values(CRITERIOS).find(c => c.lista === containerId);
+}
+
+function itensCriterio(containerId) {
+  return Array.from(document.getElementById(containerId).querySelectorAll(':scope > .criterion-item'));
+}
+
+// "IC1: texto" — o prefixo vai junto no prompt, como sempre foi, para a LLM
+// devolver os vereditos pelas mesmas chaves.
 function obterTags(containerId) {
-  const container = document.getElementById(containerId);
-  const tags = container.querySelectorAll('.badge');
-
-  return Array.from(tags).map(tag => {
-    const textEl = tag.querySelector('.criterion-text');
-    return (textEl ? textEl.textContent : tag.textContent).trim();
-  });
+  const { prefixo } = configDaLista(containerId);
+  return itensCriterio(containerId).map((item, i) =>
+    `${prefixo}${i + 1}: ${item.querySelector('.criterion-text').textContent.trim()}`
+  );
 }
 
-function obterCriteriaMetadata(containerId) {
-  const container = document.getElementById(containerId);
-  const tags = container.querySelectorAll('.badge');
-  const prefix = containerId === 'inclusaoBox' ? 'IC' : 'EC';
-
-  const result = {};
-  Array.from(tags).forEach((tag, i) => {
-    const criterionId = `${prefix}${i + 1}`;
-    let fields = [];
-    try {
-      fields = JSON.parse(tag.dataset.metadataFields || '[]');
-    } catch {
-      fields = [];
-    }
-    result[criterionId] = fields;
+function renumerarCriterios(tipo) {
+  const config = CRITERIOS[tipo];
+  const itens = itensCriterio(config.lista);
+  itens.forEach((item, i) => {
+    item.querySelector('.criterion-id').textContent = `${config.prefixo}${i + 1}`;
   });
-  return result;
+  document.getElementById(config.contador).textContent = itens.length;
 }
 
-function criarTag(container, texto, cor) {
-  const input = container.querySelector(':scope > input');
+function editarCriterio(item) {
+  if (item.classList.contains('editing')) return;
 
-  const tagsAtuais = container.querySelectorAll('.badge');
-  const indice = tagsAtuais.length + 1;
+  const textoEl = item.querySelector('.criterion-text');
+  const original = textoEl.textContent;
+  const editor = document.createElement('textarea');
+  editor.className = 'criterion-editor';
+  editor.value = original;
+  editor.rows = Math.min(6, Math.max(2, Math.ceil(original.length / 60)));
+  editor.setAttribute('aria-label', 'Edit criterion');
 
-  const prefixo = container.id === 'inclusaoBox' ? `IC${indice}` : `EC${indice}`;
-  const tagUid = ++metadataUidCounter;
-
-  const tag = document.createElement('span');
-  tag.className = `badge d-flex align-items-center ${container.id === 'inclusaoBox' ? 'ic-tag' : 'ec-tag'}`;
-
-  tag.innerHTML = `
-    <span class="criterion-text">${prefixo}: ${TableComponent.escapeHtml(texto)}</span>
-    <div class="dropdown d-inline-flex metadata-dropdown-wrapper">
-      <button type="button" class="metadata-toggle-btn" data-bs-toggle="dropdown"
-        data-bs-auto-close="outside" aria-expanded="false"
-        title="Choose metadata fields sent to the LLM for this criterion">
-        <i class="bi bi-sliders"></i>
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end p-2 metadata-menu">
-        ${METADATA_FIELDS.map(f => `
-          <li class="form-check">
-            <input class="form-check-input metadata-checkbox" type="checkbox"
-              value="${f.key}" id="meta-${tagUid}-${f.key}" checked>
-            <label class="form-check-label" for="meta-${tagUid}-${f.key}">${f.label}</label>
-          </li>
-        `).join('')}
-      </ul>
-    </div>
-    <button type="button" class="btn-close btn-close-white ms-2 remove-tag-btn" style="font-size:0.6rem;"></button>
-  `;
-
-  const checkboxes = tag.querySelectorAll('.metadata-checkbox');
-  const syncMetadataDataset = () => {
-    const selected = Array.from(checkboxes)
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
-    tag.dataset.metadataFields = JSON.stringify(selected);
+  let encerrado = false;
+  const encerrar = salvar => {
+    if (encerrado) return;
+    encerrado = true;
+    const novo = editor.value.trim();
+    textoEl.textContent = salvar && novo ? novo : original;
+    editor.replaceWith(textoEl);
+    item.classList.remove('editing');
   };
-  checkboxes.forEach(cb => cb.addEventListener('change', syncMetadataDataset));
-  syncMetadataDataset();
 
-  tag.querySelector('.remove-tag-btn').addEventListener('click', () => {
-    tag.remove();
-
-    const restantes = container.querySelectorAll('.badge');
-    restantes.forEach((t, i) => {
-      const newPrefix = container.id === 'inclusaoBox' ? `IC${i + 1}` : `EC${i + 1}`;
-      const textEl = t.querySelector('.criterion-text');
-      const criterionBody = textEl.textContent.slice(textEl.textContent.indexOf(':') + 1).trim();
-      textEl.textContent = `${newPrefix}: ${criterionBody}`;
-    });
-
-    if (restantes.length === 0) {
-      input.placeholder = container.id === 'inclusaoBox'
-        ? 'Enter inclusion criteria...'
-        : 'Enter exclusion criteria...';
+  editor.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      encerrar(true);
+    } else if (e.key === 'Escape') {
+      encerrar(false);
     }
   });
+  editor.addEventListener('blur', () => encerrar(true));
 
-  container.insertBefore(tag, input);
-  input.placeholder = '';
+  item.classList.add('editing');
+  textoEl.replaceWith(editor);
+  editor.focus();
+  editor.setSelectionRange(editor.value.length, editor.value.length);
 }
 
-function ativarInputTags(inputId, boxId, cor) {
-  const input = document.getElementById(inputId);
-  const box = document.getElementById(boxId);
+function criarItemCriterio(tipo, texto) {
+  const item = document.createElement('li');
+  item.className = 'criterion-item';
 
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+  item.innerHTML = `
+    <span class="criterion-id"></span>
+    <p class="criterion-text"></p>
+    <div class="criterion-actions">
+      <button type="button" class="criterion-action criterion-edit" aria-label="Edit criterion" title="Edit">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button type="button" class="criterion-action criterion-remove" aria-label="Remove criterion" title="Remove">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  `;
+  // textContent: o critério é texto livre do usuário.
+  item.querySelector('.criterion-text').textContent = texto;
 
-      const texto = input.value.trim();
-      if (!texto) return;
-
-      criarTag(box, texto, cor);
-      input.value = '';
-    }
+  item.querySelector('.criterion-edit').addEventListener('click', () => editarCriterio(item));
+  item.querySelector('.criterion-text').addEventListener('dblclick', () => editarCriterio(item));
+  item.querySelector('.criterion-remove').addEventListener('click', () => {
+    item.remove();
+    renumerarCriterios(tipo);
   });
+
+  return item;
+}
+
+// O campo de adicionar começa com uma linha e cresce com o texto (até o
+// max-height do CSS, depois rola).
+function autoAjustarAltura(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = `${textarea.scrollHeight + 2}px`;
+}
+
+// Adiciona o texto do campo da coluna como critério; devolve false se vazio.
+function adicionarCriterio(tipo) {
+  const config = CRITERIOS[tipo];
+  const input = document.getElementById(config.input);
+  const texto = input.value.trim();
+  if (!texto) return false;
+
+  document.getElementById(config.lista).appendChild(criarItemCriterio(tipo, texto));
+  renumerarCriterios(tipo);
+  input.value = '';
+  autoAjustarAltura(input);
+  return true;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  ativarInputTags('inclusaoInput', 'inclusaoBox', 'bg-success');
-  ativarInputTags('exclusaoInput', 'exclusaoBox', 'bg-danger');
+  Object.entries(CRITERIOS).forEach(([tipo, config]) => {
+    const input = document.getElementById(config.input);
+    input.addEventListener('input', () => autoAjustarAltura(input));
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        adicionarCriterio(tipo);
+      }
+    });
+  });
+
+  document.querySelectorAll('.criteria-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tipo = btn.dataset.criteria;
+      adicionarCriterio(tipo);
+      document.getElementById(CRITERIOS[tipo].input).focus();
+    });
+  });
 
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
   tooltipTriggerList.forEach(el => {

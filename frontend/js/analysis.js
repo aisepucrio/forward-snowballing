@@ -18,77 +18,286 @@
       return '-';
     }
 
-    function mostrarResultado(artigo) {
-      const resultadoEl = document.getElementById('resultado');
-      if (!resultadoEl) return;
+    // Uma linha por seed que deu resultado na busca. Os gráficos abaixo usam
+    // todos os estudos incluídos juntos, sem separar por seed.
+    
+function mostrarResultado(seeds) {
+  const resultadoEl = document.getElementById('resultado');
+  if (!resultadoEl) return;
 
-      if (!artigo || !artigo.title) {
-        resultadoEl.innerHTML = '<p class="text-muted">Seed article data not found.</p>';
-        return;
-      }
+  const lista = (Array.isArray(seeds) ? seeds : [seeds])
+    .filter(seed => seed && seed.title);
 
-      const authors = formatAuthors(artigo.authors);
-      const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
+  if (lista.length === 0) {
+    resultadoEl.innerHTML =
+      '<p class="text-muted">Seed article data not found.</p>';
+    return;
+  }
 
-      resultadoEl.innerHTML = `
-      <div class="table-wrapper mb-4">
-        <div class="table-topbar">
-          <div class="table-info">
-            <span class="table-title">Seed Paper</span>
+  const artigosHTML = lista.map(artigo => {
+    const authors = formatAuthors(artigo.authors);
+    const doiToShow =
+      artigo.resolved_doi ||
+      artigo.input_doi ||
+      artigo.doi ||
+      '-';
+
+    return `
+      <tr>
+        <td>
+          <div class="paper-doi">
+            DOI: ${escapeHtml(doiToShow)}
           </div>
-        </div>
 
+          <div class="paper-title">
+            ${escapeHtml(artigo.title || '-')}
+          </div>
+
+          <div class="paper-authors">
+            ${escapeHtml(authors)}
+          </div>
+
+          <div class="paper-meta">
+            <div class="paper-tags">
+              <span class="paper-tag">
+                ${escapeHtml(artigo.year || '-')}
+              </span>
+              <span class="paper-tag venue-tag">
+                ${escapeHtml(artigo.venue || '-')}
+              </span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  resultadoEl.innerHTML = `
+    <div class="table-wrapper seed-papers-wrapper">
+      <div class="seed-papers-header">
+        <h2 class="seed-papers-title">
+          Seed Papers (${lista.length})
+        </h2>
+
+        <div
+          id="seed-selector"
+          class="seed-selector"
+          role="group"
+          aria-label="Filter seed papers">
+        </div>
+      </div>
+
+      <div class="seed-papers-scroll">
         <table class="custom-table">
-          <thead>
-            <tr>
-              
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div class="paper-doi">
-                  DOI: ${escapeHtml(doiToShow)}
-                </div>
-                <div class="paper-title">
-                  ${escapeHtml(artigo.title || '-')}
-                </div>
-                ${escapeHtml(authors)}
-                <div class="paper-meta">
-                  <div class="paper-tags">
-                    <span class="paper-tag">
-                      ${escapeHtml(artigo.year || '-')}
-                    </span>
-                    <span class="paper-tag venue-tag">
-                      ${escapeHtml(artigo.venue || '-')}
-                    </span>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
+          <tbody>${artigosHTML}</tbody>
         </table>
       </div>
-      `;
-    }
+    </div>
+  `;
 
-    const totalArtigosEl = document.getElementById('total-artigos');
+  renderizarFiltrosAnalise(sementesDisponiveis);
+}
+
+
+
+
+
+function atualizarListaSeedPapers(seeds) {
+  const tbody = document.querySelector(
+    '#resultado .seed-papers-scroll .custom-table tbody'
+  );
+
+  const titulo = document.querySelector(
+    '#resultado .seed-papers-title'
+  );
+
+  if (!tbody || !titulo) return;
+
+  titulo.textContent = `Seed Papers (${seeds.length})`;
+
+  tbody.innerHTML = seeds.map(artigo => {
+    const authors = formatAuthors(artigo.authors);
+    const doiToShow =
+      artigo.resolved_doi ||
+      artigo.input_doi ||
+      artigo.doi ||
+      '-';
+
+    return `
+      <tr>
+        <td>
+          <div class="paper-doi">
+            DOI: ${escapeHtml(doiToShow)}
+          </div>
+          <div class="paper-title">
+            ${escapeHtml(artigo.title || '-')}
+          </div>
+          <div class="paper-authors">
+            ${escapeHtml(authors)}
+          </div>
+          <div class="paper-meta">
+            <div class="paper-tags">
+              <span class="paper-tag">
+                ${escapeHtml(artigo.year || '-')}
+              </span>
+              <span class="paper-tag venue-tag">
+                ${escapeHtml(artigo.venue || '-')}
+              </span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+
+const totalArtigosEl = document.getElementById('total-artigos');
     const totalVenueEl = document.getElementById('total-venue');
 
     function normalizeArticles(data) {
-      return data.map(item => ({
-        paperId: item.paperId || '',
-        title: item.title || "Untitled",
-        abstract: item.abstract || "No abstract available",
-        year: item.year || "N/A",
-        venue: item.venue || (item.publicationVenue && item.publicationVenue.name) || "N/A",
-        selecionado: item.selecionado || null,
-        open_access: item.open_access !== undefined ? item.open_access : null,
-        citations_count: parseInt(item.citations_count || 0, 10)
-      }));
+      return (Array.isArray(data) ? data : []).map((item, index) => {
+        const rawSeeds = item && item.found_via_seeds;
+        let seeds = [];
+
+        const addSeed = value => {
+          if (value === null || value === undefined || value === '') return;
+          if (typeof value === 'number' && Number.isFinite(value)) {
+            seeds.push(value);
+            return;
+          }
+
+          const text = String(value).trim();
+          const labeled = text.match(/^S\s*(\d+)$/i);
+          if (labeled) {
+            // Os botões são indexados a partir de zero: S1 corresponde ao índice 0.
+            seeds.push(Number(labeled[1]) - 1);
+            return;
+          }
+
+          const numeric = text.match(/^\d+$/);
+          if (numeric) seeds.push(Number(text));
+        };
+
+        if (Array.isArray(rawSeeds)) {
+          rawSeeds.forEach(addSeed);
+        } else if (typeof rawSeeds === 'string') {
+          const matches = rawSeeds.match(/S\s*\d+|\d+/gi);
+          if (matches) matches.forEach(addSeed);
+        } else if (typeof rawSeeds === 'number') {
+          addSeed(rawSeeds);
+        }
+
+        return {
+          ...item,
+          paperId: item.paperId || item.study_key || `article-${index}`,
+          title: item.title || 'Untitled',
+          abstract: item.abstract || 'No abstract available',
+          year: item.year || 'N/A',
+          venue: item.venue || (item.publicationVenue && item.publicationVenue.name) || 'N/A',
+          selecionado: item.selecionado || null,
+          open_access: item.open_access !== undefined ? item.open_access : null,
+          citations_count: parseInt(item.citations_count || 0, 10) || 0,
+          found_via_seeds: [...new Set(seeds)]
+        };
+      });
     }
 
-    const countBy = (arr, key) => arr.reduce((acc, item) => {
+    // Estado dos filtros da página de análise.
+   let artigosSelecionadosOriginais = [];
+let seedSelecionada = 'all';
+let sementesDisponiveis = [];
+
+function renderizarFiltrosAnalise(seeds) {
+  sementesDisponiveis = (Array.isArray(seeds) ? seeds : [seeds])
+    .filter(seed => seed && seed.title);
+
+  const selector = document.getElementById('seed-selector');
+  if (!selector) return;
+
+  selector.innerHTML = '';
+
+  function adicionarBotao(id, texto) {
+    const button = document.createElement('button');
+
+    button.type = 'button';
+    button.className =
+      `seed-option${String(id) === seedSelecionada ? ' active' : ''}`;
+
+    button.dataset.seed = String(id);
+    button.setAttribute(
+      'aria-pressed',
+      String(id) === seedSelecionada ? 'true' : 'false'
+    );
+
+    button.textContent = texto;
+
+    button.addEventListener('click', () => {
+      seedSelecionada = String(id);
+      atualizarBotoesSeed();
+      aplicarFiltrosAnalise();
+    });
+
+    selector.appendChild(button);
+  }
+
+  adicionarBotao('all', 'All seeds');
+
+  sementesDisponiveis.forEach((seed, index) => {
+    adicionarBotao(
+      index,
+      `S${index + 1}`
+    );
+  });
+
+  atualizarBotoesSeed();
+}
+
+function atualizarBotoesSeed() {
+  document.querySelectorAll('.seed-option[data-seed]')
+    .forEach(button => {
+      const ativo = button.dataset.seed === seedSelecionada;
+
+      button.classList.toggle('active', ativo);
+      button.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
+}
+
+function aplicarFiltrosAnalise() {
+  const artigosFiltrados = artigosSelecionadosOriginais.filter(artigo => {
+    if (seedSelecionada === 'all') {
+      return true;
+    }
+
+    const seedsDoArtigo = Array.isArray(artigo.found_via_seeds)
+      ? artigo.found_via_seeds
+      : [];
+
+    return seedsDoArtigo.some(
+      seed => Number(seed) === Number(seedSelecionada)
+    );
+  });
+
+  // Atualiza os indicadores, gráficos e a nuvem de palavras.
+  atualizarResumoEgraficos(artigosFiltrados);
+
+    // Atualiza a lista de seeds sem recriar os filtros.
+  const seedsParaMostrar = seedSelecionada === 'all'
+    ? sementesDisponiveis
+    : sementesDisponiveis.filter(
+        (_, index) => String(index) === seedSelecionada
+      );
+
+  atualizarListaSeedPapers(seedsParaMostrar);
+
+  const totalEl = document.getElementById('total-artigos');
+  if (totalEl) {
+    totalEl.textContent = String(artigosFiltrados.length);
+  }
+}
+
+        const countBy = (arr, key) => arr.reduce((acc, item) => {
       const val = item[key] || "N/A";
       acc[val] = (acc[val] || 0) + 1;
       return acc;
@@ -168,39 +377,53 @@
         return;
       }
 
-      const largura = container.offsetWidth || 800;
-      const altura = largura < 576 ? 260 : 380; 
-
-      let fonteMin = 14;
-      let fonteMax = 52;
-
-      if (largura < 576) {
-        fonteMin = 10;
-        fonteMax = 24;
-      } else if (largura < 992) {
-        fonteMin = 12;
-        fonteMax = 36;
-      }
-
-      const maxSize = d3.max(palavrasDados, d => d.size);
-      const minSize = d3.min(palavrasDados, d => d.size);
       
-      const escalaFonte = d3.scaleLinear()
-        .domain([minSize, maxSize])
-        .range([fonteMin, fonteMax]);
+const largura = container.offsetWidth || 800;
+const altura = largura < 576 ? 280 : 400;
 
-      const coresNuvem = ['#5D8AA8', '#367588', '#2F4F4F', '#3F7CAC', '#264348', '#2C5F71', '#5B8D89', '#176D6D'];
+let fonteMin = 15;
+let fonteMax = 48;
 
-      const layout = d3.layout.cloud()
-        .size([largura, altura])
-        .words(palavrasDados.map(d => ({ text: d.text, size: escalaFonte(d.size) })))
-        .padding(5)
-        .rotate(() => (Math.random() > 0.75 ? 90 : 0))
-        .font("Poppins, sans-serif")
-        .fontSize(d => d.size)
-        .on("end", desenharNuvem);
+if (largura < 576) {
+  fonteMin = 12;
+  fonteMax = 27;
+} else if (largura < 992) {
+  fonteMin = 13;
+  fonteMax = 36;
+}
 
-      layout.start();
+const maxSize = d3.max(palavrasDados, d => d.size);
+const minSize = d3.min(palavrasDados, d => d.size);
+
+const escalaFonte = d3.scaleSqrt()
+  .domain([minSize, maxSize === minSize ? minSize + 1 : maxSize])
+  .range([fonteMin, fonteMax]);
+
+const coresNuvem = [
+  '#163B50',
+  '#20566B',
+  '#287D78',
+  '#35958A',
+  '#477F9C',
+  '#5B9B91',
+  '#38718A'
+];
+
+const layout = d3.layout.cloud()
+  .size([largura - 24, altura - 24])
+  .words(palavrasDados.map(d => ({
+    text: d.text,
+    size: escalaFonte(d.size),
+    frequency: d.size
+  })))
+  .padding(7)
+  .rotate(() => 0)
+  .font('Poppins, sans-serif')
+  .fontSize(d => d.size)
+  .on('end', desenharNuvem);
+
+layout.start();
+
 
       function desenharNuvem(words) {
         const svg = d3.select("#word-cloud")
@@ -221,9 +444,7 @@
           .style("fill", () => coresNuvem[Math.floor(Math.random() * coresNuvem.length)])
           .attr("text-anchor", "middle")
           .attr("transform", d => `translate(${d.x}, ${d.y}) rotate(${d.rotate})`)
-          .text(d => d.text)
-          .on("mouseover", function() { d3.select(this).style("opacity", "0.7"); })
-          .on("mouseout", function() { d3.select(this).style("opacity", "1"); });
+          .text(d => d.text);
       }
 
       window.removeEventListener('resize', forcarRecalculoNuvem);
@@ -359,26 +580,73 @@
           '#176D6D', '#1A5B6E', '#2E6B6B', '#008080', '#42736E', '#3B7A70', '#206B5E', '#3B6D6D', '#1E5945', '#236B54'
         ];
 
-        window.chartVenue = new Chart(document.getElementById('graficoVenue'), {
-          type: 'pie',
-          data: {
-            labels: Object.keys(venuesFiltrados),
-            datasets: [{ 
-              data: Object.values(venuesFiltrados), 
-              backgroundColor: cores_hex.slice(0, Object.keys(venuesFiltrados).length)
-            }]
+        const canvasVenue = document.getElementById('graficoVenue');
+        if (!canvasVenue) return;
+
+        window.chartVenue = new Chart(canvasVenue, {
+  type: 'bar',
+  data: {
+    labels: Object.keys(venuesFiltrados),
+    datasets: [{
+      data: Object.values(venuesFiltrados),
+      backgroundColor: '#087f50',
+      borderRadius: 5,
+      borderSkipped: false,
+      barThickness: 14
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: context => ` ${context.raw} artigos`
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        grid: {
+          display: false
+        },
+        ticks: {
+          display: false
+        },
+        border: {
+          display: false
+        }
+      },
+      y: {
+        grid: {
+          display: false
+        },
+        border: {
+          display: false
+        },
+        ticks: {
+          color: '#334155',
+          font: {
+            size: 13
           },
-          options: { 
-            plugins: { legend: { position: 'right' } },
-            onClick: (event, elements) => {
-              if (elements && elements.length > 0) {
-                const elementIndex = elements[0].index;
-                const venue = Object.keys(venuesFiltrados)[elementIndex];
-                const quantidade = Object.values(venuesFiltrados)[elementIndex];
-              }
-            }
-          }
-        });
+          autoSkip: false,
+          padding: 8
+        }
+      }
+    },
+    layout: {
+      padding: {
+        right: 25,
+        left: 0
+      }
+    }
+  }
+});
         
       }
 
@@ -416,7 +684,13 @@
         }
       }
 
-      window.chartAno = new Chart(document.getElementById('graficoAno'), {
+      const canvasAno = document.getElementById('graficoAno');
+      if (!canvasAno) {
+        gerarNuvemPalavras(artigos);
+        return;
+      }
+
+      window.chartAno = new Chart(canvasAno, {
         type: 'bar',
         data: {
           labels: Object.keys(porAno),
@@ -488,44 +762,60 @@
     }
 
     function carregarArtigosLocal() {
-      const seedDataStorage = localStorage.getItem('seedPaperData');
-      
-      if (seedDataStorage) {
-        try {
-          const artigoSemente = JSON.parse(seedDataStorage);
-          mostrarResultado(artigoSemente);
-        } catch (e) {
-          console.error("Error parsing Seed Paper data:", e);
-          document.getElementById('resultado').innerHTML = '<p class="text-muted">Error loading seed article data.</p>';
-        }
-      } else {
-        if (window.name) {
-          try {
-            const dados = JSON.parse(window.name);
-            if (dados && dados.length > 0) {
-              const seedRef = dados.find(a => a.isSeed || a.seed === true) || dados[0];
-              mostrarResultado(seedRef);
-            }
-          } catch(e) {
-            document.getElementById('resultado').innerHTML = '<p class="text-muted">Seed article data not found.</p>';
-          }
-        }
-      }
+  const seedsDataStorage = localStorage.getItem('seedsData');
+  const seedDataStorage = localStorage.getItem('seedPaperData');
+  let seeds = [];
 
-      if (!window.name) {
-        alert('No articles found for screening. Please return to the home page and try a new search.');
-        return;
-      }
-      
-      try {
-        const dados = JSON.parse(window.name);
-        const artigos = normalizeArticles(dados.filter(a => a.selecionado === 'incluir'));
-        atualizarResumoEgraficos(artigos);
-      } catch (e) {
-        alert('Error loading screening data: ' + e.message);
-      }
+  if (seedsDataStorage) {
+    try {
+      const parsed = JSON.parse(seedsDataStorage);
+      seeds = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) {
+      console.error('Error parsing seed papers data:', e);
     }
+  } else if (seedDataStorage) {
+    try {
+      const parsed = JSON.parse(seedDataStorage);
+      seeds = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) {
+      console.error('Error parsing seed paper data:', e);
+    }
+  }
 
+  if (seeds.length) {
+    mostrarResultado(seeds);
+  } else {
+    const resultadoEl = document.getElementById('resultado');
+    if (resultadoEl) {
+      resultadoEl.innerHTML =
+        '<p class="text-muted">Seed article data not found.</p>';
+    }
+  }
+
+  if (!window.name) {
+    alert(
+      'No articles found for screening. Please return to the home page and try a new search.'
+    );
+    return;
+  }
+
+  try {
+    const dados = JSON.parse(window.name);
+
+    const incluidos = Array.isArray(dados)
+      ? dados.filter(a => a && a.selecionado === 'incluir')
+      : [];
+
+    artigosSelecionadosOriginais = normalizeArticles(incluidos);
+
+    renderizarFiltrosAnalise(seeds);
+
+    aplicarFiltrosAnalise();
+  } catch (e) {
+    console.error('Error loading screening data:', e);
+    alert('Error loading screening data: ' + e.message);
+  }
+}
     function salvarPesquisaAtual(valor) {
       localStorage.setItem('ultimaPesquisaSnowMap', valor);
     }
@@ -580,7 +870,8 @@
       });
     }
 
-   document.getElementById('btn-exportar-pdf').addEventListener('click', function () {
+   const btnExportarPdf = document.getElementById('btn-exportar-pdf');
+   if (btnExportarPdf) btnExportarPdf.addEventListener('click', function () {
       const elemento = document.querySelector('main.container');
       
       this.style.display = 'none';
@@ -806,6 +1097,10 @@
           page-break-inside: avoid !important;
           break-inside: avoid !important;
           filter: grayscale(100%) !important;
+        }
+
+        .chart-description {
+          display: none !important;
         }
       `;
       document.head.appendChild(estiloImpressao);

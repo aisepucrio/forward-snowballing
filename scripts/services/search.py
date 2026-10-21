@@ -16,6 +16,7 @@ from services.normalize import (
     generate_paper_id,
 )
 from services.matching import merge_prefer_filled
+from services.settings import cache_enabled
 
 REQUEST_TIMEOUT = 12
 USER_AGENT = "forward-snowballing-app/1.0"
@@ -1190,8 +1191,18 @@ def cache_path_for_doi(doi):
 
     return cache_dir / f"cache_complete_{safe_doi}.json"
 
+class ArticleNotFoundError(ValueError):
+    """Nenhuma fonte encontrou o artigo pedido.
+
+    Antes search_combined imprimia o erro e chamava sys.exit(1) — o que, numa
+    busca com várias seeds no mesmo processo, derrubava todas por causa de uma.
+    É ValueError para que run_cli continue respondendo {"error": ...} com
+    exit 1, exatamente como antes.
+    """
+
+
 def load_complete_cache(doi):
-    if os.getenv("SNOWMAP_DISABLE_CACHE"):
+    if not cache_enabled():
         return None
 
     path = cache_path_for_doi(doi)
@@ -1209,6 +1220,9 @@ def load_complete_cache(doi):
 
 
 def save_complete_cache(doi, data):
+    if not cache_enabled():
+        return
+
     path = cache_path_for_doi(doi)
     data = {**data, "_cache_version": COMPLETE_CACHE_VERSION}
 
@@ -1489,10 +1503,7 @@ def search_combined(doi=None, title=None):
 
 
 
-    print(json.dumps({
-        "error": f"Artigo não encontrado. DOI='{doi}' | title='{title}'"
-    }))
-    sys.exit(1)
+    raise ArticleNotFoundError(f"Artigo não encontrado. DOI='{doi}' | title='{title}'")
 
 
 

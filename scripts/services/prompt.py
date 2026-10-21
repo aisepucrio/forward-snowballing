@@ -26,8 +26,7 @@ MAX_TITLE_CHARS = 300
 MAX_ABSTRACT_CHARS = 2000
 
 # Metadados enviados alem de titulo e abstract, na ordem em que aparecem no
-# prompt. Por enquanto vao todos; a selecao por criterio feita na interface
-# (criteriaMetadata) deve filtrar esta lista no futuro.
+# prompt. Vao todos, para todos os criterios.
 METADATA_FIELDS = (
     "year",
     "language",
