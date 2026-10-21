@@ -81,17 +81,19 @@ automatically screen abstracts and provide decision support.</h3>
 
 </form>
 
-    <div class="mt-4">
-      <p id="statusAnalise" class="text-muted mb-2"></p>
-      <div class="progress" style="height: 24px;">
-        <div
-          id="progressoAnalise"
-          class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-          role="progressbar"
-          style="width: 0%;"
-        >
-          0%
-        </div>
+    <div id="analysisProgress" class="analysis-progress d-none" role="status" aria-live="polite">
+      <div class="analysis-progress-head">
+        <span class="analysis-progress-icon">
+          <span class="spinner-border spinner-border-sm icon-running" aria-hidden="true"></span>
+          <i class="bi bi-check-circle-fill icon-done" aria-hidden="true"></i>
+          <i class="bi bi-exclamation-circle-fill icon-error" aria-hidden="true"></i>
+        </span>
+        <p id="statusAnalise" class="analysis-progress-status"></p>
+        <span id="progressoContagem" class="analysis-progress-count"></span>
+      </div>
+      <div id="progressoTrilha" class="analysis-progress-track" role="progressbar"
+        aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="progressoAnalise" class="analysis-progress-fill"></div>
       </div>
     </div>
     <div id="tabelaArtigosContainer" class="mt-4">

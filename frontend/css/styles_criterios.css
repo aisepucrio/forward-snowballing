@@ -396,6 +396,117 @@ td.col-ec {
 }
 
 /* =========================
+   ANALYSIS PROGRESS
+========================= */
+
+.analysis-progress {
+  --progress-color: #198754;
+  margin: 0 auto 24px;
+  max-width: 720px;
+  padding: 14px 18px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.analysis-progress.is-error {
+  --progress-color: #9B3B42;
+  border-color: #f1c9cc;
+  background: #fdf6f6;
+}
+
+.analysis-progress-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.analysis-progress-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 18px;
+  justify-content: center;
+  padding-top: 2px;
+  color: var(--progress-color);
+}
+
+.analysis-progress-icon > * {
+  display: none;
+}
+
+.analysis-progress.is-running .icon-running,
+.analysis-progress.is-done .icon-done,
+.analysis-progress.is-error .icon-error {
+  display: inline-block;
+}
+
+.analysis-progress-status {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: #1f2933;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.analysis-progress.is-error .analysis-progress-status {
+  color: #9B3B42;
+}
+
+.analysis-progress-count {
+  flex-shrink: 0;
+  color: #6c757d;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.analysis-progress-track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9ecef;
+}
+
+.analysis-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--progress-color);
+  transition: width 0.4s ease;
+}
+
+/* Brilho correndo na trilha enquanto o lote está na LLM: a barra só anda
+   quando um lote termina, e cada lote leva dezenas de segundos. */
+.analysis-progress.is-running .analysis-progress-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: analysis-progress-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes analysis-progress-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(340%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-progress.is-running .analysis-progress-track::after {
+    animation: none;
+  }
+
+  .analysis-progress-fill {
+    transition: none;
+  }
+}
+
+/* =========================
    BUTTONS
 ========================= */
 

@@ -263,31 +263,19 @@ async function analisarEmLotes(
   const resultadosFinais = [...resultadosIniciais];
   const lotes = dividirEmLotes(artigosLimpos.slice(resultadosFinais.length), ANALYSIS_BATCH_SIZE);
 
-  const statusEl = document.getElementById('statusAnalise');
-  const progressoEl = document.getElementById('progressoAnalise');
-  const progressContainer = document.querySelector('.progress');
-
-  const atualizarProgresso = (texto) => {
-    const percentual = Math.round((resultadosFinais.length / total) * 100);
-    statusEl.textContent = texto;
-    progressoEl.style.width = `${percentual}%`;
-    progressoEl.textContent = `${percentual}%`;
-  };
-
-  if (progressContainer) {
-    progressContainer.style.display = '';
-  }
-  statusEl.style.display = '';
-  statusEl.classList.remove('text-danger');
-  statusEl.classList.add('text-muted');
-  atualizarProgresso(resultadosFinais.length > 0
-    ? `Resuming analysis... ${resultadosFinais.length}/${total}`
-    : `Starting analysis... 0/${total}`);
+  mostrarPainelProgresso('running');
+  const atualizarProgresso = texto => atualizarPainelProgresso(texto, resultadosFinais.length, total);
 
   for (const lote of lotes) {
     const primeiro = resultadosFinais.length + 1;
     const ultimo = resultadosFinais.length + lote.length;
     let resultadosLote;
+
+    // Cada lote leva dezenas de segundos: dizer quais artigos estão na LLM
+    // agora é o que mostra que a análise está andando.
+    atualizarProgresso(primeiro === ultimo
+      ? `Analyzing article ${primeiro} of ${total}...`
+      : `Analyzing articles ${primeiro}–${ultimo} of ${total}...`);
 
     try {
       const res = await fetch('/api/articles/analisar', {
@@ -322,18 +310,35 @@ async function analisarEmLotes(
 
     resultadosFinais.push(...resultadosLote);
     onLoteConcluido(resultadosFinais);
-    atualizarProgresso(`Analyzing articles... ${resultadosFinais.length}/${total}`);
   }
 
-  atualizarProgresso(`Analysis finished: ${total}/${total}`);
-  setTimeout(() => {
-    if (progressContainer) {
-      progressContainer.style.display = 'none';
-    }
-    statusEl.style.display = 'none';
-  }, 800);
+  mostrarPainelProgresso('done');
+  atualizarProgresso('Analysis finished');
+  setTimeout(esconderPainelProgresso, 1500);
 
   return resultadosFinais;
+}
+
+// Painel de progresso da análise: escondido até a primeira análise, com um
+// estado por vez (running, done, error) que troca ícone e cor da barra.
+function mostrarPainelProgresso(estado) {
+  const painel = document.getElementById('analysisProgress');
+  painel.classList.remove('d-none', 'is-running', 'is-done', 'is-error');
+  painel.classList.add(`is-${estado}`);
+}
+
+function esconderPainelProgresso() {
+  // Uma análise nova pode ter começado nesse meio-tempo.
+  const painel = document.getElementById('analysisProgress');
+  if (painel.classList.contains('is-done')) painel.classList.add('d-none');
+}
+
+function atualizarPainelProgresso(texto, feitos, total) {
+  const percentual = total ? Math.round((feitos / total) * 100) : 0;
+  document.getElementById('statusAnalise').textContent = texto;
+  document.getElementById('progressoContagem').textContent = `${feitos}/${total} · ${percentual}%`;
+  document.getElementById('progressoAnalise').style.width = `${percentual}%`;
+  document.getElementById('progressoTrilha').setAttribute('aria-valuenow', percentual);
 }
 
 function exibirResultados(resultados) {
@@ -348,13 +353,9 @@ function exibirResultados(resultados) {
 }
 
 function mostrarErroAnalise(mensagem) {
-  const statusEl = document.getElementById('statusAnalise');
-  statusEl.style.display = '';
-  statusEl.style.whiteSpace = 'pre-line';
-  statusEl.classList.remove('text-muted');
-  statusEl.classList.add('text-danger');
+  mostrarPainelProgresso('error');
   // textContent: a mensagem pode trazer texto vindo do provedor da LLM.
-  statusEl.textContent = mensagem;
+  document.getElementById('statusAnalise').textContent = mensagem;
 }
 
 document.getElementById('criteriosForm').addEventListener('submit', async (e) => {
