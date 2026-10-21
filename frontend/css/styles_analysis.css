@@ -192,6 +192,31 @@ main.container.dashboard-container {
   padding: 2px 0;
 }
 
+.metric-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.metric-list::-webkit-scrollbar-track {
+  background: rgba(11, 107, 67, 0.12);
+  border-radius: 4px;
+}
+
+.metric-list::-webkit-scrollbar-thumb {
+  background-color: #0b6b43;
+  border-radius: 4px;
+}
+
+.metric-list::-webkit-scrollbar-thumb:hover {
+  background-color: #095735;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .metric-list {
+    scrollbar-width: thin;
+    scrollbar-color: #0b6b43 rgba(11, 107, 67, 0.12);
+  }
+}
+
 .authors-card {
   min-height: 115px;
   border: 1px solid var(--sm-border);
@@ -252,6 +277,14 @@ main.container.dashboard-container {
 .select-all-control input {
   margin: 0;
   accent-color: var(--sm-green);
+}
+
+.chart-description {
+  margin: -6px 0 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #374151;
+  text-align: left;
 }
 
 /* Nuvem de palavras */
@@ -639,6 +672,14 @@ main.container.dashboard-container {
   max-width: 100%;
   height: auto;
   overflow: visible;
+}
+
+/* A nuvem é só leitura: sem hover nem seleção de texto */
+#word-cloud text {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 }
 
 /* Não deixar a nuvem ultrapassar a largura do painel */
