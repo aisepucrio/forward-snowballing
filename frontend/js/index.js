@@ -741,33 +741,6 @@ function buscarArtigoNavbar() {
   if (input) input.focus();
 }
 
-// O pipeline já calcula `warning` e `partial_result` quando uma das fontes
-// falha (Semantic Scholar fora do ar, editora bloqueando a lista de
-// referências, work IDs que o OpenAlex não resolve mais), mas até aqui esses
-// campos morriam no JSON: a tela mostrava só os números. O efeito era o pior
-// possível numa revisão sistemática — a mesma busca devolvia 19 ou 132
-// citações dependendo do dia, sem nada na interface indicando que o resultado
-// tinha vindo de uma fonte só.
-function construirAvisoResultadoParcial(artigo) {
-  // O card "All seeds" já lista o status de cada seed; aviso ali é redundante.
-  if (!artigo || artigo.isSummary) return '';
-
-  let texto = null;
-  if (artigo.partial_result || artigo.warning) {
-    // O texto detalhado do pipeline (quais fontes falharam, quantos IDs não
-    // resolveram) continua no JSON, no log e nos testes — não na tela. Aqui só
-    // o que muda a leitura do resultado: os números podem estar incompletos.
-    texto = "Some sources didn't respond — the counts below may be incomplete.";
-  }
-
-  if (!texto) return '';
-  return `
-    <div class="alert alert-warning d-flex gap-2 mb-3 py-2 px-3" role="alert" style="font-size:0.85rem;">
-      <i class="bi bi-exclamation-triangle-fill flex-shrink-0" style="line-height:1.4;"></i>
-      <div>${escapeHtml(texto)}</div>
-    </div>
-  `;
-}
 
 function construirAbasSeeds() {
   const seeds = window.seedsInfo;
@@ -943,7 +916,6 @@ function mostrarResultado(artigo, modo = 'forward') {
   else conteudo = conteudoCardSeed(artigo);
 
   const cardHTML = `
-  ${construirAvisoResultadoParcial(artigo)}
   <div class="table-wrapper mb-4">
     <div class="table-topbar">
       <div class="table-info seed-tabs-info">
