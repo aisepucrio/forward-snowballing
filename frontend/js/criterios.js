@@ -52,6 +52,10 @@ window.addEventListener('load', () => {
   // antes de navegar pra cá, então lemos de lá.
   window.currentSearchId = localStorage.getItem('currentSearchId') || null;
 
+  // Os artigos chegam com found_via_seeds desde a busca; a tag "Seed N" ajuda
+  // a saber de qual seed veio cada um na hora de aplicar os critérios.
+  window.mostrarTagsSeed = true;
+
   mostrarTabelaArtigos(artigosIncluidos);
 });
 

@@ -375,6 +375,11 @@
   color: #322c77;
 }
 
+.paper-tag.seed-origin-tag {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
 
 .btn-export {
   border: none;

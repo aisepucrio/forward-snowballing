@@ -787,10 +787,6 @@ body.busca-realizada #seedBuilder {
   font-size: 12px;
 }
 
-.paper-tag.seed-origin-tag {
-  background: #eef2ff;
-  color: #4338ca;
-}
 
 @media (max-width: 576px) {
   .seed-summary-name {

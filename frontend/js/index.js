@@ -614,7 +614,7 @@ function aplicarResultadoBusca(resultado) {
   // Com uma seed só não há o que alternar: o card é o da própria seed, como
   // antes, sem barra de abas.
   window.activeSeedTab = window.seedsInfo.length > 1 ? 'all' : 0;
-  window.mostrarTagsSeed = window.seedsInfo.length > 1;
+  window.mostrarTagsSeed = true;
 
   // Save Research State depende do banco (search_id); com o banco desligado
   // o botão não faz sentido.
@@ -1092,11 +1092,11 @@ function baixarCitationsCSV() {
   URL.revokeObjectURL(url);
 }
 
-// "S1: Título da seed; S3: ..." — de quais seeds o estudo veio.
+// "Seed 1: Título da seed; Seed 3: ..." — de quais seeds o estudo veio.
 function seedsDoEstudo(cit) {
   const seeds = window.seedsInfo || [];
   return (cit.found_via_seeds || [])
-    .map(i => `S${i + 1}: ${(seeds[i] && (seeds[i].title || seeds[i].input_value)) || '-'}`)
+    .map(i => `Seed ${i + 1}: ${(seeds[i] && (seeds[i].title || seeds[i].input_value)) || '-'}`)
     .join('; ');
 }
 
