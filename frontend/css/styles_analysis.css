@@ -689,3 +689,101 @@ main.container.dashboard-container {
   white-space: normal;
   border-radius: 8px;
 }
+
+
+/* Seed Papers: filters inside the card */
+.seed-papers-wrapper {
+  overflow: hidden;
+}
+
+.seed-papers-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border-bottom: 1px solid #e8edf3;
+}
+
+.seed-papers-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+#seed-selector.seed-selector {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#seed-selector .seed-option {
+  display: inline-flex;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 8px;
+  white-space: normal;
+  text-align: left;
+}
+
+.seed-papers-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.seed-papers-scroll .custom-table {
+  margin-bottom: 0;
+}
+
+.seed-papers-scroll .custom-table td {
+  padding: 16px 20px;
+}
+
+@media (max-width: 576px) {
+  .seed-papers-header {
+    padding: 16px;
+  }
+
+  .seed-papers-scroll {
+    max-height: 320px;
+  }
+
+  .seed-papers-scroll .custom-table td {
+    padding: 14px 16px;
+  }
+}
+
+/* Compact seed filter menu */
+.seed-papers-header {
+  padding: 0;
+  gap: 0;
+}
+
+.seed-papers-title {
+  padding: 16px 20px 10px;
+  margin: 0;
+}
+
+#seed-selector.seed-selector {
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid #e8edf3;
+}
+
+#seed-selector .seed-option {
+  border-radius: 6px 6px 0 0;
+  margin-bottom: -1px;
+  padding: 8px 18px;
+  min-width: 60px;
+  justify-content: center;
+}
+
+.seed-papers-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

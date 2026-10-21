@@ -20,7 +20,8 @@
 
     // Uma linha por seed que deu resultado na busca. Os gráficos abaixo usam
     // todos os estudos incluídos juntos, sem separar por seed.
-    function mostrarResultado(seeds) {
+    
+function mostrarResultado(seeds) {
   const resultadoEl = document.getElementById('resultado');
   if (!resultadoEl) return;
 
@@ -33,7 +34,7 @@
     return;
   }
 
-  const linhas = lista.map(artigo => {
+  const artigosHTML = lista.map(artigo => {
     const authors = formatAuthors(artigo.authors);
     const doiToShow =
       artigo.resolved_doi ||
@@ -52,14 +53,15 @@
             ${escapeHtml(artigo.title || '-')}
           </div>
 
-          ${escapeHtml(authors)}
+          <div class="paper-authors">
+            ${escapeHtml(authors)}
+          </div>
 
           <div class="paper-meta">
             <div class="paper-tags">
               <span class="paper-tag">
                 ${escapeHtml(artigo.year || '-')}
               </span>
-
               <span class="paper-tag venue-tag">
                 ${escapeHtml(artigo.venue || '-')}
               </span>
@@ -71,24 +73,87 @@
   }).join('');
 
   resultadoEl.innerHTML = `
-    <div class="table-wrapper mb-4">
-      <div class="table-topbar">
-        <div class="table-info">
-          <span class="table-title">
-            ${lista.length > 1
-              ? `Seed Papers (${lista.length})`
-              : 'Seed Paper'}
-          </span>
+    <div class="table-wrapper seed-papers-wrapper">
+      <div class="seed-papers-header">
+        <h2 class="seed-papers-title">
+          Seed Papers (${lista.length})
+        </h2>
+
+        <div
+          id="seed-selector"
+          class="seed-selector"
+          role="group"
+          aria-label="Filter seed papers">
         </div>
       </div>
 
-      <table class="custom-table">
-        <tbody>${linhas}</tbody>
-      </table>
+      <div class="seed-papers-scroll">
+        <table class="custom-table">
+          <tbody>${artigosHTML}</tbody>
+        </table>
+      </div>
     </div>
   `;
+
+  renderizarFiltrosAnalise(sementesDisponiveis);
 }
-    const totalArtigosEl = document.getElementById('total-artigos');
+
+
+
+
+
+function atualizarListaSeedPapers(seeds) {
+  const tbody = document.querySelector(
+    '#resultado .seed-papers-scroll .custom-table tbody'
+  );
+
+  const titulo = document.querySelector(
+    '#resultado .seed-papers-title'
+  );
+
+  if (!tbody || !titulo) return;
+
+  titulo.textContent = `Seed Papers (${seeds.length})`;
+
+  tbody.innerHTML = seeds.map(artigo => {
+    const authors = formatAuthors(artigo.authors);
+    const doiToShow =
+      artigo.resolved_doi ||
+      artigo.input_doi ||
+      artigo.doi ||
+      '-';
+
+    return `
+      <tr>
+        <td>
+          <div class="paper-doi">
+            DOI: ${escapeHtml(doiToShow)}
+          </div>
+          <div class="paper-title">
+            ${escapeHtml(artigo.title || '-')}
+          </div>
+          <div class="paper-authors">
+            ${escapeHtml(authors)}
+          </div>
+          <div class="paper-meta">
+            <div class="paper-tags">
+              <span class="paper-tag">
+                ${escapeHtml(artigo.year || '-')}
+              </span>
+              <span class="paper-tag venue-tag">
+                ${escapeHtml(artigo.venue || '-')}
+              </span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+
+const totalArtigosEl = document.getElementById('total-artigos');
     const totalVenueEl = document.getElementById('total-venue');
 
     function normalizeArticles(data) {
@@ -182,7 +247,7 @@ function renderizarFiltrosAnalise(seeds) {
   sementesDisponiveis.forEach((seed, index) => {
     adicionarBotao(
       index,
-      `S${index + 1}: ${seed.title || `Seed ${index + 1}`}`
+      `S${index + 1}`
     );
   });
 
@@ -217,14 +282,14 @@ function aplicarFiltrosAnalise() {
   // Atualiza os indicadores, gráficos e a nuvem de palavras.
   atualizarResumoEgraficos(artigosFiltrados);
 
-  // Atualiza também o card Seed Papers.
+    // Atualiza a lista de seeds sem recriar os filtros.
   const seedsParaMostrar = seedSelecionada === 'all'
     ? sementesDisponiveis
     : sementesDisponiveis.filter(
         (_, index) => String(index) === seedSelecionada
       );
 
-  mostrarResultado(seedsParaMostrar);
+  atualizarListaSeedPapers(seedsParaMostrar);
 
   const totalEl = document.getElementById('total-artigos');
   if (totalEl) {
