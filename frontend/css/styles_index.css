@@ -799,17 +799,21 @@ body.busca-realizada #seedBuilder {
   max-width: 100%;
 }
 
-.seed-type-toggle {
-  flex-shrink: 0;
-}
-
-.seed-type-toggle .btn,
-#addSeedBtn {
-  white-space: nowrap;
+/* Compensa o botão "+" (40px + gap de 8px) para o campo continuar alinhado
+   com a lista de seeds logo abaixo. */
+#seedBuilder #searchForm {
+  padding-left: 48px;
 }
 
 #addSeedBtn {
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Citations/References só faz sentido depois que há resultado. */

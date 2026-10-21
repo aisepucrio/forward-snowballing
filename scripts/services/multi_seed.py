@@ -64,7 +64,7 @@ def parse_seeds(raw_seeds):
     """
     Valida a lista [{type, value}] vinda da interface e devolve seeds limpas.
 
-    O tipo é o que o usuário escolheu no seletor — não há adivinhação. Um DOI
+    O tipo vem pronto da interface, que o decide pelo formato do texto. Um DOI
     sem formato de DOI é erro de entrada, não "tentar como título".
     Levanta ValueError com mensagem para o usuário.
     """

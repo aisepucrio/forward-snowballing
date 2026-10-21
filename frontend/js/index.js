@@ -236,8 +236,8 @@ function extrairDoi(value) {
 // ---------------------------------------------------------------------------
 // Seeds de entrada
 //
-// O usuário monta uma lista de seeds, cada uma com o tipo escolhido no
-// seletor DOI | Title — não há adivinhação pelo formato. A lista inteira vai
+// O usuário monta uma lista de seeds num campo só; o tipo de cada uma (DOI ou
+// título) sai do formato do texto, por looksLikeDOI. A lista inteira vai
 // numa busca só (POST /api/articles/search/multi), que devolve citations e
 // references de cada seed e a união das listas sem duplicatas.
 // ---------------------------------------------------------------------------
@@ -247,9 +247,14 @@ const SEED_STATUS_OK = ['ok'];
 
 window.seedInputs = [];
 
-function tipoSeedSelecionado() {
-  const radio = document.querySelector('input[name="seedType"]:checked');
-  return radio ? radio.value : 'doi';
+// Guarda só o DOI (10.xxxx/...): looksLikeDOI aceita links como
+// https://dx.doi.org/10..., que o normalize_doi do Python não limpa — e uma
+// seed com DOI inválido derruba a busca inteira no parse_seeds.
+function seedDoTexto(texto) {
+  const value = String(texto || '').trim();
+  return looksLikeDOI(value)
+    ? { type: 'doi', value: extrairDoi(value) }
+    : { type: 'title', value };
 }
 
 function chaveSeed(type, value) {
@@ -292,15 +297,7 @@ function adicionarSeed() {
     return false;
   }
 
-  const type = tipoSeedSelecionado();
-  if (type === 'doi' && !looksLikeDOI(value)) {
-    mostrarErroSeed(`"${value}" is not a DOI. Choose "Title" to search by title.`);
-    return false;
-  }
-  // Guarda só o DOI (10.xxxx/...): looksLikeDOI aceita links como
-  // https://dx.doi.org/10..., que o normalize_doi do Python não limpa — e uma
-  // seed com DOI inválido derruba a busca inteira no parse_seeds.
-  const seedValue = type === 'doi' ? extrairDoi(value) : value;
+  const { type, value: seedValue } = seedDoTexto(value);
 
   const chave = chaveSeed(type, seedValue);
   if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
@@ -326,14 +323,6 @@ function removerSeed(index) {
   mostrarErroSeed('');
   salvarSeedsLocal();
   renderListaSeeds();
-}
-
-function atualizarPlaceholderSeed() {
-  const input = document.getElementById('searchInput');
-  if (!input) return;
-  input.placeholder = tipoSeedSelecionado() === 'doi'
-    ? 'e.g., 10.1145/3025453.3025795'
-    : 'e.g., Guidelines for snowballing in systematic literature studies';
 }
 
 function renderListaSeeds() {
@@ -648,9 +637,8 @@ async function buscarArtigo() {
     // Se o texto já está na lista (ex.: veio da busca da navbar), não é erro:
     // limpa o campo e busca a lista como está.
     if (input && input.value.trim()) {
-      const tipo = tipoSeedSelecionado();
-      const valor = tipo === 'doi' ? extrairDoi(input.value) : input.value.trim();
-      const chave = chaveSeed(tipo, valor);
+      const { type, value } = seedDoTexto(input.value);
+      const chave = chaveSeed(type, value);
       if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
         input.value = '';
       } else if (!adicionarSeed()) {
@@ -1419,16 +1407,9 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarBotaoSalvar();
 
   carregarSeedsLocal();
-  document.querySelectorAll('input[name="seedType"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      atualizarPlaceholderSeed();
-      mostrarErroSeed('');
-    });
-  });
-  atualizarPlaceholderSeed();
 
   // analysis.html manda a busca da navbar para cá em ?search=: o texto vai
-  // para o campo e o usuário escolhe o tipo antes de adicionar.
+  // para o campo, pronto para adicionar.
   const buscaRecebida = new URLSearchParams(window.location.search).get('search');
   const inputSeed = document.getElementById('searchInput');
   if (buscaRecebida && inputSeed) inputSeed.value = buscaRecebida;
