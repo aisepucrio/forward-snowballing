@@ -5,6 +5,11 @@ const { PythonRunner } = require('./pythonRunner');
 // e não deve segurar a requisição indefinidamente se o banco não responder.
 const FLAG_UPDATE_TIMEOUT_MS = 30 * 1000;
 
+// Mesmo padrão do Python (SNOWMAP_MAX_SEEDS); o Python revalida.
+const MAX_SEEDS = Number(process.env.SNOWMAP_MAX_SEEDS) > 0 ? Number(process.env.SNOWMAP_MAX_SEEDS) : 20;
+// Com 20 seeds a união pode passar dos 10 MB padrão do PythonRunner.
+const MULTI_MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+
 class ArticleSearchService {
   constructor({ pythonRunner = new PythonRunner({ defaultTimeoutMs: 0 }) } = {}) {
     this.pythonRunner = pythonRunner;
@@ -43,6 +48,48 @@ class ArticleSearchService {
 
     writeOutput(sessionId, data);
     return data;
+  }
+
+  // Busca com várias seeds (run_multi.py). Cada seed traz citations e
+  // references, como a busca de uma seed só; o resultado junta as listas sem
+  // duplicatas e diz de qual seed veio cada estudo. A validação fina (formato
+  // do DOI, seeds repetidas) fica no Python, que é quem resolve a seed — aqui
+  // só se barra o que não deveria nem iniciar um processo.
+  async searchMulti({ sessionId, seeds, abortEmitter = null, onProgress = null }) {
+    if (!Array.isArray(seeds) || seeds.length === 0) {
+      throw this.badRequest('Informe ao menos uma seed.');
+    }
+    if (seeds.length > MAX_SEEDS) {
+      throw this.badRequest(`Máximo de ${MAX_SEEDS} seeds por busca.`);
+    }
+
+    const cleanSeeds = seeds.map((seed, i) => {
+      const type = String(seed?.type || '').trim().toLowerCase();
+      const value = this.normalizeInput(seed?.value);
+      if (!['doi', 'title'].includes(type)) {
+        throw this.badRequest(`Seed ${i + 1}: tipo deve ser 'doi' ou 'title'.`);
+      }
+      if (!value) {
+        throw this.badRequest(`Seed ${i + 1}: valor vazio.`);
+      }
+      return { type, value };
+    });
+
+    const data = await this.pythonRunner.runJsonScript('run_multi.py', {
+      input: { seeds: cleanSeeds },
+      abortEmitter,
+      onStderrLine: onProgress,
+      maxOutputBytes: MULTI_MAX_OUTPUT_BYTES,
+    });
+
+    writeOutput(sessionId, data);
+    return data;
+  }
+
+  badRequest(message) {
+    const err = new Error(message);
+    err.statusCode = 400;
+    return err;
   }
 
   async updateFlag({ searchId, paperId, selectedFirstPage, excludedDuplicate, duplicateOf }) {

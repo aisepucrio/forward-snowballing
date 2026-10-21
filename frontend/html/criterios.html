@@ -30,30 +30,46 @@ automatically screen abstracts and provide decision support.</h3>
 
   <div class="criteria-container">
     <!-- INCLUSION -->
-    <div class="criteria-box">
-      <label for="inclusao" class="form-label">
-        <i class="bi bi-check-circle label-icon inclusion"></i>
-        INCLUSION CRITERIA
-      </label>
-
-      <div id="inclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
-        <input id="inclusaoInput" type="text" class="border-0 flex-grow-1"
-          placeholder="Enter inclusion criteria..." style="outline:none;">
+    <section class="criteria-box criteria-inclusion">
+      <div class="criteria-box-header">
+        <label for="inclusaoInput" class="criteria-title">
+          <i class="bi bi-check-circle"></i>
+          Inclusion criteria
+        </label>
+        <span id="inclusaoCount" class="criteria-count">0</span>
       </div>
-    </div>
+
+      <ol id="inclusaoBox" class="criteria-list" aria-live="polite"></ol>
+      <p class="criteria-empty">No inclusion criteria yet.</p>
+
+      <div class="criteria-add">
+        <textarea id="inclusaoInput" rows="1" placeholder="Describe an inclusion criterion..."></textarea>
+        <button type="button" class="criteria-add-btn" data-criteria="inclusao" aria-label="Add inclusion criterion" title="Add criterion">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
+    </section>
 
     <!-- EXCLUSION -->
-    <div class="criteria-box">
-      <label for="exclusao" class="form-label">
-        <i class="bi bi-x-circle label-icon exclusion"></i>
-        EXCLUSION CRITERIA
-      </label>
-
-      <div id="exclusaoBox" class="form-control d-flex flex-wrap gap-2" style="min-height: 80px;">
-        <input id="exclusaoInput" type="text" class="border-0 flex-grow-1"
-          placeholder="Enter exclusion criteria..." style="outline:none;">
+    <section class="criteria-box criteria-exclusion">
+      <div class="criteria-box-header">
+        <label for="exclusaoInput" class="criteria-title">
+          <i class="bi bi-x-circle"></i>
+          Exclusion criteria
+        </label>
+        <span id="exclusaoCount" class="criteria-count">0</span>
       </div>
-    </div>
+
+      <ol id="exclusaoBox" class="criteria-list" aria-live="polite"></ol>
+      <p class="criteria-empty">No exclusion criteria yet.</p>
+
+      <div class="criteria-add">
+        <textarea id="exclusaoInput" rows="1" placeholder="Describe an exclusion criterion..."></textarea>
+        <button type="button" class="criteria-add-btn" data-criteria="exclusao" aria-label="Add exclusion criterion" title="Add criterion">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
+    </section>
 
   </div>
 
@@ -65,17 +81,19 @@ automatically screen abstracts and provide decision support.</h3>
 
 </form>
 
-    <div class="mt-4">
-      <p id="statusAnalise" class="text-muted mb-2"></p>
-      <div class="progress" style="height: 24px;">
-        <div
-          id="progressoAnalise"
-          class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-          role="progressbar"
-          style="width: 0%;"
-        >
-          0%
-        </div>
+    <div id="analysisProgress" class="analysis-progress d-none" role="status" aria-live="polite">
+      <div class="analysis-progress-head">
+        <span class="analysis-progress-icon">
+          <span class="spinner-border spinner-border-sm icon-running" aria-hidden="true"></span>
+          <i class="bi bi-check-circle-fill icon-done" aria-hidden="true"></i>
+          <i class="bi bi-exclamation-circle-fill icon-error" aria-hidden="true"></i>
+        </span>
+        <p id="statusAnalise" class="analysis-progress-status"></p>
+        <span id="progressoContagem" class="analysis-progress-count"></span>
+      </div>
+      <div id="progressoTrilha" class="analysis-progress-track" role="progressbar"
+        aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="progressoAnalise" class="analysis-progress-fill"></div>
       </div>
     </div>
     <div id="tabelaArtigosContainer" class="mt-4">

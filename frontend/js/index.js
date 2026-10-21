@@ -228,49 +228,207 @@ function looksLikeDOI(value) {
   return /^10\.\d{4,9}\/\S+$/i.test(text) || /doi\.org\/10\.\d{4,9}\/\S+/i.test(text);
 }
 
-function buildSearchURL(inputValue, type) {
-  const value = inputValue.trim();
-  const params = new URLSearchParams();
-
-  if (looksLikeDOI(value)) {
-    params.set('doi', value);
-    params.set('title', '-');
-  } else {
-    params.set('doi', '-');
-    params.set('title', value);
-  }
-
-  params.set('type', type);
-  return `/api/articles/search?${params.toString()}`;
+function extrairDoi(value) {
+  const match = String(value || '').trim().match(/10\.\d{4,9}\/\S+$/i);
+  return match ? match[0] : String(value || '').trim();
 }
 
-// O card do seed article ("Seed Paper Analysis") mostra Citations/References
-// a partir de window.seedData.citations_retrieved / references_retrieved —
-// um snapshot estático tirado direto da busca original. Remover duplicatas
-// no popup só mexe em window.citationsData (a lista da tabela abaixo); sem
-// isso aqui, o card do seed nunca refletia a remoção, mesmo com a tabela já
-// atualizada.
-function sincronizarContagemSeed() {
-  if (!window.seedData) return;
+// ---------------------------------------------------------------------------
+// Seeds de entrada
+//
+// O usuário monta uma lista de seeds num campo só; o tipo de cada uma (DOI ou
+// título) sai do formato do texto, por looksLikeDOI. A lista inteira vai
+// numa busca só (POST /api/articles/search/multi), que devolve citations e
+// references de cada seed e a união das listas sem duplicatas.
+// ---------------------------------------------------------------------------
+const MAX_SEEDS = 20;
+const SEEDS_STORAGE_KEY = 'snowmapSeeds';
+const SEED_STATUS_OK = ['ok'];
 
-  const modeInput = document.querySelector('input[name="snowballMode"]:checked');
-  const mode = modeInput ? modeInput.value : 'forward';
-  const count = (window.citationsData || []).length;
+window.seedInputs = [];
 
-  if (mode === 'forward') {
-    window.seedData.citations_retrieved = count;
-  } else {
-    window.seedData.references_retrieved = count;
+// Guarda só o DOI (10.xxxx/...): looksLikeDOI aceita links como
+// https://dx.doi.org/10..., que o normalize_doi do Python não limpa — e uma
+// seed com DOI inválido derruba a busca inteira no parse_seeds.
+function seedDoTexto(texto) {
+  const value = String(texto || '').trim();
+  return looksLikeDOI(value)
+    ? { type: 'doi', value: extrairDoi(value) }
+    : { type: 'title', value };
+}
+
+function chaveSeed(type, value) {
+  return type === 'doi' ? `doi:${normalizeDoi(value)}` : `title:${normalizeTitleJs(value)}`;
+}
+
+function mostrarErroSeed(mensagem) {
+  const el = document.getElementById('seedError');
+  if (el) el.textContent = mensagem || '';
+}
+
+function salvarSeedsLocal() {
+  try {
+    localStorage.setItem(SEEDS_STORAGE_KEY, JSON.stringify(window.seedInputs));
+  } catch {
+    // Sem localStorage a lista só não sobrevive ao recarregar a página.
+  }
+}
+
+function carregarSeedsLocal() {
+  try {
+    const salvas = JSON.parse(localStorage.getItem(SEEDS_STORAGE_KEY) || '[]');
+    if (Array.isArray(salvas)) {
+      window.seedInputs = salvas
+        .filter(s => s && ['doi', 'title'].includes(s.type) && typeof s.value === 'string' && s.value.trim())
+        .slice(0, MAX_SEEDS);
+    }
+  } catch {
+    window.seedInputs = [];
+  }
+}
+
+// Devolve true quando a seed entrou na lista (buscarArtigo usa isso para
+// não buscar com um valor digitado que acabou recusado).
+function adicionarSeed() {
+  const input = document.getElementById('searchInput');
+  const value = (input ? input.value : '').trim();
+  if (!value) {
+    mostrarErroSeed('Type a DOI or a title first.');
+    return false;
   }
 
-  mostrarResultado(window.seedData, mode);
+  const { type, value: seedValue } = seedDoTexto(value);
+
+  const chave = chaveSeed(type, seedValue);
+  if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
+    mostrarErroSeed('This seed is already in the list.');
+    return false;
+  }
+  if (window.seedInputs.length >= MAX_SEEDS) {
+    mostrarErroSeed(`Up to ${MAX_SEEDS} seeds per search.`);
+    return false;
+  }
+
+  window.seedInputs.push({ type, value: seedValue });
+  input.value = '';
+  mostrarErroSeed('');
+  salvarSeedsLocal();
+  renderListaSeeds();
+  input.focus();
+  return true;
+}
+
+function removerSeed(index) {
+  window.seedInputs.splice(index, 1);
+  mostrarErroSeed('');
+  salvarSeedsLocal();
+  renderListaSeeds();
+}
+
+function renderListaSeeds() {
+  const lista = document.getElementById('seedList');
+  const contador = document.getElementById('seedCounter');
+  const addBtn = document.getElementById('addSeedBtn');
+  const searchBtn = document.getElementById('searchSeedsBtn');
+  const total = window.seedInputs.length;
+
+  if (lista) {
+    lista.innerHTML = window.seedInputs.map((seed, i) => `
+      <div class="seed-chip" title="${escapeHtml(seed.value)}">
+        <span class="seed-chip-index">${i + 1}</span>
+        <span class="seed-chip-type">${seed.type === 'doi' ? 'DOI' : 'Title'}</span>
+        <span class="seed-chip-value">${escapeHtml(seed.value)}</span>
+        <button type="button" class="seed-chip-remove" onclick="removerSeed(${i})" aria-label="Remove seed ${i + 1}">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  if (contador) contador.textContent = `${total}/${MAX_SEEDS} seeds`;
+  if (addBtn) addBtn.disabled = total >= MAX_SEEDS;
+  if (searchBtn) {
+    searchBtn.innerHTML = total > 1
+      ? `<i class="bi bi-search"></i> Search ${total} seeds`
+      : '<i class="bi bi-search"></i> Search';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Abas de seed
+//
+// window.forwardData / window.backwardData guardam a união (aba "All seeds"),
+// um objeto por estudo. As abas de cada seed reaproveitam OS MESMOS objetos
+// (pelas chaves citation_keys / reference_keys), então incluir/excluir um
+// estudo numa aba vale em todas, e trocar de aba não perde nada.
+// ---------------------------------------------------------------------------
+function obterModoAtual() {
+  const radio = document.querySelector('input[name="snowballMode"]:checked');
+  return radio ? radio.value : 'forward';
+}
+
+function seedTemResultado(seed) {
+  return !!seed && SEED_STATUS_OK.includes(seed.status);
+}
+
+function listaDaAba(mode, aba = window.activeSeedTab) {
+  const base = mode === 'forward' ? window.forwardData : window.backwardData;
+  if (!Array.isArray(base)) return [];
+
+  let lista = base;
+  if (aba !== 'all' && aba !== null && aba !== undefined && Array.isArray(window.seedsInfo)) {
+    const seed = window.seedsInfo[aba];
+    const chaves = seed ? (mode === 'forward' ? seed.citation_keys : seed.reference_keys) : [];
+    const porChave = mode === 'forward' ? window.forwardByKey : window.backwardByKey;
+    lista = (chaves || []).map(chave => porChave && porChave.get(chave)).filter(Boolean);
+  }
+
+  // Duplicata removida na revisão manual some de todas as abas.
+  return lista.filter(item => !item.removedAsDuplicate);
+}
+
+function objetoDoCardAtual() {
+  if (window.activeSeedTab === 'all') return window.allSeedsSummary || null;
+  return (window.seedsInfo || [])[window.activeSeedTab] || null;
+}
+
+function selecionarAbaSeed(aba) {
+  window.activeSeedTab = aba === 'all' ? 'all' : Number(aba);
+  trocarModo();
+}
+
+// Todos os estudos incluídos, de todas as abas e das duas direções, uma vez
+// cada — é o que segue para o dashboard e para a triagem, sem distinção de
+// seed.
+function estudosIncluidos() {
+  const vistos = new Set();
+  const incluidos = [];
+  [...(window.forwardData || []), ...(window.backwardData || [])].forEach(item => {
+    if (item.removedAsDuplicate || item.selecionado !== 'incluir') return;
+    const chave = item.study_key || item.paperId;
+    if (vistos.has(chave)) return;
+    vistos.add(chave);
+    incluidos.push(item);
+  });
+  return incluidos;
+}
+
+// O card mostra Citations/References da aba ativa. Remover duplicatas no
+// popup só mexe em window.citationsData (a lista da tabela); sem isso aqui, o
+// card nunca refletia a remoção, mesmo com a tabela já atualizada.
+function sincronizarContagemSeed() {
+  const card = objetoDoCardAtual();
+  if (!card) return;
+
+  card.citations_retrieved = listaDaAba('forward').length;
+  card.references_retrieved = listaDaAba('backward').length;
+  window.seedData = card;
+
+  mostrarResultado(card, obterModoAtual());
 }
 
 function trocarModo() {
-  const mode = document.querySelector('input[name="snowballMode"]:checked').value;
-  const list = mode === 'forward'
-    ? (window.forwardData || [])
-    : (window.backwardData || []);
+  const mode = obterModoAtual();
 
   document.querySelector('#citationsList .table-title').textContent =
     mode === 'forward' ? 'Cited By' : 'References';
@@ -278,18 +436,15 @@ function trocarModo() {
   const citationsSectionEl = document.getElementById('citationsList');
   if (citationsSectionEl) citationsSectionEl.style.display = 'block';
 
-  const mappedList = list.map((c, i) => ({
-    ...c,
-    paperId: `${c.paperId || c.doi || 'item'}-${i}`,
-    selecionado: c.selecionado || null,
-    abstractExpanded: false,
-    keywordsExpanded: false
-  }));
-  window.rawCitationsData = mappedList;
-  window.citationsData = [...mappedList];
+  const lista = listaDaAba(mode);
+  window.rawCitationsData = lista;
+  window.citationsData = [...lista];
   window.allCitationsData = window.citationsData;
   window.dedupApplied = false;
-  window.dedupRemovedHistory = []; // reset on new search, so old removals don't bleed into a new dataset
+  // O histórico de duplicatas removidas é por direção e sobrevive à troca de
+  // aba (a remoção vale em todas); só uma busca nova o zera.
+  window.dedupHistoryByMode = window.dedupHistoryByMode || {};
+  window.dedupRemovedHistory = window.dedupHistoryByMode[mode] || [];
 
   // Citations e References são populações diferentes: os autores, venues e anos
   // de uma não valem para a outra. Zerar os filtros e reconstruir a lista aberta
@@ -307,11 +462,10 @@ function trocarModo() {
   const dedupBtn = document.getElementById('dedupBtn');
   if (dedupBtn) dedupBtn.innerHTML = '<i class="bi bi-filter"></i> Remove Duplicates';
 
-  if (window.seedData) {
-    mostrarResultado(window.seedData, mode);
-  }
+  sincronizarContagemSeed();
 
   mostrarCitacoes(window.citationsData);
+  atualizarBotaoIncludeAll();
 }
 
 // ---------------------------------------------------------------------------
@@ -385,8 +539,11 @@ async function* lerLinhasNdjson(response) {
   }
 }
 
-async function buscarComProgresso(url) {
-  const res = await fetch(url, { headers: { Accept: 'application/x-ndjson' } });
+async function buscarComProgresso(url, opcoes = {}) {
+  const res = await fetch(url, {
+    ...opcoes,
+    headers: { ...(opcoes.headers || {}), Accept: 'application/x-ndjson' },
+  });
 
   if (!res.ok) throw new Error('Search failed');
 
@@ -408,26 +565,107 @@ async function buscarComProgresso(url) {
   return resultado;
 }
 
+function prepararEstudos(lista) {
+  return (lista || []).map((c, i) => ({
+    ...c,
+    // study_key (DOI ou título normalizado) é único por direção e é a chave
+    // que liga as abas de seed à união.
+    paperId: c.study_key || `${c.paperId || c.doi || 'item'}-${i}`,
+    selecionado: c.selecionado || null,
+    abstractExpanded: false,
+    keywordsExpanded: false
+  }));
+}
+
+function aplicarResultadoBusca(resultado) {
+  window.currentSearchIdForward = resultado.search_id || null;
+  window.currentSearchIdBackward = resultado.search_id_backward || null;
+  window.paperIdMap = resultado.paper_id_map || {};
+
+  window.forwardData = prepararEstudos(resultado.citations);
+  window.backwardData = prepararEstudos(resultado.references);
+  window.forwardByKey = new Map(window.forwardData.map(item => [item.paperId, item]));
+  window.backwardByKey = new Map(window.backwardData.map(item => [item.paperId, item]));
+  window.dedupHistoryByMode = {};
+
+  window.seedsInfo = (resultado.seeds || []).map(seed => ({
+    ...seed,
+    abstractExpanded: false,
+    keywordsExpanded: false
+  }));
+  window.allSeedsSummary = {
+    isSummary: true,
+    title: 'All seeds',
+    citations_retrieved: window.forwardData.length,
+    references_retrieved: window.backwardData.length,
+  };
+
+  // Com uma seed só não há o que alternar: o card é o da própria seed, como
+  // antes, sem barra de abas.
+  window.activeSeedTab = window.seedsInfo.length > 1 ? 'all' : 0;
+  window.mostrarTagsSeed = true;
+
+  // Save Research State depende do banco (search_id); com o banco desligado
+  // o botão não faz sentido.
+  const saveStateBtn = document.getElementById('saveStateBtn');
+  if (saveStateBtn) {
+    saveStateBtn.style.display = (window.currentSearchIdForward || window.currentSearchIdBackward) ? '' : 'none';
+  }
+
+  // O dashboard (analysis.html) lista as seeds que deram resultado. Sem as
+  // chaves dos estudos, que só servem às abas daqui e pesam no localStorage.
+  try {
+    const seedsParaDashboard = window.seedsInfo
+      .filter(seedTemResultado)
+      .map(({ citation_keys, reference_keys, ...seed }) => seed);
+    localStorage.setItem('seedsData', JSON.stringify(seedsParaDashboard));
+    localStorage.removeItem('seedPaperData');
+  } catch (err) {
+    console.warn('Não foi possível guardar as seeds para o dashboard:', err);
+  }
+
+  trocarModo();
+  document.body.classList.add('busca-realizada');
+}
+
 async function buscarArtigo() {
   try {
     const input = document.getElementById('searchInput');
-    const inputValue = input.value.trim();
 
-    if (inputValue) {
-      localStorage.setItem('ultimaPesquisaSnowMap', inputValue);
+    // Valor digitado e não adicionado entra na lista antes de buscar — é o
+    // caso de quem busca uma seed só e clica direto em Search.
+    // Se o texto já está na lista (ex.: veio da busca da navbar), não é erro:
+    // limpa o campo e busca a lista como está.
+    if (input && input.value.trim()) {
+      const { type, value } = seedDoTexto(input.value);
+      const chave = chaveSeed(type, value);
+      if (window.seedInputs.some(s => chaveSeed(s.type, s.value) === chave)) {
+        input.value = '';
+      } else if (!adicionarSeed()) {
+        return;
+      }
     }
 
-    input.blur();
-
-    if (!inputValue) {
-      alert('Please enter a DOI or title to search.');
+    const seeds = window.seedInputs || [];
+    if (seeds.length === 0) {
+      mostrarErroSeed('Add at least one DOI or title to search.');
       return;
     }
 
+    if (input) input.blur();
+    mostrarErroSeed('');
+
     const navbarSearchInput = document.getElementById('navbarSearchInput');
-    if (navbarSearchInput) navbarSearchInput.value = inputValue;
+    if (navbarSearchInput) navbarSearchInput.value = '';
     document.getElementById('loadingSpinner').style.display = 'block';
     document.getElementById('resultado').innerHTML = '';
+
+    const hint = document.getElementById('progressHint');
+    if (hint) {
+      hint.textContent = seeds.length > 1
+        ? `Searching ${seeds.length} seeds, one at a time — about a minute per seed.`
+        : 'This usually takes under a minute.';
+    }
 
     const citationsSectionEl = document.getElementById('citationsList');
     if (citationsSectionEl) citationsSectionEl.style.display = 'none';
@@ -436,43 +674,23 @@ async function buscarArtigo() {
     window.backwardData = null;
     window.citationsData = [];
     window.seedData = null;
+    window.seedsInfo = null;
     window.pendingFlagChanges = {}; // nova busca, nova search_id: descarta pendências da busca anterior
     atualizarBotaoSalvar();
 
     iniciarProgresso();
 
-    buscarComProgresso(buildSearchURL(inputValue, 'forward'))
-      .then(fwd => {
-        window.currentSearchIdForward = fwd.search_id || null;
-        window.currentSearchIdBackward = fwd.search_id_backward || null;
-        window.paperIdMap = fwd.paper_id_map || {};
-        console.log('[DEBUG] search_id forward:', window.currentSearchIdForward,
-                    '| backward:', window.currentSearchIdBackward);
-        window.forwardData = fwd.citations || [];
-        window.backwardData = fwd.references || [];
-        window.seedData = {
-          ...fwd,
-          abstractExpanded: false,
-          keywordsExpanded: false
-        };
+    // Uma busca por vez: um segundo clique dispararia outro processo Python
+    // disputando o mesmo limite de requisições das APIs.
+    const searchBtn = document.getElementById('searchSeedsBtn');
+    if (searchBtn) searchBtn.disabled = true;
 
-        localStorage.setItem(
-          'seedPaperData',
-          JSON.stringify(window.seedData)
-        );
-
-        mostrarResultado(window.seedData);
-
-        const currentMode =
-          document.querySelector(
-            'input[name="snowballMode"]:checked'
-          ).value;
-        mostrarResultado(window.seedData, currentMode);
-
-        trocarModo();
-
-        document.body.classList.add('busca-realizada');
-      })
+    buscarComProgresso('/api/articles/search/multi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seeds: seeds.map(({ type, value }) => ({ type, value })) })
+    })
+      .then(aplicarResultadoBusca)
       .catch(err => {
         // A causa real (artigo não encontrado, API fora, timeout) fica no
         // console e no log do servidor, que é onde os testes a leem. Na tela
@@ -482,10 +700,11 @@ async function buscarArtigo() {
         window.forwardData = [];
         window.backwardData = [];
         document.getElementById('resultado').innerHTML =
-          '<p class="text-muted">No results for this search. Check the DOI or title and try again.</p>';
+          '<p class="text-muted">No results for this search. Check the DOIs or titles and try again.</p>';
       })
       .finally(() => {
         pararProgresso();
+        if (searchBtn) searchBtn.disabled = false;
         document.getElementById('loadingSpinner').style.display = 'none';
       });
   } catch (err) {
@@ -493,60 +712,203 @@ async function buscarArtigo() {
     document.getElementById('loadingSpinner').style.display = 'none';
     const resultadoEl = document.getElementById('resultado');
     if (resultadoEl) {
-      resultadoEl.innerHTML = `<p class="text-danger">Unexpected error: ${err.message}</p>`;
+      resultadoEl.innerHTML = `<p class="text-danger">Unexpected error: ${escapeHtml(err.message)}</p>`;
     }
   }
 }
 
+// A busca da navbar não tem seletor de tipo: ela volta para a montagem da
+// lista de seeds com o texto já no campo, e o usuário escolhe DOI ou Title.
 function buscarArtigoNavbar() {
-  const input = document.getElementById('navbarSearchInput');
-  document.getElementById('searchInput').value = input.value;
-  buscarArtigo();
+  const navbarInput = document.getElementById('navbarSearchInput');
+  const input = document.getElementById('searchInput');
+  if (input && navbarInput) input.value = navbarInput.value.trim();
+
+  document.body.classList.remove('busca-realizada');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (input) input.focus();
 }
 
-// O pipeline já calcula `warning` e `partial_result` quando uma das fontes
-// falha (Semantic Scholar fora do ar, editora bloqueando a lista de
-// referências, work IDs que o OpenAlex não resolve mais), mas até aqui esses
-// campos morriam no JSON: a tela mostrava só os números. O efeito era o pior
-// possível numa revisão sistemática — a mesma busca devolvia 19 ou 132
-// citações dependendo do dia, sem nada na interface indicando que o resultado
-// tinha vindo de uma fonte só.
-function construirAvisoResultadoParcial(artigo) {
-  if (!artigo || (!artigo.partial_result && !artigo.warning)) return '';
 
-  // O texto detalhado do pipeline (quais fontes falharam, quantos IDs não
-  // resolveram) continua no JSON, no log e nos testes — não na tela. Aqui só
-  // o que muda a leitura do resultado: os números podem estar incompletos.
+function construirAbasSeeds() {
+  const seeds = window.seedsInfo;
+  if (!Array.isArray(seeds) || seeds.length < 2) return '';
+
+  const ativa = window.activeSeedTab;
+  const aba = (valor, conteudo, titulo, extraClasse = '') => {
+    const selecionada = String(ativa) === String(valor);
+    return `
+      <button type="button" class="seed-tab ${selecionada ? 'active' : ''} ${extraClasse}" role="tab"
+              aria-selected="${selecionada ? 'true' : 'false'}" data-seed-tab="${valor}" title="${escapeHtml(titulo)}">
+        ${conteudo}
+      </button>`;
+  };
+
+  const abas = [aba('all', '<i class="bi bi-collection"></i> All seeds', 'All seeds')];
+  seeds.forEach((seed, i) => {
+    const nome = seed.title || seed.input_value || `Seed ${i + 1}`;
+    const falhou = !seedTemResultado(seed);
+    abas.push(aba(
+      i,
+      `<span class="seed-tab-index">S${i + 1}</span>
+       <span class="seed-tab-name">${escapeHtml(TableComponent.truncateText(nome, 32))}</span>
+       ${falhou ? '<i class="bi bi-exclamation-circle seed-tab-alert" aria-label="No results"></i>' : ''}`,
+      nome,
+      falhou ? 'seed-tab-failed' : ''
+    ));
+  });
+
+  return `<div class="seed-tabs" role="tablist" aria-label="Seed papers">${abas.join('')}</div>`;
+}
+
+function rotuloStatusSeed(seed) {
+  if (seed.status === 'not_found') return 'Not found';
+  if (seed.status === 'duplicate') return `Same paper as S${(seed.duplicate_of ?? 0) + 1}`;
+  if (seed.status === 'error') return 'Search failed';
+  return 'OK';
+}
+
+function caixaContagem(numero, rotulo) {
   return `
-    <div class="alert alert-warning d-flex gap-2 mb-3 py-2 px-3" role="alert" style="font-size:0.85rem;">
-      <i class="bi bi-exclamation-triangle-fill flex-shrink-0" style="line-height:1.4;"></i>
-      <div>Some sources didn't respond — the counts below may be incomplete.</div>
-    </div>
-  `;
+    <div class="citation-box d-flex align-items-center gap-2">
+      <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
+      <div>
+        <span class="citation-number fw-bold">${TableComponent.escapeHtml(String(numero))}</span>
+        <span class="citation-label text-muted" style="font-size: 0.85rem;"> ${rotulo}</span>
+      </div>
+    </div>`;
 }
 
-function mostrarResultado(artigo, modo = 'forward') {
-  if (!artigo || !artigo.title) {
-    document.getElementById('resultado').innerHTML = '<p>Article not found.</p>';
-    return;
-  }
+function conteudoCardResumo(resumo) {
+  const seeds = window.seedsInfo || [];
+  const comResultado = seeds.filter(seedTemResultado).length;
 
+  return `
+    <div class="paper-title fw-semibold mb-2" style="font-size: 1.2rem;">All seeds</div>
+    <div class="paper-authors text-muted mb-3">
+      ${comResultado} of ${seeds.length} seeds returned results · studies found by more than one seed appear once
+    </div>
+    <ul class="seed-summary-list">
+      ${seeds.map((seed, i) => `
+        <li class="seed-summary-item">
+          <button type="button" class="seed-summary-link" data-seed-tab="${i}">
+            <span class="seed-tab-index">S${i + 1}</span>
+            <span class="seed-summary-name">${escapeHtml(seed.title || seed.input_value || '-')}</span>
+          </button>
+          <span class="seed-status seed-status-${escapeHtml(seed.status)}">${escapeHtml(rotuloStatusSeed(seed))}</span>
+          ${seedTemResultado(seed)
+            ? `<span class="seed-summary-counts text-muted">${seed.citations_retrieved ?? 0} citations · ${seed.references_retrieved ?? 0} references</span>`
+            : ''}
+        </li>`).join('')}
+    </ul>
+    <div class="d-flex gap-4 mt-3 pt-3 border-top">
+      ${caixaContagem(resumo.citations_retrieved ?? '-', 'Citations')}
+      ${caixaContagem(resumo.references_retrieved ?? '-', 'References')}
+    </div>`;
+}
+
+function conteudoCardSeedSemResultado(seed) {
+  const mensagens = {
+    not_found: 'No source found this paper. Check the DOI or title.',
+    duplicate: `This is the same paper as seed S${(seed.duplicate_of ?? 0) + 1}; its results are in that tab.`,
+    error: 'The search for this seed failed. Try again later.',
+  };
+
+  return `
+    <div class="paper-doi">${seed.input_type === 'doi' ? 'DOI' : 'Title'}: ${escapeHtml(seed.input_value || '-')}</div>
+    <div class="paper-title fw-semibold mb-2" style="font-size: 1.2rem;">${escapeHtml(rotuloStatusSeed(seed))}</div>
+    <p class="text-muted mb-0">${escapeHtml(mensagens[seed.status] || mensagens.error)}</p>`;
+}
+
+function conteudoCardSeed(artigo) {
   const doiToShow = artigo.resolved_doi || artigo.input_doi || artigo.doi || '-';
   const authors = TableComponent.formatAuthors(artigo.authors);
 
   const contagemCitations = artigo.citations_retrieved ?? artigo.citations_count ?? artigo.citationCount ?? artigo.cited_by_count ?? '-';
   const contagemReferences = artigo.references_retrieved ?? artigo.references_count ?? '-';
-  const keywordsToShow = artigo.keywords || [];
-  const keywordsText = TableComponent.formatKeywords(keywordsToShow);
-  const avisoResultadoParcial = construirAvisoResultadoParcial(artigo);
+  const keywordsText = TableComponent.formatKeywords(artigo.keywords || []);
   const abstractText = artigo.abstract || '-';
 
+  return `
+    <div class="paper-doi">
+      DOI: ${TableComponent.formatDOILink(doiToShow)}
+    </div>
+
+    <div class="paper-title fw-semibold mb-2" style="font-size: 1.2rem;">
+      ${TableComponent.escapeHtml(artigo.title || '-')}
+    </div>
+
+    <div class="paper-authors text-muted mb-2">
+      ${TableComponent.escapeHtml(authors)}
+    </div>
+
+    <div class="paper-meta">
+      <div class="paper-tags mb-3">
+        ${TableComponent.formatResearchIdentityTags(artigo)}
+      </div>
+    </div>
+
+    <div class="seed-paper-details">
+      <div class="seed-detail-line ${artigo.abstractExpanded ? 'expanded' : ''}">
+        <span class="seed-detail-label">Abstract</span>
+        <span class="seed-detail-text">
+          ${
+            artigo.abstractExpanded
+              ? TableComponent.escapeHtml(abstractText)
+              : TableComponent.escapeHtml(TableComponent.truncateText(abstractText, 140).replace(/\.\.\.$/, ''))
+          }
+        </span>
+        ${
+          abstractText && abstractText !== '-' && abstractText.length > 140
+            ? `<span class="seed-detail-ellipsis" data-seed-toggle="abstract" role="button" tabindex="0" aria-expanded="${artigo.abstractExpanded ? 'true' : 'false'}">
+                ${artigo.abstractExpanded ? ' READ LESS' : '...'}
+              </span>`
+            : ''
+        }
+      </div>
+
+      <div class="seed-detail-line ${artigo.keywordsExpanded ? 'expanded' : ''}">
+        <span class="seed-detail-label">Keywords</span>
+        <span class="seed-detail-text">
+          ${
+            artigo.keywordsExpanded
+              ? TableComponent.escapeHtml(keywordsText)
+              : TableComponent.escapeHtml(TableComponent.truncateText(keywordsText, 110).replace(/\.\.\.$/, ''))
+          }
+        </span>
+        ${
+          keywordsText && keywordsText !== '-' && keywordsText.length > 110
+            ? `<span class="seed-detail-ellipsis" data-seed-toggle="keywords" role="button" tabindex="0" aria-expanded="${artigo.keywordsExpanded ? 'true' : 'false'}">
+                ${artigo.keywordsExpanded ? ' READ LESS' : '...'}
+              </span>`
+            : ''
+        }
+      </div>
+    </div>
+
+    <div class="d-flex gap-4 mt-3 pt-3 border-top">
+      ${caixaContagem(contagemCitations, 'Citations')}
+      ${caixaContagem(contagemReferences, 'References')}
+    </div>`;
+}
+
+function mostrarResultado(artigo, modo = 'forward') {
+  if (!artigo || (!artigo.title && !artigo.status)) {
+    document.getElementById('resultado').innerHTML = '<p>Article not found.</p>';
+    return;
+  }
+
+  let conteudo;
+  if (artigo.isSummary) conteudo = conteudoCardResumo(artigo);
+  else if (artigo.status && !seedTemResultado(artigo)) conteudo = conteudoCardSeedSemResultado(artigo);
+  else conteudo = conteudoCardSeed(artigo);
+
   const cardHTML = `
-  ${avisoResultadoParcial}
   <div class="table-wrapper mb-4">
     <div class="table-topbar">
-      <div class="table-info">
+      <div class="table-info seed-tabs-info">
         <span class="table-title">Seed Paper Analysis</span>
+        ${construirAbasSeeds()}
       </div>
     </div>
 
@@ -559,80 +921,7 @@ function mostrarResultado(artigo, modo = 'forward') {
       <tbody>
         <tr>
           <td>
-            <div class="paper-doi">
-              DOI: ${TableComponent.formatDOILink(doiToShow)}
-            </div>
-
-            <div class="paper-title fw-semibold mb-2" style="font-size: 1.2rem;">
-              ${TableComponent.escapeHtml(artigo.title || '-')}
-            </div>
-
-            <div class="paper-authors text-muted mb-2">
-              ${TableComponent.escapeHtml(authors)}
-            </div>
-
-            <div class="paper-meta">
-              <div class="paper-tags mb-3">
-                ${TableComponent.formatResearchIdentityTags(artigo)}
-              </div>
-            </div>
-
-            <div class="seed-paper-details">
-              <div class="seed-detail-line ${window.seedData.abstractExpanded ? 'expanded' : ''}">
-                <span class="seed-detail-label">Abstract</span>
-                <span class="seed-detail-text">
-                  ${
-                    window.seedData.abstractExpanded
-                      ? TableComponent.escapeHtml(abstractText)
-                      : TableComponent.escapeHtml(TableComponent.truncateText(abstractText, 140).replace(/\.\.\.$/, ''))
-                  }
-                </span>
-                ${
-                  abstractText && abstractText !== '-' && abstractText.length > 140
-                    ? `<span class="seed-detail-ellipsis" data-seed-toggle="abstract" role="button" tabindex="0" aria-expanded="${window.seedData.abstractExpanded ? 'true' : 'false'}">
-                        ${window.seedData.abstractExpanded ? ' READ LESS' : '...'}
-                      </span>`
-                    : ''
-                }
-              </div>
-
-              <div class="seed-detail-line ${window.seedData.keywordsExpanded ? 'expanded' : ''}">
-                <span class="seed-detail-label">Keywords</span>
-                <span class="seed-detail-text">
-                  ${
-                    window.seedData.keywordsExpanded
-                      ? TableComponent.escapeHtml(keywordsText)
-                      : TableComponent.escapeHtml(TableComponent.truncateText(keywordsText, 110).replace(/\.\.\.$/, ''))
-                  }
-                </span>
-                ${
-                  keywordsText && keywordsText !== '-' && keywordsText.length > 110
-                    ? `<span class="seed-detail-ellipsis" data-seed-toggle="keywords" role="button" tabindex="0" aria-expanded="${window.seedData.keywordsExpanded ? 'true' : 'false'}">
-                        ${window.seedData.keywordsExpanded ? ' READ LESS' : '...'}
-                      </span>`
-                    : ''
-                }
-              </div>
-            </div>
-
-            <div class="d-flex gap-4 mt-3 pt-3 border-top">
-              <div class="citation-box d-flex align-items-center gap-2">
-                <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
-                <div>
-                  <span class="citation-number fw-bold">${TableComponent.escapeHtml(String(contagemCitations))}</span>
-                  <span class="citation-label text-muted" style="font-size: 0.85rem;"> Citations</span>
-                </div>
-              </div>
-
-              <div class="citation-box d-flex align-items-center gap-2">
-                <div class="citation-dot" style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%;"></div>
-                <div>
-                  <span class="citation-number fw-bold">${TableComponent.escapeHtml(String(contagemReferences))}</span>
-                  <span class="citation-label text-muted" style="font-size: 0.85rem;"> References</span>
-                </div>
-              </div>
-            </div>
-
+            ${conteudo}
           </td>
         </tr>
       </tbody>
@@ -642,8 +931,14 @@ function mostrarResultado(artigo, modo = 'forward') {
   document.getElementById('resultado').innerHTML = cardHTML;
 
   document.getElementById('resultado').onclick = function (e) {
+    const aba = e.target.closest('[data-seed-tab]');
+    if (aba) {
+      selecionarAbaSeed(aba.dataset.seedTab);
+      return;
+    }
+
     const toggle = e.target.closest('[data-seed-toggle]');
-    if (toggle) {
+    if (toggle && window.seedData) {
       const target = toggle.dataset.seedToggle;
       if (target === 'abstract') {
         window.seedData.abstractExpanded = !window.seedData.abstractExpanded;
@@ -651,8 +946,7 @@ function mostrarResultado(artigo, modo = 'forward') {
       if (target === 'keywords') {
         window.seedData.keywordsExpanded = !window.seedData.keywordsExpanded;
       }
-      const currentMode = document.querySelector('input[name="snowballMode"]:checked').value;
-      mostrarResultado(window.seedData, currentMode);
+      mostrarResultado(window.seedData, obterModoAtual());
     }
   };
 
@@ -723,7 +1017,8 @@ function baixarCitationsCSV() {
     return;
   }
 
-  let csvContent = "Title,Abstract,Authors,Year,Venue,DOI,Cited by,Open Access,URL,Keywords,Language,Pages,Actions\n";
+  let csvContent = "Title,Abstract,Authors,Year,Venue,DOI,Cited by,Open Access,URL,Keywords,Language,Pages,Actions,Seeds,Direction\n";
+  const direction = obterModoAtual() === 'forward' ? 'Citation' : 'Reference';
 
   citations.forEach(cit => {
     const title = `"${String(cit.title || '-').replace(/"/g, '""')}"`;
@@ -740,7 +1035,9 @@ function baixarCitationsCSV() {
     const pages = `"${String(cit.numpages != null ? cit.numpages : cit.pages || '-').replace(/"/g, '""')}"`;
     const action = `"${String(getActionLabel(cit.selecionado)).replace(/"/g, '""')}"`;
 
-    csvContent += `${title},${abstract},${authors},${year},${venue},${doi},${citedBy},${openAccess},${url},${keywords},${language},${pages},${action}\n`;
+    const seeds = `"${seedsDoEstudo(cit).replace(/"/g, '""')}"`;
+
+    csvContent += `${title},${abstract},${authors},${year},${venue},${doi},${citedBy},${openAccess},${url},${keywords},${language},${pages},${action},${seeds},"${direction}"\n`;
   });
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -755,12 +1052,21 @@ function baixarCitationsCSV() {
   URL.revokeObjectURL(url);
 }
 
+// "Seed 1: Título da seed; Seed 3: ..." — de quais seeds o estudo veio.
+function seedsDoEstudo(cit) {
+  const seeds = window.seedsInfo || [];
+  return (cit.found_via_seeds || [])
+    .map(i => `Seed ${i + 1}: ${(seeds[i] && (seeds[i].title || seeds[i].input_value)) || '-'}`)
+    .join('; ');
+}
+
 function irParaTriagem() {
-  if (!window.citationsData || window.citationsData.length === 0) {
+  const incluidos = estudosIncluidos();
+  if (incluidos.length === 0) {
     alert('No citations to send to screening.');
     return;
   }
-  window.name = JSON.stringify(window.citationsData);
+  window.name = JSON.stringify(incluidos);
   window.location.href = 'analysis.html';
 }
 
@@ -887,10 +1193,17 @@ function undoDedupRemoval(paperId) {
   if (idx === -1) return;
 
   const [entry] = history.splice(idx, 1);
+  entry.item.removedAsDuplicate = false;
+  window.dedupHistoryByMode = window.dedupHistoryByMode || {};
+  window.dedupHistoryByMode[obterModoAtual()] = history;
+
   // Restaurado nas duas listas, pelo mesmo motivo da remoção: allCitationsData
-  // é a base que os filtros leem.
-  window.citationsData = [...(window.citationsData || []), entry.item];
-  window.allCitationsData = [...(window.allCitationsData || []), entry.item];
+  // é a base que os filtros leem. Só volta para a tabela se o estudo pertence
+  // à aba aberta — o histórico vale para todas as abas da direção.
+  if (listaDaAba(obterModoAtual()).includes(entry.item)) {
+    window.citationsData = [...(window.citationsData || []), entry.item];
+    window.allCitationsData = [...(window.allCitationsData || []), entry.item];
+  }
 
   const searchId = obterSearchIdAtual();
   const paperIdBd = obterPaperIdBd(entry.item);
@@ -1021,10 +1334,15 @@ function finishDedupReview() {
   // abortava a função e as duplicatas nunca saíam da tabela, mesmo com o
   // popup já fechado.
   window.citationsData = (window.citationsData || []).filter(c => !state.toRemove.has(c.paperId));
+  // Os objetos são os mesmos em todas as abas: marcar aqui tira a duplicata
+  // das outras abas de seed da mesma direção também.
+  itensParaRemover.forEach(item => { item.removedAsDuplicate = true; });
   window.dedupRemovedHistory = [
     ...(window.dedupRemovedHistory || []),
     ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
   ];
+  window.dedupHistoryByMode = window.dedupHistoryByMode || {};
+  window.dedupHistoryByMode[obterModoAtual()] = window.dedupRemovedHistory;
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
@@ -1040,12 +1358,9 @@ function finishDedupReview() {
         return;
       }
 
+      // Só enfileira: vai para o banco no "Save Research State".
       queueFlagChange({ searchId, paperId: paperIdBd, excludedDuplicate: true });
     });
-
-    Promise.all(updates)
-      .then(() => console.log('[DB] Sucesso: Duplicatas atualizadas com excluded_duplicate = TRUE.'))
-      .catch(err => console.error('[ERRO DB] Falha ao gravar excluded_duplicate:', err));
   }
 
   // A remoção precisa valer também na base que o filtro usa. Sem isso, aplicar
@@ -1054,10 +1369,6 @@ function finishDedupReview() {
   const semRemovidos = (itens) => (itens || []).filter(c => !state.toRemove.has(c.paperId));
   window.citationsData = semRemovidos(window.citationsData);
   window.allCitationsData = semRemovidos(window.allCitationsData);
-  window.dedupRemovedHistory = [
-    ...(window.dedupRemovedHistory || []),
-    ...itensParaRemover.map(item => ({ item, removedAt: Date.now() }))
-  ];
 
   mostrarCitacoes(window.citationsData);
   atualizarBotaoIncludeAll();
@@ -1079,9 +1390,7 @@ window.addEventListener('beforeunload', (e) => {
 
 document.querySelectorAll('input[name="snowballMode"]').forEach(radio => {
   radio.addEventListener('change', () => {
-    const navRadio = document.getElementById(radio.value === 'forward' ? 'navbarModeForward' : 'navbarModeBackward');
-    if (navRadio) navRadio.checked = true;
-    if (window.forwardData !== null && window.backwardData !== null) trocarModo();
+    if (window.forwardData !== null || window.backwardData !== null) trocarModo();
   });
 });
 
@@ -1097,16 +1406,26 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarBotaoIncludeAll();
   atualizarBotaoSalvar();
 
+  carregarSeedsLocal();
+
+  // analysis.html manda a busca da navbar para cá em ?search=: o texto vai
+  // para o campo, pronto para adicionar.
+  const buscaRecebida = new URLSearchParams(window.location.search).get('search');
+  const inputSeed = document.getElementById('searchInput');
+  if (buscaRecebida && inputSeed) inputSeed.value = buscaRecebida;
+  renderListaSeeds();
+
   const linkAnalise = document.querySelector('a.nav-link[href="analysis.html"]');
   if (linkAnalise) {
     linkAnalise.addEventListener('click', e => {
       e.preventDefault();
-      if (!window.citationsData || window.citationsData.length === 0) {
+      if (!window.forwardData && !window.backwardData) {
         alert('No citations to send to screening.');
         return;
       }
 
-      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
+      // Tudo o que foi incluído, em qualquer aba de seed e nas duas direções.
+      const incluidos = estudosIncluidos();
 
       if (incluidos.length === 0) {
         alert('No article marked as "Include"');
@@ -1122,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // criteria_logs, mas window.currentSearchId* só existe em memória aqui)
       localStorage.setItem('currentSearchId', obterSearchIdAtual() || '');
 
-      window.name = JSON.stringify(window.citationsData);
+      window.name = JSON.stringify(incluidos);
       window.location.href = 'analysis.html';
     });
   }
@@ -1132,12 +1451,12 @@ document.addEventListener('DOMContentLoaded', () => {
     linkCriterios.addEventListener('click', e => {
       e.preventDefault();
 
-      if (!window.citationsData || window.citationsData.length === 0) {
+      if (!window.forwardData && !window.backwardData) {
         alert('No citations to send.');
         return;
       }
 
-      const incluidos = window.citationsData.filter(c => c.selecionado === 'incluir');
+      const incluidos = estudosIncluidos();
 
       if (incluidos.length === 0) {
         alert('No article marked as "Include"');

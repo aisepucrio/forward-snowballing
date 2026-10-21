@@ -1,0 +1,59 @@
+# Copie este arquivo para .env e ajuste o que precisar:
+#   copy .env.example .env      (Windows)
+#   cp .env.example .env        (Linux/macOS)
+#
+# O .env nunca deve ser commitado.
+
+# ---------------------------------------------------------------------------
+# Banco de dados (usado pelo docker-compose e pela aplicação)
+# ---------------------------------------------------------------------------
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=snowmap_bd
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# Se você já tem um PostgreSQL instalado na máquina, ele ocupa a 5432 e o
+# container não sobe. Nesse caso use DB_PORT=5433 — o valor vale para os dois
+# lados: o docker-compose publica nessa porta e a aplicação conecta nela.
+
+# Usuário fixo enquanto não existe sistema de login.
+# Precisa existir na tabela users, senão nenhuma busca é gravada.
+TEMP_USER_ID=00000000-0000-0000-0000-000000000001
+
+# ---------------------------------------------------------------------------
+# Servidor web
+# ---------------------------------------------------------------------------
+PORT=3000
+
+# ---------------------------------------------------------------------------
+# Semantic Scholar (opcional)
+# ---------------------------------------------------------------------------
+# Sem chave a API funciona, mas com limite de requisições bem menor.
+# Solicite em https://www.semanticscholar.org/product/api
+SEMANTIC_API_KEY=s2k-YNZEtsTUVWefhwo2dVDVv9jPAB65pWw3s2Hp1eJU
+
+# ---------------------------------------------------------------------------
+# OpenRouter — triagem por LLM (página de Critérios)
+# ---------------------------------------------------------------------------
+# Chave em https://openrouter.ai/settings/keys. Fica só no servidor: o
+# frontend nunca envia chave, URL ou modelo.
+OPENROUTER_API_KEY=
+LLM_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
+# Modelos de reserva, separados por vírgula (opcional).
+LLM_FALLBACK_MODELS=
+
+# Chamadas à LLM em paralelo, uma por artigo (padrão 8).
+LLM_MAX_WORKERS=4
+
+# A variante :free nao aceita JSON schema; o raciocinio consome LLM_MAX_TOKENS
+# e deixa cada chamada bem mais lenta.
+LLM_STRUCTURED_OUTPUT=false
+LLM_REASONING=true
+LLM_MAX_TOKENS=16000
+LLM_TIMEOUT_SECONDS=300
+
+# Fallback: quando o OpenRouter falha, a triagem tenta o Gemini direto na API
+# do Google. Chave em https://aistudio.google.com/apikey. Sem chave, nao ha fallback.
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.7-flash,gemini-3.5-flash-lite

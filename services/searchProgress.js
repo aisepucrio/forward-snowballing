@@ -17,9 +17,47 @@
 
 const CONTAGEM_FINAL = /^\[SOURCE COUNTS\] Final \w+: citations=(\d+), references=(\d+)/;
 
+// Busca com várias seeds (run_multi.py): o marco útil é em qual seed a busca
+// está, e o que cada uma trouxe ao terminar.
+const SEED_INICIO = /^\[SEED START\] (\d+)\/(\d+)/;
+const SEED_FIM = /^\[SEED DONE\] (\d+)\/(\d+) status=(\w+) citations=(\d+) references=(\d+)/;
+
+const STATUS_SEED = {
+  not_found: 'not found',
+  error: 'failed',
+  duplicate: 'duplicate',
+};
+
+function parseSeedLine(text) {
+  const inicio = text.match(SEED_INICIO);
+  if (inicio) {
+    const [, seed, total] = inicio.map(Number);
+    return { stage: 'seed_start', seed, total, message: `Seed ${seed}/${total}: searching…` };
+  }
+
+  const fim = text.match(SEED_FIM);
+  if (fim) {
+    const seed = Number(fim[1]);
+    const total = Number(fim[2]);
+    const status = fim[3];
+    const citations = Number(fim[4]);
+    const references = Number(fim[5]);
+    const detalhe = STATUS_SEED[status] || `${citations} citations · ${references} references`;
+    return {
+      stage: 'seed_done', seed, total, status, citations, references,
+      message: `Seed ${seed}/${total}: ${detalhe}`,
+    };
+  }
+
+  return null;
+}
+
 function parseProgressLine(line) {
   const text = String(line || '').trim();
   if (!text) return null;
+
+  const seed = parseSeedLine(text);
+  if (seed) return seed;
 
   const match = text.match(CONTAGEM_FINAL);
   if (!match) return null;

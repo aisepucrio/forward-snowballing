@@ -31,7 +31,6 @@ class LlmAnalysisService {
     const input = {
       criteriosInclusao: payload.criteriosInclusao,
       criteriosExclusao: payload.criteriosExclusao,
-      criteriaMetadata: payload.criteriaMetadata,
       artigos,
       extraPrompt: payload.extraPrompt,
     };

@@ -28,19 +28,30 @@
       <h1 class="fw-semibold mb-4">SnowMap</h1>
       <p class="text-muted mb-2">The Academic Curator for deep citation mapping and research discovery</p>
 
-      <input type="radio" name="snowballMode" id="modeForward" value="forward" checked hidden>
-      <input type="radio" name="snowballMode" id="modeBackward" value="backward" hidden>
-
-      <p class="text-black">Search by <b>DOI</b> or <b>Title</b></p>
+      <p class="text-black">Add one or more seed papers by <b>DOI</b> or <b>Title</b></p>
     </div>
 
-    <form id="searchForm" class="d-flex justify-content-center mb-4" onsubmit="buscarArtigo(); return false;">
-      <div class="d-flex align-items-center shadow-sm" style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
-        <i class="bi bi-search text-muted me-2"></i>
-        <input type="text" id="searchInput" placeholder="Enter DOI or Title (e.g., 10.1145/3025453.3025795)" class="form-control border-0 bg-transparent" style="box-shadow:none;">
-        <button type="submit" class="btn btn-success ms-2 px-4">Search</button>
+    <div id="seedBuilder">
+      <form id="searchForm" class="d-flex justify-content-center align-items-center gap-2 mb-2" onsubmit="adicionarSeed(); return false;">
+        <div class="d-flex align-items-center shadow-sm" style="background:#f1f1f1;border-radius:20px;padding:8px 12px;">
+          <input type="text" id="searchInput" placeholder="DOI or title (e.g., 10.1145/3025453.3025795)" class="form-control border-0 bg-transparent" style="box-shadow:none;" aria-label="Seed DOI or title">
+        </div>
+        <button type="submit" id="addSeedBtn" class="btn btn-outline-success" aria-label="Add seed" title="Add seed">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </form>
+
+      <p id="seedError" class="seed-error text-danger text-center small mb-2" role="alert"></p>
+
+      <div id="seedList" class="seed-list" aria-live="polite"></div>
+
+      <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
+        <span id="seedCounter" class="seed-counter text-muted small">0/20 seeds</span>
+        <button type="button" id="searchSeedsBtn" class="btn btn-success px-4 seed-search-btn" onclick="buscarArtigo()">
+          <i class="bi bi-search"></i> Search
+        </button>
       </div>
-    </form>
+    </div>
 
     <div id="loadingSpinner" class="my-4" style="display:none;">
       <div class="search-progress" role="status" aria-live="polite">
@@ -49,11 +60,24 @@
           <span id="progressStatus" class="search-progress-status">Searching…</span>
           <span id="progressElapsed" class="search-progress-elapsed">0s</span>
         </div>
-        <p class="search-progress-hint">This usually takes under a minute.</p>
+        <p id="progressHint" class="search-progress-hint">This usually takes under a minute.</p>
       </div>
     </div>
 
     <div id="resultado" class="mt-4"></div>
+
+    <div id="snowballModeToggle" class="mb-3">
+      <div class="btn-group" role="group" aria-label="Snowballing direction">
+        <input type="radio" class="btn-check" name="snowballMode" id="modeForward" value="forward" checked>
+        <label class="btn btn-outline-success btn-sm px-3" for="modeForward">
+          <i class="bi bi-arrow-up-right-circle me-1"></i> Citations
+        </label>
+        <input type="radio" class="btn-check" name="snowballMode" id="modeBackward" value="backward">
+        <label class="btn btn-outline-success btn-sm px-3" for="modeBackward">
+          <i class="bi bi-arrow-down-left-circle me-1"></i> References
+        </label>
+      </div>
+    </div>
 
     <div id="citationsList" class="table-wrapper" style="display:none;">
 
@@ -79,7 +103,8 @@
             <i class="bi bi-check2-square"></i>
             Include All
           </button>
-          <button id="saveStateBtn" class="btn-export" disabled>
+          <!-- Só aparece quando a busca devolve search_id (banco ligado). -->
+          <button id="saveStateBtn" class="btn-export" style="display:none;" disabled>
             <i class="bi bi-cloud-check"></i>
             Save Research State
           </button>
