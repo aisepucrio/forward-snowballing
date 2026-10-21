@@ -1,18 +1,5 @@
 let artigosIncluidos = [];
 
-const METADATA_FIELDS = [
-  { key: 'language', label: 'Language' },
-  { key: 'year', label: 'Year' },
-  { key: 'venue', label: 'Venue' },
-  { key: 'open_access', label: 'Open Access' },
-  { key: 'keywords', label: 'Keywords' },
-  { key: 'pages', label: 'Pages' },
-  { key: 'numpages', label: 'Number of Pages' },
-  { key: 'citationCount', label: 'Citation Count' },
-];
-
-let metadataUidCounter = 0;
-
 // Modelo, chave, temperatura e paralelismo da LLM ficam só no .env do
 // servidor; o frontend envia apenas critérios, artigos e prompt extra.
 // Artigos por requisição ao servidor (cada artigo é uma chamada à LLM). Com
@@ -255,7 +242,6 @@ async function analisarEmLotes(
   artigos,
   criteriosInclusao,
   criteriosExclusao,
-  criteriaMetadata = {},
   { extraPrompt = '', resultadosIniciais = [], onLoteConcluido = () => {} } = {}
 ) {
   const artigosLimpos = prepararArtigosParaAnalise(artigos);
@@ -284,7 +270,6 @@ async function analisarEmLotes(
         body: JSON.stringify({
           criteriosInclusao: criteriosInclusao,
           criteriosExclusao: criteriosExclusao,
-          criteriaMetadata: criteriaMetadata,
           artigos: lote,
           extraPrompt: extraPrompt,
         })
@@ -373,11 +358,6 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
     .map((c, i) => `${i + 1}. ${c}`)
     .join('\n');
 
-  const criteriaMetadata = {
-    ...obterCriteriaMetadata('inclusaoBox'),
-    ...obterCriteriaMetadata('exclusaoBox'),
-  };
-
   const btnTexto = document.getElementById('btnTexto');
   const btnLoading = document.getElementById('btnLoading');
   const analisarBtn = document.getElementById('analisarBtn');
@@ -424,7 +404,6 @@ document.getElementById('criteriosForm').addEventListener('submit', async (e) =>
       artigosIncluidos,
       inclusao,
       exclusao,
-      criteriaMetadata,
       {
         extraPrompt,
         resultadosIniciais,
@@ -494,8 +473,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 // Critérios de inclusão/exclusão
 //
 // Cada coluna é uma lista (IC1, IC2... / EC1, EC2...) com um campo de
-// adicionar sempre visível embaixo. Cada critério guarda em
-// data-metadata-fields quais metadados vão para a LLM junto com ele.
+// adicionar sempre visível embaixo.
 // ---------------------------------------------------------------------------
 const CRITERIOS = {
   inclusao: { prefixo: 'IC', lista: 'inclusaoBox', input: 'inclusaoInput', contador: 'inclusaoCount' },
@@ -519,21 +497,6 @@ function obterTags(containerId) {
   );
 }
 
-function obterCriteriaMetadata(containerId) {
-  const { prefixo } = configDaLista(containerId);
-  const result = {};
-  itensCriterio(containerId).forEach((item, i) => {
-    let fields = [];
-    try {
-      fields = JSON.parse(item.dataset.metadataFields || '[]');
-    } catch {
-      fields = [];
-    }
-    result[`${prefixo}${i + 1}`] = fields;
-  });
-  return result;
-}
-
 function renumerarCriterios(tipo) {
   const config = CRITERIOS[tipo];
   const itens = itensCriterio(config.lista);
@@ -541,13 +504,6 @@ function renumerarCriterios(tipo) {
     item.querySelector('.criterion-id').textContent = `${config.prefixo}${i + 1}`;
   });
   document.getElementById(config.contador).textContent = itens.length;
-}
-
-function resumoMetadados(selecionados) {
-  if (selecionados.length === METADATA_FIELDS.length) return 'All metadata';
-  if (selecionados.length === 0) return 'Title and abstract only';
-  const rotulos = METADATA_FIELDS.filter(f => selecionados.includes(f.key)).map(f => f.label);
-  return rotulos.length <= 2 ? rotulos.join(', ') : `${rotulos.length} metadata fields`;
 }
 
 function editarCriterio(item) {
@@ -590,32 +546,10 @@ function editarCriterio(item) {
 function criarItemCriterio(tipo, texto) {
   const item = document.createElement('li');
   item.className = 'criterion-item';
-  const uid = ++metadataUidCounter;
 
   item.innerHTML = `
     <span class="criterion-id"></span>
-    <div class="criterion-body">
-      <p class="criterion-text"></p>
-      <div class="dropdown metadata-dropdown-wrapper">
-        <button type="button" class="metadata-toggle-btn" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside" aria-expanded="false"
-          title="Choose metadata fields sent to the LLM for this criterion">
-          <i class="bi bi-sliders"></i>
-          <span class="metadata-summary"></span>
-          <i class="bi bi-chevron-down metadata-caret"></i>
-        </button>
-        <ul class="dropdown-menu p-2 metadata-menu">
-          <li class="metadata-menu-title">Metadata sent to the LLM</li>
-          ${METADATA_FIELDS.map(f => `
-            <li class="form-check">
-              <input class="form-check-input metadata-checkbox" type="checkbox"
-                value="${f.key}" id="meta-${uid}-${f.key}" checked>
-              <label class="form-check-label" for="meta-${uid}-${f.key}">${f.label}</label>
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    </div>
+    <p class="criterion-text"></p>
     <div class="criterion-actions">
       <button type="button" class="criterion-action criterion-edit" aria-label="Edit criterion" title="Edit">
         <i class="bi bi-pencil"></i>
@@ -627,16 +561,6 @@ function criarItemCriterio(tipo, texto) {
   `;
   // textContent: o critério é texto livre do usuário.
   item.querySelector('.criterion-text').textContent = texto;
-
-  const checkboxes = item.querySelectorAll('.metadata-checkbox');
-  const resumoEl = item.querySelector('.metadata-summary');
-  const sincronizarMetadados = () => {
-    const selecionados = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-    item.dataset.metadataFields = JSON.stringify(selecionados);
-    resumoEl.textContent = resumoMetadados(selecionados);
-  };
-  checkboxes.forEach(cb => cb.addEventListener('change', sincronizarMetadados));
-  sincronizarMetadados();
 
   item.querySelector('.criterion-edit').addEventListener('click', () => editarCriterio(item));
   item.querySelector('.criterion-text').addEventListener('dblclick', () => editarCriterio(item));

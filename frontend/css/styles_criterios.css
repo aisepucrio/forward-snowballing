@@ -170,9 +170,12 @@ main button {
   background: #fbfcfc;
 }
 
+/* O código e a primeira linha do texto ficam centrados na altura dos botões
+   de editar/remover (28px); critérios longos continuam crescendo para baixo. */
 .criterion-id {
   flex-shrink: 0;
   min-width: 34px;
+  margin-top: 3px;
   padding: 2px 6px;
   border-radius: 6px;
   background: var(--criteria-soft);
@@ -182,16 +185,10 @@ main button {
   text-align: center;
 }
 
-.criterion-body {
+.criterion-text {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.criterion-text {
-  margin: 0;
+  margin: 4px 0 0;
   color: #1f2933;
   font-size: 14px;
   line-height: 1.45;
@@ -320,81 +317,6 @@ td.col-ic {
 td.col-ec {
   background-color: #fdecea;
 }
-/* =========================
-   METADATA FILTER DROPDOWN
-========================= */
-
-.metadata-dropdown-wrapper {
-  position: relative;
-  align-self: flex-start;
-}
-
-.metadata-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border: 1px solid #e9ecef;
-  border-radius: 999px;
-  background: #f8f9fa;
-  color: #4C616C;
-  font-size: 11px;
-  line-height: 1.6;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.metadata-toggle-btn:hover,
-.metadata-toggle-btn[aria-expanded="true"] {
-  border-color: #ced4da;
-  background: #f1f3f5;
-  color: #1f2933;
-}
-
-.metadata-caret {
-  font-size: 9px;
-}
-
-.metadata-menu {
-  min-width: 210px;
-  font-size: 0.8rem;
-}
-
-.metadata-menu-title {
-  padding: 2px 0 6px;
-  color: #6c757d;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.metadata-menu .form-check {
-  padding-left: 1.6em;
-}
-
-.metadata-menu .form-check-input {
-  flex: none;
-  min-width: 0;
-  width: 1em;
-  height: 1em;
-}
-
-.metadata-menu .form-check-input:not(:checked) {
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  background-color: #fff;
-}
-
-.metadata-menu .form-check-input:checked {
-  background-color: #198754;
-  border-color: #198754;
-}
-
-.metadata-menu .form-check-input:focus {
-  border-color: #198754;
-  box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
-}
-
 /* =========================
    ANALYSIS PROGRESS
 ========================= */

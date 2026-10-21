@@ -408,8 +408,8 @@ if __name__ == "__main__":
     data = json.loads(input_json)
 
     try:
-        # criteriaMetadata ainda chega do frontend, mas por enquanto todos os
-        # metadados vao para o prompt (ver METADATA_FIELDS em services/prompt.py).
+        # Todos os metadados vao para o prompt (ver METADATA_FIELDS em
+        # services/prompt.py).
         results = analisar(
             data.get("criteriosInclusao", ""),
             data.get("criteriosExclusao", ""),
