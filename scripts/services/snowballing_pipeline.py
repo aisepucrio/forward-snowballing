@@ -14,12 +14,9 @@ from services.search import (
     build_pages,
     collapse_duplicates_by_key,
     enrich_incomplete_citations,
-    get_record_key,
-    merge_records_across_sources,
     tag_source,
     extract_npages,
     fallback_openalex_by_title,
-    fallback_opencitations_by_doi,
     reconstruct_abstract_from_inverted_index,
     search_combined,
 )
@@ -28,7 +25,7 @@ from services.search import (
 NULL_INPUTS = {None, "", "-", "null", "None"}
 # Versão 3: o payload passou a carregar search_id / seed_id / paper_id_map.
 # Entradas antigas precisam ser refeitas, senão voltam sem os ids do banco.
-RESULT_CACHE_VERSION = 3
+RESULT_CACHE_VERSION = 4
 
 # Usado enquanto não existe login. Quando houver autenticação, trocar pelo id do
 # usuário logado.
@@ -315,7 +312,6 @@ class SnowballingPipeline:
                 fut_refs = executor.submit(self.reference_provider.get_references, search_input.doi)
                 paper = fut_paper.result()
                 openalex_references = fut_refs.result()
-            seed_doi = search_input.doi
         else:
             # Busca por título: os identificadores só são conhecidos depois de
             # resolver o paper. Sem isso as referências sairiam sempre vazias.
@@ -336,7 +332,6 @@ class SnowballingPipeline:
             openalex_references = self.reference_provider.get_references(
                 doi=resolved_doi, openalex_id=openalex_id
             )
-            seed_doi = resolved_doi
 
         # O Semantic Scholar também contribui
         # referências (via paper.get("references"), que search_combined já
@@ -347,18 +342,9 @@ class SnowballingPipeline:
         semantic_references = tag_source(paper.get("references"), "semantic")
         paper["citations"] = tag_source(paper.get("citations"), "semantic")
 
-        # OpenCitations entra quando o Semantic Scholar não entregou lista de
-        # referências — seja por bloqueio da editora, seja porque não respondeu
-        # (sem chave de API, 429 é o caso comum). Depender só do bloqueio
-        # confirmado deixava a fonte complementar presa justamente à fonte que
-        # mais falha. Quando o Semantic entrega a lista, ela é a mais completa
-        # e a chamada extra não compensa.
-        #
-        # Fica aqui, e não em search_combined: só neste ponto as referências do
-        # OpenAlex já existem, e sem elas não há como saber o que é novo.
-        opencitations_references = []
-        if not semantic_references and seed_doi:
-            opencitations_references = fallback_opencitations_by_doi(seed_doi)
+        # As referências são obtidas na mesma busca que as citações:
+        # prioriza Semantic Scholar e usa OpenAlex apenas como fallback
+        # quando Semantic Scholar não retorna nenhuma referência.
         semantic_citations = paper.get("citations", []) or []
 
         print(
@@ -385,33 +371,19 @@ class SnowballingPipeline:
                 )
             )
         )
+
         references = CitationNormalizer.normalize_counts(
             collapse_duplicates_by_key(
                 enrich_incomplete_citations(
-                    merge_records_across_sources(
-                        merge_records_across_sources(
-                            semantic_references,
-                            openalex_references,
-                        ),
-                        opencitations_references,
-                    )
+                    semantic_references if semantic_references else openalex_references
                 )
             )
         )
 
-        semantic_reference_keys = {
-            get_record_key(item) for item in semantic_references
-        }
-        cross_source_matches = sum(
-            1 for record in openalex_references
-            if get_record_key(record) in semantic_reference_keys
-        )
-
         print(
-            f"[DEDUP COUNTS] References: semantic={len(semantic_references)}, "
-            f"openalex={len(openalex_references)}, "
-            f"cross_source_matches={cross_source_matches}, "
-            f"final_after_merge={len(references)}",
+            f"[REFERENCE SOURCE] selected={'semantic' if semantic_references else 'openalex'}; "
+            f"semantic={len(semantic_references)}, openalex={len(openalex_references)}, "
+            f"final={len(references)}",
             file=sys.stderr,
         )
 
@@ -420,37 +392,6 @@ class SnowballingPipeline:
             f"references={len(references)}",
             file=sys.stderr,
         )
-
-        # Conta o que a OpenCitations trouxe e nenhuma outra fonte trouxe.
-        # merge_records_across_sources e collapse_duplicates_by_key preservam o
-        # registro da primeira fonte em que ele aparece, então o que chega ao
-        # resultado com source == "opencitations" não casou com nada das outras
-        # fontes pela chave de identidade do pipeline (get_record_key).
-        #
-        # Limite conhecido: essa chave usa o DOI quando existe e só cai para o
-        # título quando não existe, então um registro com DOI nunca é comparado
-        # por título com outro sem DOI. Se o OpenAlex trouxer uma referência sem
-        # DOI (cerca de 10% nos artigos medidos) e a OpenCitations trouxer a
-        # mesma com DOI, as duas sobrevivem e esta contagem inclui a duplicata.
-        opencitations_added = sum(
-            1 for record in references if record.get("source") == "opencitations"
-        )
-        if opencitations_references:
-            print(
-                f"[OPENCITATIONS] listed={len(opencitations_references)}, "
-                f"added={opencitations_added}",
-                file=sys.stderr,
-            )
-        if opencitations_added:
-            opencitations_note = (
-                f"OpenCitations acrescentou {opencitations_added} "
-                f"{'referência' if opencitations_added == 1 else 'referências'} "
-                "que não vieram das outras fontes."
-            )
-            existing_warning = paper.get("warning")
-            paper["warning"] = (
-                f"{existing_warning} | {opencitations_note}" if existing_warning else opencitations_note
-            )
 
         openalex_warning = self.reference_provider.last_warning
         if openalex_warning:
