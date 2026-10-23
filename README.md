@@ -34,14 +34,19 @@ process.
 ├── routes/               # API route definitions
 ├── services/             # Session management, Python runner, search service
 ├── server/               # Application bootstrap
-├── scripts/              # Python: citation analysis, LLM screening, database
+├── scripts/              # Python: snowballing pipeline, LLM screening, database
 ├── tests/                # Node tests (npm test); Python tests are in scripts/tests
 ├── init/                 # SQL executed when the Postgres container is first created
-├── LLMs_Analysis/        # Evaluation of the LLM screening against human ground truth
+├── experiments/
+│   ├── forward_analysis/     # Paper: Tables I, II and Forward columns of Table III
+│   ├── backward_analysis/    # Paper: Backward columns of Table III
+│   └── preliminary/
+│       └── llm_analysis/     # Preliminary LLM screening tests (not in the paper)
 ├── doc/                  # Process diagrams
 ├── docker-compose.yml    # PostgreSQL container
 ├── package.json          # Node.js dependencies
 ├── requirements.txt      # Python dependencies
+├── .gitignore            # must include .env
 ├── LICENSE
 └── README.md
 ```
