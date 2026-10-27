@@ -15,6 +15,7 @@ from services.search import (
     collapse_duplicates_by_key,
     enrich_incomplete_citations,
     get_record_key,
+    is_semantic_reference_noise,
     merge_records_across_sources,
     tag_source,
     extract_npages,
@@ -237,6 +238,9 @@ class OpenAlexReferenceProvider:
             "pages": pages,
             "numpages": extract_npages(pages),
             "source": "openalex",
+            # "paratext" é volume de anais/front matter: o OpenAlex às vezes
+            # resolve a referência ao volume em vez do artigo dentro dele.
+            "openalex_type": ref.get("type"),
         }
 
 
@@ -344,7 +348,11 @@ class SnowballingPipeline:
         # duas fontes aqui, o forward ficava com o "References" contando só o
         # que o OpenAlex resolveu, bem menor do que a busca backward do mesmo
         # paper (que já fazia o merge desde o commit anterior).
-        semantic_references = tag_source(paper.get("references"), "semantic")
+        semantic_references = [
+            record
+            for record in tag_source(paper.get("references"), "semantic")
+            if not is_semantic_reference_noise(record)
+        ]
         paper["citations"] = tag_source(paper.get("citations"), "semantic")
 
         # OpenCitations entra quando o Semantic Scholar não entregou lista de
@@ -360,6 +368,19 @@ class SnowballingPipeline:
         if not semantic_references and seed_doi:
             opencitations_references = fallback_opencitations_by_doi(seed_doi)
         semantic_citations = paper.get("citations", []) or []
+
+        # Com a lista do Semantic disponível, o OpenAlex só complementa. Um
+        # registro "paratext" (volume de anais) é a mesma referência que o
+        # Semantic já resolveu para o artigo certo, mas não casa por DOI nem
+        # por título e entrava como referência extra. Sem o Semantic, ele é a
+        # única pista de que a referência existe, então fica.
+        if semantic_references:
+            openalex_complement = [
+                record for record in openalex_references
+                if record.get("openalex_type") != "paratext"
+            ]
+        else:
+            openalex_complement = openalex_references
 
         print(
             f"[SOURCE COUNTS] Semantic: references={len(semantic_references)}; "
@@ -391,7 +412,8 @@ class SnowballingPipeline:
                     merge_records_across_sources(
                         merge_records_across_sources(
                             semantic_references,
-                            openalex_references,
+                            openalex_complement,
+                            match_titles=True,
                         ),
                         opencitations_references,
                     )
