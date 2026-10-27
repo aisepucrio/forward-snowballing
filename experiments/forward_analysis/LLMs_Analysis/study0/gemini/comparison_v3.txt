@@ -1,0 +1,156 @@
+Total: N=109
+True Positives (TP): 6
+False Positives (FP): 7
+True Negatives (TN): 92
+False Negatives (FN): 4
+
+Recall: 0.6000
+Precision: 0.4615
+F1-score: 0.5217
+
+LLM = Inclusion ^ GT = Exclusion:
+- CaRE: Finding Root Causes of Configuration Issues in Highly-Configurable Robots
+- Feature-oriented defect prediction
+- FOCloud: feature model guided performance prediction and explanation for deployment configurable cloud applications
+- Learning Graph Configuration Spaces with Graph Embedding in Engineering Domains
+- Performance health index for complex cyber infrastructures
+- Regression model trees: Compact energy models for complex IoT devices
+- Unicorn: Reasoning about configurable system performance through the lens of causality
+
+LLM = Exclusion ^ GT = Inclusion:
+- Adaptive behavioral model learning for software product lines
+- Configuration optimization with limited functional impact
+- On Programming Variability with Large Language Model-based Assistant
+- Pragmatic Random Sampling of the Linux Kernel: Enhancing the Randomness and Correctness of the conf Tool
+
+Criteria analysis:
+LLM > IC1:    Yes 99.09% | No 00.91% | Not conclusive 00.00%
+Source > IC1: Yes 99.08% | No 00.92% | Not conclusive 00.00%
+LLM > IC2:    Yes 84.55% | No 15.45% | Not conclusive 00.00%
+Source > IC2: Yes 63.30% | No 36.70% | Not conclusive 00.00%
+LLM > IC3:    Yes 13.64% | No 86.36% | Not conclusive 00.00%
+Source > IC3: Yes 22.02% | No 77.98% | Not conclusive 00.00%
+LLM > EC1:    Yes 10.91% | No 89.09% | Not conclusive 00.00%
+Source > EC1: Yes 02.75% | No 97.25% | Not conclusive 00.00%
+LLM > EC2:    Yes 06.36% | No 93.64% | Not conclusive 00.00%
+Source > EC2: Yes 09.17% | No 90.83% | Not conclusive 00.00%
+LLM > EC3:    Yes 03.64% | No 96.36% | Not conclusive 00.00%
+Source > EC3: Yes 05.50% | No 94.50% | Not conclusive 00.00%
+LLM > EC4:    Yes 50.91% | No 49.09% | Not conclusive 00.00%
+Source > EC4: Yes 19.27% | No 80.73% | Not conclusive 00.00%
+
+
+----------------------------------prompt
+    You are an expert researcher conducting a Systematic Review.
+    Your task is to decide whether the article should be selected.
+
+    Think through the criteria carefully before answering, but do not include your reasoning in the output.
+
+    The examples below illustrate the decision process only.
+    Do not reuse the example criteria when analyzing the real article.
+
+
+    EXEMPLE INCLUSION CRITERIA (mark Yes/No)
+            "IC1": "The paper describes an empirical primary study in software engineering.",
+            "IC2": "The paper is focused on predicting defects in a software system using machine learning techniques.",
+            "IC3": "The paper discusses the use of software defect prediction methods in an industrial setting using an industrial database."
+            
+
+    EXEMPLE EXCLUSION CRITERIA (mark Yes/No)
+            "EC1": "The paper was not a peer-reviewed article, conference proceeding, or book chapter.",
+            "EC2": "The paper was written in a language other than English.",
+            "EC3": "The paper was published before 01.01.2015 or appeared in the searched databases after 08.04.2022.",
+            "EC4": "The same results were already published in another paper."
+
+    EXAMPLES:
+
+    ARTICLE TO ANALYZE:
+    - title: Machine learning based defect prediction using industrial software metrics
+    - abstract: This empirical study evaluates machine learning classifiers for predicting defective modules in an industrial software system. The study uses historical defect data and software metrics collected from a real company project, compares prediction performance, and discusses practical implications for software quality assurance.
+
+    EXPECTED OUTPUT (JSON):
+    {{
+      "title": "Machine learning based defect prediction using industrial software metrics",
+      "results": {{
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "No"
+      }},
+      "Decision": {{
+        "decision": "inclusion"
+      }}
+    }}
+
+    ARTICLE TO ANALYZE:
+    - title: A literature review of software defect prediction techniques
+    - abstract: This paper reviews and summarizes existing software defect prediction approaches published in the literature. It compares prior studies, organizes machine learning techniques used in defect prediction, and identifies open research challenges.
+
+    EXPECTED OUTPUT (JSON):
+    {{
+      "title": "A literature review of software defect prediction techniques",
+      "results": {{
+        "IC1": "Yes",
+        "IC2": "Yes",
+        "IC3": "No",
+        "EC1": "Yes",
+        "EC2": "No",
+        "EC3": "No",
+        "EC4": "Yes"
+      }},
+      "Decision": {{
+        "decision": "exclusion"
+      }}
+    }}
+
+    ARTICLE TO ANALYZE:
+    - title: Deep learning for image classification in medical diagnosis
+    - abstract: This paper proposes a convolutional neural network for classifying medical images. Experiments are performed on a public image dataset and results show improved diagnostic accuracy compared with previous image classification approaches.
+
+    EXPECTED OUTPUT (JSON):
+    {{
+      "title": "Deep learning for image classification in medical diagnosis",
+      "results": {{
+        "IC1": "Yes",
+        "IC2": "No",
+        "IC3": "Yes",
+        "EC1": "No",
+        "EC2": "No",
+        "EC3": "Yes",
+        "EC4": "No"
+      }},
+      "Decision": {{
+        "decision": "exclusion"
+      }}
+    }}
+
+    REAL INCLUSION CRITERIA (mark Yes/No)
+    {inclusion_criteria}
+
+    REAL EXCLUSION CRITERIA (mark Yes/No)
+    {exclusion_criteria}
+
+    ARTICLE TO ANALYZE:
+    - title: {_normalize_text(title)}
+    - abstract: {_normalize_text(summary)}
+
+    EXACT OUTPUT FORMAT (JSON):
+    {{
+      "title": "<repeat the article title>",
+      "results": {criteria_output},
+      "Decision": {{
+        "decision": "inclusion|exclusion"
+      }}
+    }}
+
+    DECISION RULES:
+    - Decide inlusion if the article satisfies all inclusion criteria and no exclusion criterion is satisfied.
+    - Decide exclusion if any inclusion criterion is not satisfied.
+    - Decide exclusion if any exclusion criterion is satisfied.
+    
+    OUTPUT:
+    - Return only one expected json
+    - Do not include explanations, reasoning, criterion labels, confidence, markdown, JSON, or extra text.

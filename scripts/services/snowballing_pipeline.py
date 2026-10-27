@@ -29,7 +29,9 @@ from services.search import (
 NULL_INPUTS = {None, "", "-", "null", "None"}
 # Versão 3: o payload passou a carregar search_id / seed_id / paper_id_map.
 # Entradas antigas precisam ser refeitas, senão voltam sem os ids do banco.
-RESULT_CACHE_VERSION = 3
+# Versão 4: backward passou a filtrar lixo do Semantic e a casar OpenAlex por
+# título; resultados cacheados antes disso têm outra contagem de referências.
+RESULT_CACHE_VERSION = 4
 
 # Usado enquanto não existe login. Quando houver autenticação, trocar pelo id do
 # usuário logado.
