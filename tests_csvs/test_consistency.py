@@ -19,7 +19,12 @@ RUN_FORWARD_PY = os.path.join(SCRIPTS_DIR, "run_forward.py")
 
 EXECUCOES_POR_ENTRADA = 2
 
-INPUT_CSV = os.path.join(SCRIPT_DIR, "tests_csvs.csv")
+# Padrão: os 5 artigos problemáticos. Para rodar a lista completa:
+#   INPUT_CSV=tests_csvs/tests_csvs.csv MAX_ENTRADAS=16
+INPUT_CSV = os.getenv("INPUT_CSV") or os.path.join(SCRIPT_DIR, "problematicos.csv")
+# Cada entrada leva minutos (várias APIs, com espera de rate limit); acima de
+# 5 a rodada fica longa demais para iterar.
+MAX_ENTRADAS = int(os.getenv("MAX_ENTRADAS", "5"))
 OUTPUT_CSV = os.path.join(SCRIPT_DIR, "result_searches.csv")
 VALORES_REAIS_CSV = os.path.join(SCRIPT_DIR, "valores_reais_artigos.csv")
 
@@ -416,6 +421,10 @@ def main():
     if not papers:
         print("(ERRO) Nenhum item válido encontrado no CSV.")
         return
+
+    if len(papers) > MAX_ENTRADAS:
+        print(f"(AVISO) {len(papers)} entradas no CSV; usando só as {MAX_ENTRADAS} primeiras.")
+        papers = papers[:MAX_ENTRADAS]
 
     # Carrega a tabela com os valores reais dos artigos
     reais_por_doi, reais_por_titulo = load_valores_reais(VALORES_REAIS_CSV)
