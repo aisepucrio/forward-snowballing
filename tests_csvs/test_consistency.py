@@ -19,9 +19,18 @@ RUN_FORWARD_PY = os.path.join(SCRIPTS_DIR, "run_forward.py")
 
 EXECUCOES_POR_ENTRADA = 2
 
-INPUT_CSV = os.path.join(SCRIPT_DIR, "tests_csvs.csv")
-OUTPUT_CSV = os.path.join(SCRIPT_DIR, "result_searches.csv")
-VALORES_REAIS_CSV = os.path.join(SCRIPT_DIR, "valores_reais_artigos.csv")
+# Padrão: os 5 artigos problemáticos. Para rodar a lista completa:
+#   INPUT_CSV=tests_csvs/tests_csvs.csv MAX_ENTRADAS=16
+INPUT_CSV = os.getenv("INPUT_CSV") or os.path.join(SCRIPT_DIR, "problematicos.csv")
+# Cada entrada leva minutos (várias APIs, com espera de rate limit); acima de
+# 5 a rodada fica longa demais para iterar.
+MAX_ENTRADAS = int(os.getenv("MAX_ENTRADAS", "5"))
+# Outra amostra (ex.: samplec):
+#   INPUT_CSV=tests_csvs/samplec_titulos.csv
+#   VALORES_REAIS_CSV=tests_csvs/samplec_valores_reais.csv
+#   OUTPUT_CSV=tests_csvs/samplec_resultados.csv
+OUTPUT_CSV = os.getenv("OUTPUT_CSV") or os.path.join(SCRIPT_DIR, "result_searches.csv")
+VALORES_REAIS_CSV = os.getenv("VALORES_REAIS_CSV") or os.path.join(SCRIPT_DIR, "valores_reais_artigos.csv")
 
 PAUSA_ENTRE_BUSCAS = float(os.getenv("PAUSA_ENTRE_BUSCAS", "2"))
 TIMEOUT_POR_BUSCA = float(os.getenv("TIMEOUT_POR_BUSCA", "300"))
@@ -416,6 +425,10 @@ def main():
     if not papers:
         print("(ERRO) Nenhum item válido encontrado no CSV.")
         return
+
+    if len(papers) > MAX_ENTRADAS:
+        print(f"(AVISO) {len(papers)} entradas no CSV; usando só as {MAX_ENTRADAS} primeiras.")
+        papers = papers[:MAX_ENTRADAS]
 
     # Carrega a tabela com os valores reais dos artigos
     reais_por_doi, reais_por_titulo = load_valores_reais(VALORES_REAIS_CSV)

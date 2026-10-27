@@ -12,6 +12,7 @@ output.json
 app.log
 db_debug.log
 correcoes.txt
+tests_csvs/diagnostics/
 
 # Python
 __pycache__/

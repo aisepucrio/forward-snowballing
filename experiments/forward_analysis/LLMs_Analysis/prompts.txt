@@ -1,0 +1,147 @@
+Prompt1-----------------------------------------------------------------------------------------------------------
+
+You are an expert researcher conducting a Systematic Review.
+Evaluate the article based on the inclusion and exclusion criteria.
+
+INCLUSION CRITERIA (mark Yes/No)
+{inclusion_criteria}
+
+EXCLUSION CRITERIA (mark Yes/No)
+{exclusion_criteria}
+
+ARTICLE TO ANALYZE:
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+EXACT OUTPUT FORMAT (JSON):
+{{
+  "title": "<repeat the article title>",
+{results_schema}
+}}
+
+Rules:
+- Use only "Yes" or "No" in the result for each criterion.
+- If any inclusion criterion is marked "No", the decision must be "exclusion". STOP and return the results json.
+- If any exclusion criterion is marked "Yes", the decision must be "exclusion". STOP and return the results json.
+- Only if all inclusion criteria are "Yes" and all exclusion criteria are "No", the decision can be "inclusion".
+- Do not include any keys other than the requested ones.
+- Return only the JSON, without any markdown or extra text.
+"""
+
+Prompt2----------------------------------------------------------------------------------------------------------
+
+You are an expert researcher conducting a Systematic Review.
+Evaluate the article based on the inclusion and exclusion criteria.
+
+INCLUSION CRITERIA (mark Yes/No)
+{inclusion_criteria}
+
+EXCLUSION CRITERIA (mark Yes/No)
+{exclusion_criteria}
+
+EXAMPLES:
+
+ARTICLE TO ANALYZE:
+- title: Machine learning based defect prediction using industrial software metrics
+- abstract: This empirical study evaluates machine learning classifiers for predicting defective modules in an industrial software system. The study uses historical defect data and software metrics collected from a real company project, compares prediction performance, and discusses practical implications for software quality assurance.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "Machine learning based defect prediction using industrial software metrics",
+  "selected": 1
+}}
+
+ARTICLE TO ANALYZE:
+- title: A literature review of software defect prediction techniques
+- abstract: This paper reviews and summarizes existing software defect prediction approaches published in the literature. It compares prior studies, organizes machine learning techniques used in defect prediction, and identifies open research challenges.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "A literature review of software defect prediction techniques",
+  "selected": 0
+}}
+
+ARTICLE TO ANALYZE:
+- title: Deep learning for image classification in medical diagnosis
+- abstract: This paper proposes a convolutional neural network for classifying medical images. Experiments are performed on a public image dataset and results show improved diagnostic accuracy compared with previous image classification approaches.
+
+EXPECTED OUTPUT (JSON):
+{{
+  "title": "Deep learning for image classification in medical diagnosis",
+  "selected": 0
+}}
+
+ARTICLE TO ANALYZE:
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+EXACT OUTPUT FORMAT (JSON):
+{{
+  "title": "<repeat the article title>",
+  "selected": 0|1
+}}
+
+Rules:
+- Use only 0 or 1 in "selected".
+- Use selected 1 only if all inclusion criteria are satisfied and no exclusion criterion is satisfied.
+- Use selected 0 if any inclusion criterion is not satisfied.
+- Use selected 0 if any exclusion criterion is satisfied.
+- Prefer selected 0 when the abstract does not provide enough evidence to satisfy all inclusion criteria.
+- Do not include explanations, criterion labels, confidence, markdown, or extra keys.
+- Return only the JSON object.
+
+Prompt3----------------------------------------------------------------------------------------------------------
+
+You are an expert researcher conducting a Systematic Review.
+Your task is to decide whether the article should be selected.
+
+Think through the criteria carefully before answering, but do not include your reasoning in the output.
+
+The examples below illustrate the decision process only.
+Do not reuse the example criteria when analyzing the real article.
+
+EXAMPLE CRITERIA
+
+INCLUSION CRITERIA
+- IC1: The article is a primary empirical study.
+- IC2: The article evaluates an intervention, method, technique, or phenomenon related to the review topic.
+
+EXCLUSION CRITERIA
+- EC1: The article is a literature review, mapping study, editorial, tutorial, or opinion paper.
+- EC2: The article is outside the review topic.
+
+EXAMPLE ARTICLE:
+- title: Empirical evaluation of a method in the target research area
+- abstract: This paper presents a primary empirical study evaluating a method related to the target research area. The authors collect data, describe the study design, report results, and discuss implications for the investigated topic.
+
+EXPECTED OUTPUT:
+1
+
+EXAMPLE ARTICLE:
+- title: A review of methods in the target research area
+- abstract: This paper reviews and summarizes previously published studies about methods related to the target research area. It organizes existing literature, compares prior findings, and identifies open research challenges, but it does not present a new primary empirical study.
+
+EXPECTED OUTPUT:
+0
+
+REAL CRITERIA
+
+INCLUSION CRITERIA
+{inclusion_criteria}
+
+EXCLUSION CRITERIA
+{exclusion_criteria}
+
+REAL ARTICLE
+- title: {normalize_text(title)}
+- abstract: {normalize_text(abstract)}
+
+DECISION RULES:
+- Return 1 if the article satisfies all inclusion criteria and no exclusion criterion is satisfied.
+- Return 0 if any inclusion criterion is not satisfied.
+- Return 0 if any exclusion criterion is satisfied.
+- Return 1 when the evidence is ambiguous, incomplete, or only weakly implied.
+
+OUTPUT:
+- Return only one character: 0 or 1.
+- Do not include explanations, reasoning, criterion labels, confidence, markdown, JSON, or extra text.

@@ -8,15 +8,20 @@ import requests
 
 from services.cache import get_cached, init_db, save_to_cache
 from services.deduplication import deduplicate_citations
-from services.normalize import normalize_doi
+from services.normalize import is_missing, normalize_doi
 from services.settings import cache_enabled, database_enabled
 from services.search import (
     build_pages,
     collapse_duplicates_by_key,
     enrich_incomplete_citations,
+    get_record_key,
+    is_semantic_reference_noise,
+    merge_records_across_sources,
     tag_source,
     extract_npages,
     fallback_openalex_by_title,
+    fallback_opencitations_by_doi,
+    fetch_crossref_references,
     reconstruct_abstract_from_inverted_index,
     search_combined,
 )
@@ -25,7 +30,27 @@ from services.search import (
 NULL_INPUTS = {None, "", "-", "null", "None"}
 # Versão 3: o payload passou a carregar search_id / seed_id / paper_id_map.
 # Entradas antigas precisam ser refeitas, senão voltam sem os ids do banco.
-RESULT_CACHE_VERSION = 4
+# Versão 4: backward passou a filtrar lixo do Semantic e a casar OpenAlex por
+# título; resultados cacheados antes disso têm outra contagem de referências.
+# Versão 5: a lista de referências do Crossref passou a ser a base do backward.
+RESULT_CACHE_VERSION = 5
+
+CROSSREF_MIN_COVERAGE = 0.8
+
+
+def use_citation_text_as_missing_title(records):
+    """
+    Entradas do Crossref sem título estruturado que nenhuma outra fonte
+    completou: o texto livre da citação vira o título exibido. Fica para o fim
+    do pipeline porque, antes, um título assim seria buscado no Crossref.
+    """
+    result = []
+    for record in records:
+        item = dict(record)
+        if is_missing(item.get("title")) and item.get("unstructured"):
+            item["title"] = item["unstructured"]
+        result.append(item)
+    return result
 
 # Usado enquanto não existe login. Quando houver autenticação, trocar pelo id do
 # usuário logado.
@@ -234,6 +259,9 @@ class OpenAlexReferenceProvider:
             "pages": pages,
             "numpages": extract_npages(pages),
             "source": "openalex",
+            # "paratext" é volume de anais/front matter: o OpenAlex às vezes
+            # resolve a referência ao volume em vez do artigo dentro dele.
+            "openalex_type": ref.get("type"),
         }
 
 
@@ -312,6 +340,7 @@ class SnowballingPipeline:
                 fut_refs = executor.submit(self.reference_provider.get_references, search_input.doi)
                 paper = fut_paper.result()
                 openalex_references = fut_refs.result()
+            seed_doi = search_input.doi
         else:
             # Busca por título: os identificadores só são conhecidos depois de
             # resolver o paper. Sem isso as referências sairiam sempre vazias.
@@ -332,6 +361,7 @@ class SnowballingPipeline:
             openalex_references = self.reference_provider.get_references(
                 doi=resolved_doi, openalex_id=openalex_id
             )
+            seed_doi = resolved_doi
 
         # O Semantic Scholar também contribui
         # referências (via paper.get("references"), que search_combined já
@@ -339,13 +369,54 @@ class SnowballingPipeline:
         # duas fontes aqui, o forward ficava com o "References" contando só o
         # que o OpenAlex resolveu, bem menor do que a busca backward do mesmo
         # paper (que já fazia o merge desde o commit anterior).
-        semantic_references = tag_source(paper.get("references"), "semantic")
+        semantic_references = [
+            record
+            for record in tag_source(paper.get("references"), "semantic")
+            if not is_semantic_reference_noise(record)
+        ]
         paper["citations"] = tag_source(paper.get("citations"), "semantic")
 
-        # As referências são obtidas na mesma busca que as citações:
-        # prioriza Semantic Scholar e usa OpenAlex apenas como fallback
-        # quando Semantic Scholar não retorna nenhuma referência.
+        # OpenCitations entra quando o Semantic Scholar não entregou lista de
+        # referências — seja por bloqueio da editora, seja porque não respondeu
+        # (sem chave de API, 429 é o caso comum). Depender só do bloqueio
+        # confirmado deixava a fonte complementar presa justamente à fonte que
+        # mais falha. Quando o Semantic entrega a lista, ela é a mais completa
+        # e a chamada extra não compensa.
+        #
+        # Fica aqui, e não em search_combined: só neste ponto as referências do
+        # OpenAlex já existem, e sem elas não há como saber o que é novo.
+        crossref_references = fetch_crossref_references(seed_doi) if seed_doi else []
+        largest_other_list = max(len(semantic_references), len(openalex_references))
+        # A lista do Crossref só define o conjunto quando está completa. Há
+        # editoras que depositam só parte das referências; abaixo de 80% da
+        # maior lista das outras fontes, ela é tratada como incompleta.
+        use_crossref = bool(crossref_references) and (
+            len(crossref_references) >= CROSSREF_MIN_COVERAGE * largest_other_list
+        )
+        if crossref_references and not use_crossref:
+            print(
+                f"[CROSSREF REFERENCES] ignorada: listed={len(crossref_references)} "
+                f"< {CROSSREF_MIN_COVERAGE:.0%} de {largest_other_list}",
+                file=sys.stderr,
+            )
+
+        opencitations_references = []
+        if not semantic_references and not use_crossref and seed_doi:
+            opencitations_references = fallback_opencitations_by_doi(seed_doi)
         semantic_citations = paper.get("citations", []) or []
+
+        # Com a lista do Semantic disponível, o OpenAlex só complementa. Um
+        # registro "paratext" (volume de anais) é a mesma referência que o
+        # Semantic já resolveu para o artigo certo, mas não casa por DOI nem
+        # por título e entrava como referência extra. Sem o Semantic, ele é a
+        # única pista de que a referência existe, então fica.
+        if semantic_references:
+            openalex_complement = [
+                record for record in openalex_references
+                if record.get("openalex_type") != "paratext"
+            ]
+        else:
+            openalex_complement = openalex_references
 
         print(
             f"[SOURCE COUNTS] Semantic: references={len(semantic_references)}; "
@@ -371,19 +442,60 @@ class SnowballingPipeline:
                 )
             )
         )
+        if use_crossref:
+            # A lista depositada pela editora define QUAIS são as referências;
+            # Semantic e OpenAlex só completam título, DOI, abstract etc. das
+            # entradas dela. Os itens que só elas trazem ficam de fora: nos
+            # artigos medidos eram referências do preprint (não da versão
+            # publicada), citações ligadas ao paper errado e lixo de PDF.
+            merged_references = merge_records_across_sources(
+                merge_records_across_sources(
+                    crossref_references,
+                    semantic_references,
+                    match_titles=True,
+                    keep_unmatched=False,
+                ),
+                openalex_complement,
+                match_titles=True,
+                keep_unmatched=False,
+            )
+        else:
+            merged_references = merge_records_across_sources(
+                merge_records_across_sources(
+                    semantic_references,
+                    openalex_complement,
+                    match_titles=True,
+                ),
+                opencitations_references,
+            )
 
         references = CitationNormalizer.normalize_counts(
-            collapse_duplicates_by_key(
-                enrich_incomplete_citations(
-                    semantic_references if semantic_references else openalex_references
+            use_citation_text_as_missing_title(
+                collapse_duplicates_by_key(
+                    enrich_incomplete_citations(merged_references)
                 )
             )
         )
+        print(
+            f"[REFERENCE SOURCE] base={'crossref' if use_crossref else 'semantic+openalex'}; "
+            f"crossref={len(crossref_references)}, semantic={len(semantic_references)}, "
+            f"openalex={len(openalex_references)}, final={len(references)}",
+            file=sys.stderr,
+        )
+
+        semantic_reference_keys = {
+            get_record_key(item) for item in semantic_references
+        }
+        cross_source_matches = sum(
+            1 for record in openalex_references
+            if get_record_key(record) in semantic_reference_keys
+        )
 
         print(
-            f"[REFERENCE SOURCE] selected={'semantic' if semantic_references else 'openalex'}; "
-            f"semantic={len(semantic_references)}, openalex={len(openalex_references)}, "
-            f"final={len(references)}",
+            f"[DEDUP COUNTS] References: semantic={len(semantic_references)}, "
+            f"openalex={len(openalex_references)}, "
+            f"cross_source_matches={cross_source_matches}, "
+            f"final_after_merge={len(references)}",
             file=sys.stderr,
         )
 
@@ -392,6 +504,37 @@ class SnowballingPipeline:
             f"references={len(references)}",
             file=sys.stderr,
         )
+
+        # Conta o que a OpenCitations trouxe e nenhuma outra fonte trouxe.
+        # merge_records_across_sources e collapse_duplicates_by_key preservam o
+        # registro da primeira fonte em que ele aparece, então o que chega ao
+        # resultado com source == "opencitations" não casou com nada das outras
+        # fontes pela chave de identidade do pipeline (get_record_key).
+        #
+        # Limite conhecido: essa chave usa o DOI quando existe e só cai para o
+        # título quando não existe, então um registro com DOI nunca é comparado
+        # por título com outro sem DOI. Se o OpenAlex trouxer uma referência sem
+        # DOI (cerca de 10% nos artigos medidos) e a OpenCitations trouxer a
+        # mesma com DOI, as duas sobrevivem e esta contagem inclui a duplicata.
+        opencitations_added = sum(
+            1 for record in references if record.get("source") == "opencitations"
+        )
+        if opencitations_references:
+            print(
+                f"[OPENCITATIONS] listed={len(opencitations_references)}, "
+                f"added={opencitations_added}",
+                file=sys.stderr,
+            )
+        if opencitations_added:
+            opencitations_note = (
+                f"OpenCitations acrescentou {opencitations_added} "
+                f"{'referência' if opencitations_added == 1 else 'referências'} "
+                "que não vieram das outras fontes."
+            )
+            existing_warning = paper.get("warning")
+            paper["warning"] = (
+                f"{existing_warning} | {opencitations_note}" if existing_warning else opencitations_note
+            )
 
         openalex_warning = self.reference_provider.last_warning
         if openalex_warning:

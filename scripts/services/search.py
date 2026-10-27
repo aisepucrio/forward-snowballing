@@ -5,6 +5,7 @@ import time
 import json
 import threading
 import requests
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from services.normalize import (
@@ -123,7 +124,12 @@ def safe_get(url, headers=None):
     # Semantic Scholar), não uma falha excepcional — por isso ele leva mais
     # tentativas e espera de verdade o Retry-After, ao contrário de erro de
     # rede/5xx, que é retry curto, e 4xx que não é 429, que não é retryable.
-    max_attempts_429 = 3
+    # Medido: a Semantic Scholar devolve 429 já na segunda requisição pesada
+    # (references + citations com abstract), mesmo com chave, e só libera após
+    # ~5 s. Com 3 tentativas (1 s + 2 s de espera) o pipeline desistia antes
+    # disso e caía para "só OpenAlex" — origem da variação entre execuções do
+    # mesmo artigo. 6 tentativas esperam até 1+2+4+8+8 = 23 s.
+    max_attempts_429 = 6
     max_attempts_other = 2
     max_wait_seconds = 8
 
@@ -348,6 +354,21 @@ def enrich_semantic_records(data):
             records[index] = record
 
     return data
+
+
+def is_semantic_reference_noise(record):
+    """
+    Referência que a Semantic Scholar extraiu do PDF sem casar com paper algum
+    e sem ano nem DOI. Medido em dois artigos: as 6 que caíam nesse caso eram
+    frases do corpo do texto ("We identified six main different application
+    areas...", "A6 Evolution", "RQ3 - What is the performance..."), não
+    referências — e entravam na contagem do backward.
+    """
+    return (
+        not record.get("paperId")
+        and is_missing(record.get("year"))
+        and not get_citation_doi(record)
+    )
 
 
 def tag_source(records, source):
@@ -935,6 +956,80 @@ def fallback_crossref_batch_by_doi(dois, batch_size=20):
 
 
 
+def is_crossref_reference_fragment(ref):
+    """
+    Pedaço de citação que a editora depositou como entrada própria: só a lista
+    de autores, terminada em vírgula ("Ashouri, A.H., Killian, W., ...,
+    Silvano, C.,"). Medido: 6 dos 139 itens do Crossref de um artigo da JSS;
+    sem eles a contagem fecha com a lista do PDF. "Sem ano" não serve de
+    critério: há referências legítimas sem ano e anos como "1988a".
+    """
+    if ref.get("DOI") or ref.get("year"):
+        return False
+    if ref.get("article-title") or ref.get("volume-title") or ref.get("series-title"):
+        return False
+    return (ref.get("unstructured") or "").rstrip().endswith(",")
+
+
+def crossref_reference_to_record(ref):
+    # article-title é o trabalho citado; volume-title/series-title é o livro
+    # ou anais onde ele saiu (ou o próprio livro, quando não há article-title).
+    container = ref.get("journal-title") or ref.get("volume-title") or ref.get("series-title")
+    title = ref.get("article-title") or ref.get("volume-title") or ref.get("series-title")
+    if title == container and not ref.get("article-title"):
+        container = ref.get("journal-title")
+        # Capítulo de livro sem título próprio: a editora deposita o título
+        # do LIVRO em volume-title e a página inicial do capítulo. Usá-lo como
+        # título dava o mesmo título a todos os capítulos do livro (4 num
+        # artigo), que o collapse por chave fundia num só — e o enriquecimento
+        # por título colava neles o DOI de outra obra homônima.
+        if ref.get("first-page"):
+            title = None
+            container = ref.get("volume-title") or ref.get("series-title")
+
+    return {
+        # Sem título estruturado fica "-": o texto livre da citação vai em
+        # "unstructured", onde merge_records_across_sources procura o título
+        # vindo das outras fontes. Usar o texto livre como título aqui faria
+        # enrich_incomplete_citations buscá-lo no Crossref por título.
+        "title": title or "-",
+        "unstructured": ref.get("unstructured"),
+        "year": ref.get("year") or "-",
+        "venue": container or "-",
+        "doi": normalize_doi(ref.get("DOI")) or "-",
+        "authors": [{"name": ref["author"]}] if ref.get("author") else [],
+        "source": "crossref",
+    }
+
+
+def fetch_crossref_references(doi):
+    """
+    Lista de referências que a editora depositou no Crossref para `doi`.
+
+    É a fonte mais próxima da lista impressa no artigo: nos artigos medidos
+    bateu exatamente com a contagem do PDF (77, 28, 83), inclusive quando a
+    Semantic Scholar bloqueia a lista e o OpenAlex só conhece as referências
+    com DOI (capítulos de livro, resumos de congresso e "in press" ficavam de
+    fora). Usa a mesma URL de fallback_crossref, então a requisição é
+    reaproveitada pelo cache de safe_get.
+    """
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi:
+        return []
+
+    encoded_doi = requests.utils.quote(normalized_doi, safe="")
+    data = safe_get(f"https://api.crossref.org/works/{encoded_doi}")
+    if not data:
+        return []
+
+    refs = (data.get("message") or {}).get("reference") or []
+    return [
+        crossref_reference_to_record(ref)
+        for ref in refs
+        if isinstance(ref, dict) and not is_crossref_reference_fragment(ref)
+    ]
+
+
 def semantic_references_blocked_warning(paper_data):
     """
     A Semantic Scholar às vezes sabe QUANTAS referências um paper tem
@@ -988,31 +1083,119 @@ def merge_semantic_with_openalex(semantic_data, openalex_data):
     return merged
 
 
-def merge_records_across_sources(primary_records, secondary_records):
-    """Remove only records that overlap between two different sources."""
+def merge_records_across_sources(
+    primary_records,
+    secondary_records,
+    match_titles=False,
+    keep_unmatched=True,
+):
+    """
+    Remove only records that overlap between two different sources.
+
+    match_titles=True também casa por título quando a chave (DOI, ou título se
+    não houver DOI) não bate. Medido no backward: o mesmo trabalho chega com
+    DOI de um lado e sem DOI do outro (a chave vira doi:... vs title:...), ou
+    com DOIs diferentes (preprint arXiv vs versão publicada, edição de livro),
+    e era contado duas vezes — 18 de 131 referências do OpenAlex num artigo.
+    Dentro da lista de referências de UM paper, dois títulos praticamente
+    iguais são o mesmo trabalho citado; por isso a opção é só para referências.
+    Também casa o título da secundária dentro do texto livre da citação
+    ("unstructured") de uma primária sem título — o caso do Crossref.
+
+    keep_unmatched=False usa a secundária só para completar campos da
+    primária, sem acrescentar registros: é o modo em que a lista primária
+    (a depositada pela editora no Crossref) define o conjunto.
+    """
     primary_records = [dict(record) for record in (primary_records or [])]
     secondary_records = [dict(record) for record in (secondary_records or [])]
 
     primary_by_key = {}
+    primary_by_title = {}
+    primary_by_citation_text = {}
     for record in primary_records:
         key = get_record_key(record)
         if key and key not in primary_by_key:
             primary_by_key[key] = record
+        title = normalize_title(record.get("title"))
+        if title and title not in primary_by_title:
+            primary_by_title[title] = record
+        citation_text = normalize_title(record.get("unstructured"))
+        if not title and citation_text:
+            primary_by_citation_text.setdefault(citation_text, record)
 
     merged = primary_records[:]
     for record in secondary_records:
         key = get_record_key(record)
-        if key and key in primary_by_key:
-            primary_by_key[key].update({
+        match = primary_by_key.get(key) if key else None
+        if match is None and match_titles:
+            match = find_record_by_title(record.get("title"), primary_by_title)
+        if match is None and match_titles:
+            match = find_record_in_citation_text(record.get("title"), primary_by_citation_text)
+        if match is not None:
+            match.update({
                 field: value
                 for field, value in record.items()
-                if field_missing(primary_by_key[key].get(field))
+                if field_missing(match.get(field))
                 and not field_missing(value)
             })
             continue
-        merged.append(record)
+        if keep_unmatched:
+            merged.append(record)
 
     return merged
+
+
+def find_record_in_citation_text(title, records_by_citation_text):
+    """
+    Só aceita quando o título aparece no texto de UMA citação. O título de um
+    livro aparece em todos os capítulos citados dele ("Membranes, Metabolism
+    and Dry Organisms" em 4 citações de um artigo): casar com o primeiro
+    colava o livro no capítulo, e o collapse por chave depois fundia os 4
+    capítulos num só.
+    """
+    normalized = normalize_title(title)
+    if len(normalized) < REFERENCE_TITLE_MIN_LENGTH:
+        return None
+    matches = [
+        record
+        for citation_text, record in records_by_citation_text.items()
+        if normalized in citation_text
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
+REFERENCE_TITLE_MATCH_THRESHOLD = 0.90
+# Abaixo disso a similaridade de sequência não é confiável: "Action research"
+# casaria com qualquer título curto parecido.
+REFERENCE_TITLE_MIN_LENGTH = 20
+
+
+def find_record_by_title(title, records_by_title):
+    normalized = normalize_title(title)
+    if not normalized:
+        return None
+
+    exact = records_by_title.get(normalized)
+    if exact is not None:
+        return exact
+
+    if len(normalized) < REFERENCE_TITLE_MIN_LENGTH:
+        return None
+
+    best, best_score = None, 0.0
+    for candidate_title, candidate in records_by_title.items():
+        if len(candidate_title) < REFERENCE_TITLE_MIN_LENGTH:
+            continue
+        # Um título prefixo do outro é a mesma obra com sufixo de edição ou
+        # subtítulo ("Modern Information Retrieval, 1st ed"), que derruba a
+        # similaridade de sequência abaixo do limiar.
+        if normalized.startswith(candidate_title) or candidate_title.startswith(normalized):
+            return candidate
+        score = SequenceMatcher(None, normalized, candidate_title).ratio()
+        if score > best_score:
+            best, best_score = candidate, score
+
+    return best if best_score >= REFERENCE_TITLE_MATCH_THRESHOLD else None
 
 
 def collapse_duplicates_by_key(records):
