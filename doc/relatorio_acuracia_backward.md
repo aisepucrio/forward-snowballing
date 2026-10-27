@@ -74,13 +74,86 @@ Scholar, OpenAlex e OpenCitations com o resultado final (detalhes em
   ("Author version of the manuscript accepted for publication", 2020) que a
   heurística não pega, e 1 ref só do OpenAlex.
 
-## Próximo passo sugerido
+## Atualização: Crossref como base do backward
 
-Usar a lista `reference` do **Crossref** como fonte do backward. Hoje ela é
-ignorada: `crossref_item_to_result` só lê metadados. Nos artigos medidos, ela
-bateu exatamente com o gabarito em 2 de 2 casos (77 e 28) e cobre justamente o
-caso da lista bloqueada na Semantic para editoras como a Elsevier
-(10.1016/j.infsof.2016.07.006: Semantic bloqueado, Crossref 77 = real).
+A lista de referências que a editora deposita no Crossref (`reference`) passou
+a ser a **base** do backward quando existe e está completa (≥ 80% da maior
+lista entre Semantic e OpenAlex). Semantic e OpenAlex só completam metadados
+das entradas do Crossref e não acrescentam itens. Sem lista no Crossref, o
+comportamento anterior continua (Semantic + complemento do OpenAlex +
+OpenCitations).
+
+| Artigo | Real (PDF) | Sem Crossref | Com Crossref |
+|---|---|---|---|
+| 10.1016/j.jss.2021.111044 | 132* | 141 | **131** |
+| 10.5277/e-Inf180103 | 75 | 5 | 5 (sem lista no Crossref) |
+| 10.1016/j.infsof.2016.07.006 | 77 | 76 | **77** |
+| 10.1016/j.infsof.2020.106294 | 28 | 30 | **28** |
+| 10.1049/ic.2011.0001 | 23 | 12 | 12 (Crossref tem 0) |
+| 10.1007/BF00762210 (busca por título) | 83 | 69 | **83** |
+
+\* Contado no PDF. `valores_reais_artigos.csv` ainda traz 110, que está errado.
+
+Os 4 artigos com lista no Crossref ficaram com erro de no máximo 1
+referência; antes ficavam entre 1 e 14. As 2 execuções de cada artigo deram
+o mesmo resultado.
+
+Ajustes necessários para o formato do Crossref (todos com teste unitário em
+`scripts/tests/test_crossref_references.py`):
+
+- **Fragmentos:** a editora às vezes deposita só a lista de autores, terminada
+  em vírgula, como entrada própria (6 na JSS). Esses fragmentos são
+  descartados.
+- **Capítulos de livro:** vêm com o título do livro em `volume-title`. Se esse
+  título fosse usado, todos os capítulos do mesmo livro seriam fundidos (4 no
+  BF00762210). Agora o título do capítulo fica vazio e o livro vai para
+  `venue`.
+- **Entradas só com texto livre (`unstructured`):** o título vindo de outra
+  fonte é procurado dentro desse texto, e só vale se aparecer em uma única
+  citação. Sem correspondência, o texto da citação é exibido como título (18 no
+  BF00762210).
+
+### Rodada completa (todos os artigos de `tests_csvs/` + amostra samplec)
+
+Foram 44 buscas (por título e por DOI, 2 execuções cada), em cerca de 35 min.
+Todas as execuções repetidas deram o mesmo número, e a busca por título e a
+por DOI coincidiram em todos os artigos.
+
+| Artigo | Real | Sistema | Δ | Base | Crossref / Semantic / OpenAlex |
+|---|---|---|---|---|---|
+| JSS 2021 (config. spaces) | 132 | 131 | −1 | Crossref | 133 / 143 / 135 |
+| IST 2016 (industry-academia) | 77 | 77 | 0 | Crossref | 77 / bloq. / 80 |
+| IST 2020 (hybrid search) | 28 | 28 | 0 | Crossref | 28 / 30 / 34 |
+| UML Diagrams (MDPI 2021) | 7 | 7 | 0 | Crossref | 7 / 7 / 6 |
+| Procedia 2015 (load forecasting) | 29 | 29 | 0 | Crossref | 29 / 24 / 27 |
+| BF00762210 (1989) | 83 | 83 | 0 | Crossref | 83 / bloq. / 69 |
+| KM Diagnostics (ACM 2018) | 57 | 55 | −2 | Crossref | 55 / bloq. / 47 |
+| SLRs in SE (IST 2009) | 42* | 42 | 0 | Crossref | 42 / 50 / 47 |
+| Internet Addiction (2012) | 128 | 138 | +10 | Sem. + OA | — / 136 / 131 |
+| Personality in SE (IET 2011) | 23 | 12 | −11 | OpenAlex | 0 / bloq. / 12 |
+| KM in Testing (e-Inf 2018) | 75 | 5 | −70 | OpenAlex | — / bloq. / 4 |
+| Child abuse and the Internet (2001) | 118 | 31 | −87 | OpenAlex | sem DOI / bloq. / 31 |
+| ICSME 2026 | 63 | não encontrado | — | — | não indexado |
+
+\* Contado no PDF: [1]–[42]. O gabarito antigo dizia 52 e foi corrigido.
+
+- Dos 12 artigos encontrados, 6 estão exatos e 2 erram por 1–2 referências.
+  No início do dia, só 1 de 7 ficava dentro de ±10%.
+- **SLRs in SE (IST 2009):** parecia o único caso em que o Crossref piorava o
+  resultado (42 contra 52), mas o PDF tem exatamente 42 referências. O erro
+  estava no gabarito. O Semantic (50) e o OpenAlex (47) é que listam a mais. A
+  proteção dos 80% decidiu certo e não precisa de ajuste. A união das 3 fontes
+  com remoção de duplicatas, simulada como alternativa, daria 51, ou 9 a mais.
+- Dois dos 8 gabaritos originais estavam errados (JSS: 110 → 132; SLR 2009:
+  52 → 42). Vale conferir no PDF os que ainda não foram verificados, como o KM
+  Diagnostics (gabarito 57, Crossref 55).
+- **Internet Addiction:** a editora (OMICS) não deposita referências no
+  Crossref. Continua o excesso causado por referências que o Semantic liga ao
+  paper errado.
+
+Continuam sem solução os artigos cuja editora não deposita referências
+(e-Informatica, IET) e os artigos sem DOI. Nesses casos só a extração do PDF
+resolveria.
 
 ## Limitações
 

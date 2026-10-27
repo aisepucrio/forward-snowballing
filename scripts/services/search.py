@@ -956,6 +956,80 @@ def fallback_crossref_batch_by_doi(dois, batch_size=20):
 
 
 
+def is_crossref_reference_fragment(ref):
+    """
+    Pedaço de citação que a editora depositou como entrada própria: só a lista
+    de autores, terminada em vírgula ("Ashouri, A.H., Killian, W., ...,
+    Silvano, C.,"). Medido: 6 dos 139 itens do Crossref de um artigo da JSS;
+    sem eles a contagem fecha com a lista do PDF. "Sem ano" não serve de
+    critério: há referências legítimas sem ano e anos como "1988a".
+    """
+    if ref.get("DOI") or ref.get("year"):
+        return False
+    if ref.get("article-title") or ref.get("volume-title") or ref.get("series-title"):
+        return False
+    return (ref.get("unstructured") or "").rstrip().endswith(",")
+
+
+def crossref_reference_to_record(ref):
+    # article-title é o trabalho citado; volume-title/series-title é o livro
+    # ou anais onde ele saiu (ou o próprio livro, quando não há article-title).
+    container = ref.get("journal-title") or ref.get("volume-title") or ref.get("series-title")
+    title = ref.get("article-title") or ref.get("volume-title") or ref.get("series-title")
+    if title == container and not ref.get("article-title"):
+        container = ref.get("journal-title")
+        # Capítulo de livro sem título próprio: a editora deposita o título
+        # do LIVRO em volume-title e a página inicial do capítulo. Usá-lo como
+        # título dava o mesmo título a todos os capítulos do livro (4 num
+        # artigo), que o collapse por chave fundia num só — e o enriquecimento
+        # por título colava neles o DOI de outra obra homônima.
+        if ref.get("first-page"):
+            title = None
+            container = ref.get("volume-title") or ref.get("series-title")
+
+    return {
+        # Sem título estruturado fica "-": o texto livre da citação vai em
+        # "unstructured", onde merge_records_across_sources procura o título
+        # vindo das outras fontes. Usar o texto livre como título aqui faria
+        # enrich_incomplete_citations buscá-lo no Crossref por título.
+        "title": title or "-",
+        "unstructured": ref.get("unstructured"),
+        "year": ref.get("year") or "-",
+        "venue": container or "-",
+        "doi": normalize_doi(ref.get("DOI")) or "-",
+        "authors": [{"name": ref["author"]}] if ref.get("author") else [],
+        "source": "crossref",
+    }
+
+
+def fetch_crossref_references(doi):
+    """
+    Lista de referências que a editora depositou no Crossref para `doi`.
+
+    É a fonte mais próxima da lista impressa no artigo: nos artigos medidos
+    bateu exatamente com a contagem do PDF (77, 28, 83), inclusive quando a
+    Semantic Scholar bloqueia a lista e o OpenAlex só conhece as referências
+    com DOI (capítulos de livro, resumos de congresso e "in press" ficavam de
+    fora). Usa a mesma URL de fallback_crossref, então a requisição é
+    reaproveitada pelo cache de safe_get.
+    """
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi:
+        return []
+
+    encoded_doi = requests.utils.quote(normalized_doi, safe="")
+    data = safe_get(f"https://api.crossref.org/works/{encoded_doi}")
+    if not data:
+        return []
+
+    refs = (data.get("message") or {}).get("reference") or []
+    return [
+        crossref_reference_to_record(ref)
+        for ref in refs
+        if isinstance(ref, dict) and not is_crossref_reference_fragment(ref)
+    ]
+
+
 def semantic_references_blocked_warning(paper_data):
     """
     A Semantic Scholar às vezes sabe QUANTAS referências um paper tem
@@ -1009,7 +1083,12 @@ def merge_semantic_with_openalex(semantic_data, openalex_data):
     return merged
 
 
-def merge_records_across_sources(primary_records, secondary_records, match_titles=False):
+def merge_records_across_sources(
+    primary_records,
+    secondary_records,
+    match_titles=False,
+    keep_unmatched=True,
+):
     """
     Remove only records that overlap between two different sources.
 
@@ -1020,12 +1099,19 @@ def merge_records_across_sources(primary_records, secondary_records, match_title
     e era contado duas vezes — 18 de 131 referências do OpenAlex num artigo.
     Dentro da lista de referências de UM paper, dois títulos praticamente
     iguais são o mesmo trabalho citado; por isso a opção é só para referências.
+    Também casa o título da secundária dentro do texto livre da citação
+    ("unstructured") de uma primária sem título — o caso do Crossref.
+
+    keep_unmatched=False usa a secundária só para completar campos da
+    primária, sem acrescentar registros: é o modo em que a lista primária
+    (a depositada pela editora no Crossref) define o conjunto.
     """
     primary_records = [dict(record) for record in (primary_records or [])]
     secondary_records = [dict(record) for record in (secondary_records or [])]
 
     primary_by_key = {}
     primary_by_title = {}
+    primary_by_citation_text = {}
     for record in primary_records:
         key = get_record_key(record)
         if key and key not in primary_by_key:
@@ -1033,6 +1119,9 @@ def merge_records_across_sources(primary_records, secondary_records, match_title
         title = normalize_title(record.get("title"))
         if title and title not in primary_by_title:
             primary_by_title[title] = record
+        citation_text = normalize_title(record.get("unstructured"))
+        if not title and citation_text:
+            primary_by_citation_text.setdefault(citation_text, record)
 
     merged = primary_records[:]
     for record in secondary_records:
@@ -1040,6 +1129,8 @@ def merge_records_across_sources(primary_records, secondary_records, match_title
         match = primary_by_key.get(key) if key else None
         if match is None and match_titles:
             match = find_record_by_title(record.get("title"), primary_by_title)
+        if match is None and match_titles:
+            match = find_record_in_citation_text(record.get("title"), primary_by_citation_text)
         if match is not None:
             match.update({
                 field: value
@@ -1048,9 +1139,29 @@ def merge_records_across_sources(primary_records, secondary_records, match_title
                 and not field_missing(value)
             })
             continue
-        merged.append(record)
+        if keep_unmatched:
+            merged.append(record)
 
     return merged
+
+
+def find_record_in_citation_text(title, records_by_citation_text):
+    """
+    Só aceita quando o título aparece no texto de UMA citação. O título de um
+    livro aparece em todos os capítulos citados dele ("Membranes, Metabolism
+    and Dry Organisms" em 4 citações de um artigo): casar com o primeiro
+    colava o livro no capítulo, e o collapse por chave depois fundia os 4
+    capítulos num só.
+    """
+    normalized = normalize_title(title)
+    if len(normalized) < REFERENCE_TITLE_MIN_LENGTH:
+        return None
+    matches = [
+        record
+        for citation_text, record in records_by_citation_text.items()
+        if normalized in citation_text
+    ]
+    return matches[0] if len(matches) == 1 else None
 
 
 REFERENCE_TITLE_MATCH_THRESHOLD = 0.90

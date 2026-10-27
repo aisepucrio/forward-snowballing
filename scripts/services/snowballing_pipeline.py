@@ -8,7 +8,7 @@ import requests
 
 from services.cache import get_cached, init_db, save_to_cache
 from services.deduplication import deduplicate_citations
-from services.normalize import normalize_doi
+from services.normalize import is_missing, normalize_doi
 from services.settings import cache_enabled, database_enabled
 from services.search import (
     build_pages,
@@ -21,6 +21,7 @@ from services.search import (
     extract_npages,
     fallback_openalex_by_title,
     fallback_opencitations_by_doi,
+    fetch_crossref_references,
     reconstruct_abstract_from_inverted_index,
     search_combined,
 )
@@ -31,7 +32,25 @@ NULL_INPUTS = {None, "", "-", "null", "None"}
 # Entradas antigas precisam ser refeitas, senão voltam sem os ids do banco.
 # Versão 4: backward passou a filtrar lixo do Semantic e a casar OpenAlex por
 # título; resultados cacheados antes disso têm outra contagem de referências.
-RESULT_CACHE_VERSION = 4
+# Versão 5: a lista de referências do Crossref passou a ser a base do backward.
+RESULT_CACHE_VERSION = 5
+
+CROSSREF_MIN_COVERAGE = 0.8
+
+
+def use_citation_text_as_missing_title(records):
+    """
+    Entradas do Crossref sem título estruturado que nenhuma outra fonte
+    completou: o texto livre da citação vira o título exibido. Fica para o fim
+    do pipeline porque, antes, um título assim seria buscado no Crossref.
+    """
+    result = []
+    for record in records:
+        item = dict(record)
+        if is_missing(item.get("title")) and item.get("unstructured"):
+            item["title"] = item["unstructured"]
+        result.append(item)
+    return result
 
 # Usado enquanto não existe login. Quando houver autenticação, trocar pelo id do
 # usuário logado.
@@ -366,8 +385,23 @@ class SnowballingPipeline:
         #
         # Fica aqui, e não em search_combined: só neste ponto as referências do
         # OpenAlex já existem, e sem elas não há como saber o que é novo.
+        crossref_references = fetch_crossref_references(seed_doi) if seed_doi else []
+        largest_other_list = max(len(semantic_references), len(openalex_references))
+        # A lista do Crossref só define o conjunto quando está completa. Há
+        # editoras que depositam só parte das referências; abaixo de 80% da
+        # maior lista das outras fontes, ela é tratada como incompleta.
+        use_crossref = bool(crossref_references) and (
+            len(crossref_references) >= CROSSREF_MIN_COVERAGE * largest_other_list
+        )
+        if crossref_references and not use_crossref:
+            print(
+                f"[CROSSREF REFERENCES] ignorada: listed={len(crossref_references)} "
+                f"< {CROSSREF_MIN_COVERAGE:.0%} de {largest_other_list}",
+                file=sys.stderr,
+            )
+
         opencitations_references = []
-        if not semantic_references and seed_doi:
+        if not semantic_references and not use_crossref and seed_doi:
             opencitations_references = fallback_opencitations_by_doi(seed_doi)
         semantic_citations = paper.get("citations", []) or []
 
@@ -408,19 +442,45 @@ class SnowballingPipeline:
                 )
             )
         )
+        if use_crossref:
+            # A lista depositada pela editora define QUAIS são as referências;
+            # Semantic e OpenAlex só completam título, DOI, abstract etc. das
+            # entradas dela. Os itens que só elas trazem ficam de fora: nos
+            # artigos medidos eram referências do preprint (não da versão
+            # publicada), citações ligadas ao paper errado e lixo de PDF.
+            merged_references = merge_records_across_sources(
+                merge_records_across_sources(
+                    crossref_references,
+                    semantic_references,
+                    match_titles=True,
+                    keep_unmatched=False,
+                ),
+                openalex_complement,
+                match_titles=True,
+                keep_unmatched=False,
+            )
+        else:
+            merged_references = merge_records_across_sources(
+                merge_records_across_sources(
+                    semantic_references,
+                    openalex_complement,
+                    match_titles=True,
+                ),
+                opencitations_references,
+            )
+
         references = CitationNormalizer.normalize_counts(
-            collapse_duplicates_by_key(
-                enrich_incomplete_citations(
-                    merge_records_across_sources(
-                        merge_records_across_sources(
-                            semantic_references,
-                            openalex_complement,
-                            match_titles=True,
-                        ),
-                        opencitations_references,
-                    )
+            use_citation_text_as_missing_title(
+                collapse_duplicates_by_key(
+                    enrich_incomplete_citations(merged_references)
                 )
             )
+        )
+        print(
+            f"[REFERENCE SOURCE] base={'crossref' if use_crossref else 'semantic+openalex'}; "
+            f"crossref={len(crossref_references)}, semantic={len(semantic_references)}, "
+            f"openalex={len(openalex_references)}, final={len(references)}",
+            file=sys.stderr,
         )
 
         semantic_reference_keys = {

@@ -25,8 +25,12 @@ INPUT_CSV = os.getenv("INPUT_CSV") or os.path.join(SCRIPT_DIR, "problematicos.cs
 # Cada entrada leva minutos (várias APIs, com espera de rate limit); acima de
 # 5 a rodada fica longa demais para iterar.
 MAX_ENTRADAS = int(os.getenv("MAX_ENTRADAS", "5"))
-OUTPUT_CSV = os.path.join(SCRIPT_DIR, "result_searches.csv")
-VALORES_REAIS_CSV = os.path.join(SCRIPT_DIR, "valores_reais_artigos.csv")
+# Outra amostra (ex.: samplec):
+#   INPUT_CSV=tests_csvs/samplec_titulos.csv
+#   VALORES_REAIS_CSV=tests_csvs/samplec_valores_reais.csv
+#   OUTPUT_CSV=tests_csvs/samplec_resultados.csv
+OUTPUT_CSV = os.getenv("OUTPUT_CSV") or os.path.join(SCRIPT_DIR, "result_searches.csv")
+VALORES_REAIS_CSV = os.getenv("VALORES_REAIS_CSV") or os.path.join(SCRIPT_DIR, "valores_reais_artigos.csv")
 
 PAUSA_ENTRE_BUSCAS = float(os.getenv("PAUSA_ENTRE_BUSCAS", "2"))
 TIMEOUT_POR_BUSCA = float(os.getenv("TIMEOUT_POR_BUSCA", "300"))
