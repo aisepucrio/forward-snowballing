@@ -114,20 +114,63 @@ function prepararArtigosParaAnalise(artigos) {
   }));
 }
 
-function construirColunasCriterios(resultados) {
-  const colunas = Array.from(
-    new Set((resultados || []).flatMap(r => Object.keys(r?.results || {})))
-  );
+function normalizarRespostaCriterio(valor) {
+  if (typeof valor === 'boolean') return valor ? 'yes' : 'no';
+  const normalizado = String(valor ?? '').trim().toLowerCase();
+  if (['yes', 'sim', 'true'].includes(normalizado)) return 'yes';
+  if (['no', 'não', 'nao', 'false'].includes(normalizado)) return 'no';
+  return null;
+}
 
-  return colunas.map(col => ({
-    label: col,
-    className: 'text-center',
-    render: (artigo, index) => {
-      const resultado = resultados?.[index] || { results: {} };
-      const raw = resultado.results?.[col];
-      return TableComponent.formatCriteriaBadge(raw);
-    }
-  }));
+function obterDecisaoIA(resultados) {
+  const criterios = Object.entries(resultados || {});
+  const inclusao = criterios.filter(([nome]) => nome.toUpperCase().startsWith('IC'));
+  const exclusao = criterios.filter(([nome]) => nome.toUpperCase().startsWith('EC'));
+  const atendeInclusao = inclusao.every(([, valor]) => normalizarRespostaCriterio(valor) === 'yes');
+  const atendeExclusao = exclusao.every(([, valor]) => normalizarRespostaCriterio(valor) !== 'yes');
+  return atendeInclusao && atendeExclusao ? 'include' : 'exclude';
+}
+
+function formatarChipCriterio(nome, valor) {
+  const resposta = normalizarRespostaCriterio(valor);
+  const estado = resposta === 'yes' ? 'yes' : resposta === 'no' ? 'no' : 'na';
+  const simbolo = estado === 'yes' ? '✓' : estado === 'no' ? '✗' : '—';
+  return `<span class="decision-criterion decision-criterion-${estado}">
+    <span>${TableComponent.escapeHtml(nome)}</span><span aria-hidden="true">${simbolo}</span>
+  </span>`;
+}
+
+function renderizarDecisao(artigo) {
+  const aiDecision = artigo.aiDecision || 'exclude';
+  const userDecision = artigo.userDecision || aiDecision;
+  const diverge = userDecision !== aiDecision;
+  const sugestao = aiDecision === 'include' ? 'include' : 'exclude';
+  const header = diverge
+    ? `<img src="../images/differs.svg" alt="" class="decision-suggestion-icon">
+       <span>Differs · AI suggested ${sugestao}</span>`
+    : `<img src="../images/ai_suggestion.svg" alt="" class="decision-suggestion-icon">
+       <span>AI suggests <strong class="decision-${sugestao}">${sugestao}</strong></span>`;
+  const criterios = Object.entries(artigo.criteriaResults || {})
+    .sort(([a], [b]) => {
+      const aIsExclusion = a.toUpperCase().startsWith('EC');
+      const bIsExclusion = b.toUpperCase().startsWith('EC');
+      return Number(aIsExclusion) - Number(bIsExclusion);
+    })
+    .map(([nome, valor]) => formatarChipCriterio(nome, valor))
+    .join('');
+
+  return `<div class="decision-cell">
+    <div class="decision-suggestion ${diverge ? 'decision-diverges' : ''}">${header}</div>
+    <div class="decision-criteria">${criterios || '<span class="decision-criterion decision-criterion-na">—</span>'}</div>
+    <div class="decision-buttons">
+      <button type="button" class="decision-button ${userDecision === 'include' ? 'is-selected' : ''}" data-decision="include">
+        <img src="../images/include.svg" alt="" aria-hidden="true"><span>${userDecision === 'include' ? 'Included' : 'Include'}</span>
+      </button>
+      <button type="button" class="decision-button ${userDecision === 'exclude' ? 'is-selected' : ''}" data-decision="exclude">
+        <img src="../images/exclude.svg" alt="" aria-hidden="true"><span>${userDecision === 'exclude' ? 'Excluded' : 'Exclude'}</span>
+      </button>
+    </div>
+  </div>`;
 }
 
 function mostrarTabelaComResultados(artigos, resultados) {
@@ -144,24 +187,32 @@ function mostrarTabelaComResultados(artigos, resultados) {
     return;
   }
 
-  const extraColumns = construirColunasCriterios(resultados);
-
   TableComponent.render({
     target: tbody,
     data: artigos,
     showActions: false,
-    extraColumns,
+    decisionColumn: {
+      render: artigo => renderizarDecisao(artigo),
+      onChange: (artigo, decision) => {
+        artigo.userDecision = decision;
+        artigo.decision = decision;
+        mostrarTabelaComResultados(artigos, resultados);
+      }
+    },
     onToggleExpand: () => mostrarTabelaComResultados(artigos, resultados)
   });
 }
 
-function jsonParaCSV(resultados) {
-  if (!resultados || resultados.length === 0) return '';
+function jsonParaCSV(artigos) {
+  const resultados = (artigos || []).filter(artigo =>
+    (artigo.userDecision || artigo.decision || artigo.aiDecision) === 'include'
+  );
+  if (resultados.length === 0) return '';
 
   const criteriosSet = new Set();
   resultados.forEach(r => {
-    if (r.results) {
-      Object.keys(r.results).forEach(c => criteriosSet.add(c));
+    if (r.criteriaResults) {
+      Object.keys(r.criteriaResults).forEach(c => criteriosSet.add(c));
     }
   });
 
@@ -172,7 +223,7 @@ function jsonParaCSV(resultados) {
   resultados.forEach(r => {
     const linha = [r.title || ''];
     colunas.forEach(col => {
-      let val = r.results?.[col] || '';
+      let val = r.criteriaResults?.[col] || '';
       val = String(val);
       if (val.includes(',') || val.includes('"') || val.includes('\n')) {
         val = `"${val.replace(/"/g, '""')}"`;
@@ -330,6 +381,14 @@ function exibirResultados(resultados) {
   document.getElementById('resultadoAnalise').dataset.resultadosRaw = JSON.stringify(resultados);
   document.getElementById('selectedTitle').style.display = 'none';
 
+  artigosIncluidos.forEach((artigo, index) => {
+    const resultado = resultados[index] || { results: {} };
+    artigo.criteriaResults = resultado.results || {};
+    artigo.aiDecision = obterDecisaoIA(artigo.criteriaResults);
+    artigo.userDecision = artigo.aiDecision;
+    artigo.decision = artigo.aiDecision;
+  });
+
   const analysisSection = document.getElementById('analysisSection');
   analysisSection.classList.remove('d-none');
   analysisSection.classList.add('d-flex');
@@ -454,7 +513,11 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     return;
   }
 
-  const csv = jsonParaCSV(resultados);
+  const csv = jsonParaCSV(artigosIncluidos);
+  if (!csv) {
+    alert('No included articles available for download.');
+    return;
+  }
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);

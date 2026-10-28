@@ -450,3 +450,154 @@ td.col-ec {
   margin: 1rem;
 }
 
+/* =========================
+   DECISION COLUMN
+========================= */
+
+#tabela-criterios {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+#tabela-criterios th.col-identity,
+#tabela-criterios td.col-identity {
+  width: 26% !important;
+}
+
+#tabela-criterios th.col-abstract,
+#tabela-criterios td.col-abstract {
+  width: 32% !important;
+}
+
+#tabela-criterios th.col-keywords,
+#tabela-criterios td.col-keywords {
+  width: 12% !important;
+}
+
+#tabela-criterios th.col-citations,
+#tabela-criterios td.col-citations {
+  width: 8% !important;
+}
+
+#tabela-criterios th.col-decision,
+#tabela-criterios td.col-decision {
+  width: 22% !important;
+}
+
+.criteria-table-wrapper {
+  overflow-x: visible;
+}
+
+#tabela-criterios td.col-decision {
+  vertical-align: top;
+}
+
+#tabela-criterios tbody tr:hover td {
+  background-color: #f9fafb;
+}
+
+.decision-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+.decision-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #475467;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.decision-suggestion-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+}
+
+.decision-suggestion strong {
+  font-weight: 600;
+}
+
+.decision-include {
+  color: #166534;
+}
+
+.decision-exclude {
+  color: #B42318;
+}
+
+.decision-suggestion.decision-diverges {
+  color: #92400E;
+}
+
+.decision-criteria {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.decision-criterion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.decision-criterion-yes {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.decision-criterion-no {
+  background: #FEE4E2;
+  color: #B42318;
+}
+
+.decision-criterion-na {
+  background: #F2F4F7;
+  color: #667085;
+}
+
+.decision-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.decision-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #CECECE;
+  border-radius: 6px;
+  background: #FFFFFF;
+  color: #6D6D6D;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.decision-button img {
+  width: 15px;
+  height: 15px;
+}
+
+.decision-button.is-selected {
+  border-color: #818080;
+  background: #E9E9E9;
+  color: #4B4139;
+}
