@@ -137,6 +137,7 @@ const TableComponent = (function () {
       data = [],
       showActions = false,
       extraColumns = [],
+      decisionColumn = null,
       onAction = null,
       onToggleExpand = null
     } = options;
@@ -150,6 +151,11 @@ const TableComponent = (function () {
     const table = tbody.closest('table');
     if (table) {
       const colActionsHeader = table.querySelector('.col-actions');
+      const decisionHeader = table.querySelector('.col-decision');
+      if (decisionHeader) decisionHeader.classList.toggle('d-none', !decisionColumn);
+      if (decisionColumn) table.classList.add('has-decision');
+      else table.classList.remove('has-decision');
+      table.classList.toggle('has-actions', showActions);
       if (colActionsHeader) {
         if (showActions) {
           colActionsHeader.classList.remove('d-none');
@@ -160,7 +166,7 @@ const TableComponent = (function () {
       syncExtraHeaders(table, extraColumns, showActions);
     }
 
-    const totalColSpan = 4 + (showActions ? 1 : 0) + extraColumns.length;
+    const totalColSpan = 4 + (decisionColumn ? 1 : 0) + (showActions ? 1 : 0) + extraColumns.length;
 
     if (!data || data.length === 0) {
       tbody.innerHTML = `<tr><td colspan="${totalColSpan}" class="text-center text-muted">No records found.</td></tr>`;
@@ -242,6 +248,13 @@ const TableComponent = (function () {
         tr.appendChild(td);
       });
 
+      if (decisionColumn) {
+        const tdDecision = document.createElement('td');
+        tdDecision.className = 'col-decision';
+        tdDecision.innerHTML = decisionColumn.render(item, index);
+        tr.appendChild(tdDecision);
+      }
+
       if (showActions) {
         const tdActions = document.createElement('td');
         tdActions.className = 'col-actions text-center';
@@ -301,6 +314,14 @@ const TableComponent = (function () {
             onAction(item, newStatus, index);
           });
         }
+      }
+
+      if (decisionColumn && typeof decisionColumn.onChange === 'function') {
+        tr.querySelectorAll('[data-decision]').forEach(button => {
+          button.addEventListener('click', () => {
+            decisionColumn.onChange(item, button.dataset.decision, index);
+          });
+        });
       }
 
       tbody.appendChild(tr);
