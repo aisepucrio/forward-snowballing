@@ -23,20 +23,18 @@ function mostrarTabelaArtigos(artigos) {
   });
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   try {
-    artigosIncluidos = JSON.parse(window.name || '[]').map(a => ({
+    artigosIncluidos = (await SearchState.carregarIncluidos()).map(a => ({
       ...a,
       abstractExpanded: false,
       keywordsExpanded: false
     }));
-  } catch {
+  } catch (err) {
+    console.error('Não foi possível carregar os artigos incluídos:', err);
     artigosIncluidos = [];
   }
 
-  // search_id não vem no window.name (não quisemos mudar esse formato, que
-  // analysis.html também lê) — index.js grava ele à parte no localStorage
-  // antes de navegar pra cá, então lemos de lá.
   window.currentSearchId = localStorage.getItem('currentSearchId') || null;
 
   // Os artigos chegam com found_via_seeds desde a busca; a tag "Seed N" ajuda

@@ -4,6 +4,7 @@ const crypto = require('crypto');
 
 const SESSION_COOKIE_NAME = 'snowballing_session';
 const SESSIONS_DIR = path.join(__dirname, '..', 'sessions');
+const SESSION_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) {
@@ -35,7 +36,7 @@ function ensureSession(req, res, next) {
     sessionId = crypto.randomBytes(16).toString('hex');
     res.setHeader(
       'Set-Cookie',
-      `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=Lax`
+      `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}; Path=/; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}; HttpOnly; SameSite=Lax`
     );
   }
 

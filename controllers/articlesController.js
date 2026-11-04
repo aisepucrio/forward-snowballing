@@ -1,3 +1,4 @@
+const { readOutput } = require('../services/sessionState');
 const { ArticleSearchService } = require('../services/articleSearchService');
 const { handlePythonRunnerError } = require('./pythonRunnerErrorHandler');
 const { EventEmitter } = require('events');
@@ -13,6 +14,7 @@ class ArticlesController {
     this.getArtigosIncluidos = this.getArtigosIncluidos.bind(this);
     this.updateFlag = this.updateFlag.bind(this);
     this.updateFlagBatch = this.updateFlagBatch.bind(this);
+    this.getLastResult = this.getLastResult.bind(this);
   }
 
   getMockPapers(req, res) {
@@ -58,6 +60,15 @@ class ArticlesController {
       logPrefix: 'Erro na busca com várias seeds',
       genericMessage: 'Erro ao buscar as seeds via script Python.',
     });
+  }
+
+  getLastResult(req, res) {
+    const resultado = readOutput(req.sessionId);
+    if (!resultado) {
+      return res.status(404).json({ error: 'No search result for this session.' });
+    }
+    res.set('Cache-Control', 'no-store');
+    return res.json(resultado);
   }
 
   async streamSearch(req, res, runSearch, { logPrefix, genericMessage }) {
