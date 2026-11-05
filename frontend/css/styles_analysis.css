@@ -19,7 +19,6 @@
 
 body {
   margin: 0;
-  background: var(--sm-bg);
   color: var(--sm-text);
   font-family: "Poppins", sans-serif;
   font-size: 14px;
@@ -144,19 +143,7 @@ main.container.dashboard-container {
 }
 
 .metric-green {
-  background: var(--sm-green-light);
-}
-
-.metric-blue {
-  background: var(--sm-blue-light);
-}
-
-.metric-gold {
-  background: var(--sm-gold-light);
-}
-
-.metric-purple {
-  background: var(--sm-purple-light);
+  background: #eaf7ef;
 }
 
 .metric-label {
@@ -219,8 +206,6 @@ main.container.dashboard-container {
 
 .authors-card {
   min-height: 115px;
-  border: 1px solid var(--sm-border);
-  background: #fff;
 }
 
 /* Painéis e gráficos */

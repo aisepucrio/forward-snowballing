@@ -355,7 +355,7 @@ const FilterComponent = (function () {
           <i class="bi bi-filter"></i>
           <span style="font-family: 'Poppins', sans-serif;">Filter By</span>
           <select id="status" name="status">
-            <option value="todos">Todos</option>
+            <option value="todos">Default</option>
             <option value="year-range">Year Range</option>
             <option value="author">Author</option>
             <option value="venue">Venue</option>

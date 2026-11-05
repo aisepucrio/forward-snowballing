@@ -9,6 +9,7 @@ router.get('/mock-papers', articlesController.getMockPapers);
 router.get('/search', articlesController.searchByDOI);
 // Várias seeds (DOI ou título, escolhido pelo usuário) numa busca só.
 router.post('/search/multi', articlesController.searchMulti);
+router.get('/last-result', articlesController.getLastResult);
 router.post('/marcar', articlesController.marcarArtigo);
 router.get('/artigos/incluidos', articlesController.getArtigosIncluidos);
 
