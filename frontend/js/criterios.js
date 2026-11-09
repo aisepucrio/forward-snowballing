@@ -23,20 +23,18 @@ function mostrarTabelaArtigos(artigos) {
   });
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   try {
-    artigosIncluidos = JSON.parse(window.name || '[]').map(a => ({
+    artigosIncluidos = (await SearchState.carregarIncluidos()).map(a => ({
       ...a,
       abstractExpanded: false,
       keywordsExpanded: false
     }));
-  } catch {
+  } catch (err) {
+    console.error('Não foi possível carregar os artigos incluídos:', err);
     artigosIncluidos = [];
   }
 
-  // search_id não vem no window.name (não quisemos mudar esse formato, que
-  // analysis.html também lê) — index.js grava ele à parte no localStorage
-  // antes de navegar pra cá, então lemos de lá.
   window.currentSearchId = localStorage.getItem('currentSearchId') || null;
 
   // Os artigos chegam com found_via_seeds desde a busca; a tag "Seed N" ajuda
@@ -115,19 +113,83 @@ function prepararArtigosParaAnalise(artigos) {
 }
 
 function construirColunasCriterios(resultados) {
-  const colunas = Array.from(
-    new Set((resultados || []).flatMap(r => Object.keys(r?.results || {})))
-  );
+  const colunas = Array.from(new Set([
+    ...obterTags('inclusaoBox').map((_, i) => `IC${i + 1}`),
+    ...obterTags('exclusaoBox').map((_, i) => `EC${i + 1}`),
+    ...(resultados || []).flatMap(r => Object.keys(r?.results || {}))
+      .filter(nome => /^(IC|EC)\d+$/.test(nome))
+  ])).sort((a, b) => {
+    const grupoA = a.startsWith('IC') ? 0 : 1;
+    const grupoB = b.startsWith('IC') ? 0 : 1;
+    if (grupoA !== grupoB) return grupoA - grupoB;
+    return (parseInt(a.slice(2), 10) || 0) - (parseInt(b.slice(2), 10) || 0);
+  });
 
   return colunas.map(col => ({
     label: col,
     className: 'text-center',
+    columnClassName: `col-criterion col-${col.toLowerCase().startsWith('ic') ? 'ic' : 'ec'}`,
     render: (artigo, index) => {
       const resultado = resultados?.[index] || { results: {} };
       const raw = resultado.results?.[col];
-      return TableComponent.formatCriteriaBadge(raw);
+      return `<button type="button" class="criteria-toggle" data-table-column-toggle
+        aria-label="Toggle ${col} for ${TableComponent.escapeHtml(artigo.title || 'article')}"
+        title="Toggle ${col}">${TableComponent.formatCriteriaBadge(raw)}</button>`;
+    },
+    onClick: (artigo, index) => {
+      const resultado = resultados[index] || (resultados[index] = { results: {} });
+      resultado.results = resultado.results || {};
+      resultado.results[col] = !valorPositivo(resultado.results[col]);
+      resultado.decision = calcularDecisaoInicial(resultado);
+      resultado.decisionLocked = false;
+      sincronizarResultadoComArtigo(artigo, resultado);
+      atualizarResultadosSalvos(resultados);
+      mostrarTabelaComResultados(artigosIncluidos, resultados);
     }
   }));
+}
+
+function valorPositivo(valor) {
+  return valor === true || (typeof valor === 'string' && ['yes', 'sim', 'true'].includes(valor.trim().toLowerCase()));
+}
+
+function calcularDecisaoInicial(resultado) {
+  const criterios = resultado?.results || {};
+  const nomesInclusao = obterTags('inclusaoBox').map((_, i) => `IC${i + 1}`);
+  const nomesExclusao = obterTags('exclusaoBox').map((_, i) => `EC${i + 1}`);
+  const inclusoes = nomesInclusao.length
+    ? nomesInclusao
+    : Object.keys(criterios).filter(nome => /^IC\d+$/.test(nome));
+  const exclusoes = nomesExclusao.length
+    ? nomesExclusao
+    : Object.keys(criterios).filter(nome => /^EC\d+$/.test(nome));
+
+  return inclusoes.every(nome => valorPositivo(criterios[nome]))
+    && exclusoes.every(nome => valorNegativo(criterios[nome]));
+}
+
+function valorNegativo(valor) {
+  return valor === false || (typeof valor === 'string' && ['no', 'não', 'nao', 'false'].includes(valor.trim().toLowerCase()));
+}
+
+function sincronizarResultadoComArtigo(artigo, resultado) {
+  artigo.criteriaResults = resultado.results || {};
+  artigo.decision = resultado.decision === true || resultado.decision === 'Yes';
+}
+
+function prepararResultadosParaTela(artigos, resultados) {
+  resultados.forEach((resultado, index) => {
+    resultado.results = resultado.results || {};
+    if (typeof resultado.decision !== 'boolean') {
+      resultado.decision = calcularDecisaoInicial(resultado);
+    }
+    if (artigos[index]) sincronizarResultadoComArtigo(artigos[index], resultado);
+  });
+}
+
+function atualizarResultadosSalvos(resultados) {
+  const container = document.getElementById('resultadoAnalise');
+  if (container) container.dataset.resultadosRaw = JSON.stringify(resultados);
 }
 
 function mostrarTabelaComResultados(artigos, resultados) {
@@ -144,7 +206,30 @@ function mostrarTabelaComResultados(artigos, resultados) {
     return;
   }
 
-  const extraColumns = construirColunasCriterios(resultados);
+  prepararResultadosParaTela(artigos, resultados);
+  const decisionColumn = {
+    label: 'Decision',
+    className: 'text-center',
+    columnClassName: 'col-decision',
+    render: (artigo, index) => {
+      const resultado = resultados[index] || { decision: false };
+      return `<button type="button" class="criteria-toggle decision-toggle" data-table-column-toggle
+        aria-label="Toggle final decision for ${TableComponent.escapeHtml(artigo.title || 'article')}"
+        title="Toggle final decision">${TableComponent.formatCriteriaBadge(resultado.decision)}</button>`;
+    },
+    onClick: (artigo, index) => {
+      const resultado = resultados[index] || (resultados[index] = { results: {} });
+      resultado.decision = !Boolean(resultado.decision);
+      resultado.decisionLocked = true;
+      sincronizarResultadoComArtigo(artigo, resultado);
+      atualizarResultadosSalvos(resultados);
+      mostrarTabelaComResultados(artigosIncluidos, resultados);
+    }
+  };
+  const extraColumns = [
+    ...construirColunasCriterios(resultados),
+    decisionColumn
+  ];
 
   TableComponent.render({
     target: tbody,
@@ -155,29 +240,26 @@ function mostrarTabelaComResultados(artigos, resultados) {
   });
 }
 
-function jsonParaCSV(resultados) {
-  if (!resultados || resultados.length === 0) return '';
+function jsonParaCSV(resultados, artigos = artigosIncluidos) {
+  if (!artigos || artigos.length === 0) return '';
 
-  const criteriosSet = new Set();
-  resultados.forEach(r => {
-    if (r.results) {
-      Object.keys(r.results).forEach(c => criteriosSet.add(c));
-    }
-  });
-
-  const colunas = Array.from(criteriosSet);
-  const header = ['Title', ...colunas];
+  const colunas = construirColunasCriterios(resultados).map(coluna => coluna.label);
+  const header = ['Title', 'Decision', ...colunas];
   const linhas = [header.join(',')];
 
-  resultados.forEach(r => {
-    const linha = [r.title || ''];
+  const escapar = valor => {
+    let val = String(valor ?? '');
+    if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+      val = `"${val.replace(/"/g, '""')}"`;
+    }
+    return val;
+  };
+
+  artigos.forEach((artigo, index) => {
+    const r = resultados[index] || { results: {} };
+    const linha = [escapar(artigo.title || r.title || ''), escapar(valorPositivo(r.decision) ? 'Yes' : 'No')];
     colunas.forEach(col => {
-      let val = r.results?.[col] || '';
-      val = String(val);
-      if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-        val = `"${val.replace(/"/g, '""')}"`;
-      }
-      linha.push(val);
+      linha.push(escapar(valorPositivo(r.results?.[col]) ? 'Yes' : 'No'));
     });
     linhas.push(linha.join(','));
   });
@@ -327,7 +409,8 @@ function atualizarPainelProgresso(texto, feitos, total) {
 }
 
 function exibirResultados(resultados) {
-  document.getElementById('resultadoAnalise').dataset.resultadosRaw = JSON.stringify(resultados);
+  prepararResultadosParaTela(artigosIncluidos, resultados);
+  atualizarResultadosSalvos(resultados);
   document.getElementById('selectedTitle').style.display = 'none';
 
   const analysisSection = document.getElementById('analysisSection');
@@ -454,7 +537,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     return;
   }
 
-  const csv = jsonParaCSV(resultados);
+  const csv = jsonParaCSV(resultados, artigosIncluidos);
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);

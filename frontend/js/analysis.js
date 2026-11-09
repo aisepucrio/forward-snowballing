@@ -538,13 +538,7 @@ layout.start();
       }
 
       function dadosOriginaisDoArtigo(artigoNormalizado) {
-        try {
-          const dadosOriginais = JSON.parse(window.name || '[]');
-          const original = dadosOriginais.find(a => a.paperId === artigoNormalizado.paperId || a.title === artigoNormalizado.title);
-          return original ? original.authors : null;
-        } catch(e) {
-          return null;
-        }
+        return (artigoNormalizado && artigoNormalizado.authors) || null;
       }
 
       totalArtigosEl.textContent = artigos.length;
@@ -761,7 +755,7 @@ layout.start();
       gerarNuvemPalavras(artigos);
     }
 
-    function carregarArtigosLocal() {
+    async function carregarArtigosLocal() {
   const seedsDataStorage = localStorage.getItem('seedsData');
   const seedDataStorage = localStorage.getItem('seedPaperData');
   let seeds = [];
@@ -792,20 +786,23 @@ layout.start();
     }
   }
 
-  if (!window.name) {
+  let incluidos = [];
+  try {
+    incluidos = await SearchState.carregarIncluidos();
+  } catch (e) {
+    console.error('Error loading screening data:', e);
+    alert('Error loading screening data: ' + e.message);
+    return;
+  }
+
+  if (incluidos.length === 0) {
     alert(
-      'No articles found for screening. Please return to the home page and try a new search.'
+      'No included articles found. Go back to the search results, mark the articles you want to analyze and return here.'
     );
     return;
   }
 
   try {
-    const dados = JSON.parse(window.name);
-
-    const incluidos = Array.isArray(dados)
-      ? dados.filter(a => a && a.selecionado === 'incluir')
-      : [];
-
     artigosSelecionadosOriginais = normalizeArticles(incluidos);
 
     renderizarFiltrosAnalise(seeds);
@@ -854,21 +851,6 @@ layout.start();
     });
 
     document.addEventListener('DOMContentLoaded', carregarArtigosLocal);
-
-    const linkCriteriosEl = document.getElementById('linkCriterios');
-    if (linkCriteriosEl) {
-      linkCriteriosEl.addEventListener('click', function (e) {
-        e.preventDefault();
-        try {
-          const dados = JSON.parse(window.name || '[]');
-          const selecionados = dados.filter(a => a.selecionado === 'incluir');
-          window.name = JSON.stringify(selecionados);
-          window.location.href = 'criterios.html';
-        } catch (e) {
-          alert('Error preparing data for criteria screen:  ' + e.message);
-        }
-      });
-    }
 
    const btnExportarPdf = document.getElementById('btn-exportar-pdf');
    if (btnExportarPdf) btnExportarPdf.addEventListener('click', function () {
