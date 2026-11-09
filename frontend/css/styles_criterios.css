@@ -300,22 +300,156 @@ main button {
 }
 
 /* =========================
-   TABLE HEADERS
+   CRITERIA TABLE
 ========================= */
 
-th.col-ic,
-th.col-ec {
-  background: linear-gradient(90deg, #000, #333);
-  color: #fff;
+#tabela-criterios.criteria-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-/* TABLE CELLS */
-td.col-ic {
-  background-color: #e8f5e9;
+#tabela-criterios.criteria-table.criteria-table-many {
+  min-width: calc(590px + var(--criteria-fixed-width)) !important;
 }
 
-td.col-ec {
-  background-color: #fdecea;
+#tabela-criterios.criteria-table .col-identity {
+  width: calc((100% - var(--criteria-fixed-width, 186px)) * 0.42) !important;
+}
+
+#tabela-criterios.criteria-table .col-abstract {
+  width: calc((100% - var(--criteria-fixed-width, 186px)) * 0.44) !important;
+}
+
+#tabela-criterios.criteria-table .col-keywords {
+  width: calc((100% - var(--criteria-fixed-width, 186px)) * 0.14) !important;
+}
+
+#tabela-criterios.criteria-table th.col-citations,
+#tabela-criterios.criteria-table td.col-citations,
+#tabela-criterios.criteria-table th.col-criterion,
+#tabela-criterios.criteria-table td.col-criterion {
+  width: 68px !important;
+  min-width: 68px;
+  max-width: 68px;
+  padding: 16px 6px !important;
+  text-align: center !important;
+}
+
+#tabela-criterios.criteria-table th.col-citations,
+#tabela-criterios.criteria-table td.col-citations {
+  width: 90px !important;
+  min-width: 90px;
+  max-width: 90px;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+#tabela-criterios.criteria-table th.col-decision,
+#tabela-criterios.criteria-table td.col-decision {
+  width: 96px !important;
+  min-width: 96px;
+  max-width: 96px;
+  padding: 16px 12px !important;
+  text-align: center !important;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  background-color: rgba(249, 250, 251, 0.7);
+}
+
+#tabela-criterios.criteria-table th.col-criterion,
+#tabela-criterios.criteria-table td.col-criterion {
+  border-left: 0;
+}
+
+#tabela-criterios.criteria-table th.col-citations,
+#tabela-criterios.criteria-table td.col-citations {
+  border-right: 0;
+}
+
+#tabela-criterios.criteria-table th.col-decision {
+  color: #111827 !important;
+  font-weight: 700;
+}
+
+#tabela-criterios.criteria-table td.col-decision .criteria-badge {
+  border: 1.5px solid currentColor;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+#tabela-criterios.criteria-table td.col-decision .decision-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100%;
+}
+
+#tabela-criterios.criteria-table.criteria-table-many .col-identity {
+  min-width: 220px;
+}
+
+#tabela-criterios.criteria-table.criteria-table-many .col-abstract {
+  min-width: 240px;
+}
+
+#tabela-criterios.criteria-table.criteria-table-many .col-keywords {
+  min-width: 130px;
+}
+
+#tabela-criterios.criteria-table .criteria-header {
+  text-align: center !important;
+  color: #374151 !important;
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#tabela-criterios.criteria-table .criteria-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+#tabela-criterios.criteria-table .criteria-yes {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+#tabela-criterios.criteria-table .criteria-no {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+#tabela-criterios.criteria-table .criteria-toggle {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+#tabela-criterios.criteria-table .criteria-toggle:focus-visible {
+  outline: 2px solid #0b6b43;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+#tabela-criterios.criteria-table th.col-ic,
+#tabela-criterios.criteria-table th.col-ec {
+  background: transparent;
+  color: #6b7280;
+}
+
+#tabela-criterios.criteria-table td.col-ic,
+#tabela-criterios.criteria-table td.col-ec,
+#tabela-criterios.criteria-table td.col-criterion {
+  background: transparent !important;
 }
 /* =========================
    ANALYSIS PROGRESS
@@ -449,4 +583,3 @@ td.col-ec {
 .espacamento-nav {
   margin: 1rem;
 }
-

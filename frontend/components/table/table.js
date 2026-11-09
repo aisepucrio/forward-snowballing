@@ -1,4 +1,9 @@
 const TableComponent = (function () {
+  function addClassNames(element, classNames) {
+    const names = String(classNames || '').split(/\s+/).filter(Boolean);
+    if (names.length) element.classList.add(...names);
+  }
+
   
   function escapeHtml(text) {
     if (text === null || text === undefined) return '-';
@@ -80,11 +85,11 @@ const TableComponent = (function () {
   }
 
   function formatCriteriaBadge(rawValue) {
-    const valor = typeof rawValue === 'string' ? rawValue.trim().toLowerCase() : '-';
-    if (['sim', 'yes'].includes(valor)) {
+    const valor = typeof rawValue === 'string' ? rawValue.trim().toLowerCase() : rawValue;
+    if (rawValue === true || ['sim', 'yes', 'include', 'included'].includes(valor)) {
       return '<span class="criteria-badge criteria-yes">Yes</span>';
     }
-    if (['não', 'nao', 'no'].includes(valor)) {
+    if (rawValue === false || ['não', 'nao', 'no', 'exclude', 'excluded'].includes(valor)) {
       return '<span class="criteria-badge criteria-no">No</span>';
     }
     return escapeHtml(rawValue ?? '-');
@@ -94,6 +99,13 @@ const TableComponent = (function () {
     if (!table) return;
     const theadRow = table.querySelector('thead tr');
     if (!theadRow) return;
+
+    if (table.classList.contains('criteria-table')) {
+      ['col-identity', 'col-abstract', 'col-keywords', 'col-citations']
+        .forEach((className, index) => {
+          theadRow.children[index]?.classList.add(className);
+        });
+    }
 
     theadRow.querySelectorAll('th[data-dynamic-col]').forEach(th => th.remove());
 
@@ -106,7 +118,8 @@ const TableComponent = (function () {
       th.textContent = col.label;
       th.dataset.dynamicCol = 'true';
       th.classList.add('criteria-header');
-      if (col.headerClassName) th.classList.add(col.headerClassName);
+      addClassNames(th, col.headerClassName);
+      addClassNames(th, col.columnClassName);
 
       if (actionsTh) {
         theadRow.insertBefore(th, actionsTh);
@@ -149,6 +162,12 @@ const TableComponent = (function () {
 
     const table = tbody.closest('table');
     if (table) {
+      if (table.classList.contains('criteria-table')) {
+        const criteriaCount = Math.max(0, extraColumns.length - 1);
+        const fixedWidth = 90 + 96 + criteriaCount * 68;
+        table.style.setProperty('--criteria-fixed-width', `${fixedWidth}px`);
+        table.classList.toggle('criteria-table-many', criteriaCount > 6);
+      }
       const colActionsHeader = table.querySelector('.col-actions');
       if (colActionsHeader) {
         if (showActions) {
@@ -238,7 +257,16 @@ const TableComponent = (function () {
       extraColumns.forEach(col => {
         const td = document.createElement('td');
         td.className = col.className || 'text-center';
+        addClassNames(td, col.columnClassName);
         td.innerHTML = typeof col.render === 'function' ? col.render(item, index) : '-';
+        if (typeof col.onClick === 'function') {
+          td.querySelectorAll('[data-table-column-toggle]').forEach(toggle => {
+            toggle.addEventListener('click', event => {
+              event.preventDefault();
+              col.onClick(item, index);
+            });
+          });
+        }
         tr.appendChild(td);
       });
 
