@@ -6,11 +6,10 @@ function injetarNavbar() {
       <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
         <div class="container-fluid navbar-inner">
 
-          <!-- Logo sem link: a volta para a busca agora é o item "New Search". -->
-          <div class="navbar-brand d-flex align-items-center gap-2" id="navbarSnowballing" style="cursor: default;">
+          <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" id="navbarSnowballing" aria-label="SnowMap home">
             <img src="/images/logo-snowballing.png" class="logo-nav" alt="Logo SnowMap">
             <span class="brand-text">SnowMap</span>
-          </div>
+          </a>
 
           <form id="navbarSearchForm" class="navbar-search d-none" onsubmit="if(typeof buscarArtigoNavbar === 'function') { buscarArtigoNavbar(); } return false;">
             <i class="bi bi-search"></i>
