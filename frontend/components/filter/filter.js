@@ -108,6 +108,9 @@ const FilterComponent = (function () {
     } 
 
     result = sortResults(result);
+    if (typeof window.onTableFilterApplied === 'function') {
+      window.onTableFilterApplied(baseDados, result);
+    }
     try { window.citationsData = result; } catch (err) {}
     if (typeof mostrarCitacoes === 'function') mostrarCitacoes(result);
     else console.warn('mostrarCitacoes não encontrada para renderizar resultados');

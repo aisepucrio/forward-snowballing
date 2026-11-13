@@ -302,6 +302,34 @@ function persistirEstado() {
   }
 }
 
+function limparTriagemDeArtigosOcultos(baseDados, artigosVisiveis) {
+  const modo = obterModoAtual();
+  const visiveis = new Set((artigosVisiveis || []).map(item => item.paperId));
+  const ocultos = (baseDados || []).filter(item => !visiveis.has(item.paperId));
+
+  if (!ocultos.length) return;
+
+  const searchId = obterSearchIdAtual();
+  ocultos.forEach(item => {
+    if (item.selecionado !== 'incluir' && item.selecionado !== 'excluir') return;
+
+    item.selecionado = null;
+    const paperIdBd = obterPaperIdBd(item);
+    if (paperIdBd && searchId) {
+      queueFlagChange({
+        searchId,
+        paperId: paperIdBd,
+        selectedFirstPage: false,
+      });
+    }
+  });
+
+  SearchState.limparTriagem(ocultos, modo);
+  persistirEstado();
+}
+
+window.onTableFilterApplied = limparTriagemDeArtigosOcultos;
+
 function aplicarResultadoBusca(resultado) {
   const estado = SearchState.ler();
 
