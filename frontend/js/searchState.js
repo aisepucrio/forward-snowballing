@@ -87,6 +87,19 @@ const SearchState = (function () {
     return lista;
   }
 
+  function limparTriagem(lista, modo, estado = ler()) {
+    const chaves = new Set((lista || []).map(item => chave(modo, item)));
+    estado.inc = (estado.inc || []).filter(item => !chaves.has(item));
+    estado.exc = (estado.exc || []).filter(item => !chaves.has(item));
+
+    (lista || []).forEach(item => {
+      item.selecionado = null;
+    });
+
+    gravar(estado);
+    return estado;
+  }
+
   async function buscarUltimoResultado() {
     const res = await fetch(RESULT_URL, { headers: { Accept: 'application/json' } });
     if (res.status === 404) return null;
@@ -128,7 +141,7 @@ const SearchState = (function () {
   }
 
   return {
-    ler, reiniciar, salvarTriagem, aplicarTriagem,
+    ler, reiniciar, salvarTriagem, aplicarTriagem, limparTriagem,
     buscarUltimoResultado, prepararEstudos, unicosIncluidos, carregarIncluidos,
   };
 })();
