@@ -169,6 +169,37 @@ const FilterComponent = (function () {
       endInput.value = applied.end;
     }
 
+    function setYearFromPlaceholder(input, direction) {
+      if (input.value !== '') return;
+
+      const baseYear = Number.parseInt(input.placeholder, 10);
+      if (!Number.isFinite(baseYear)) return;
+
+      input.value = String(baseYear + direction);
+    }
+
+    function handleYearInputInteraction(input, ev) {
+      if (ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
+      if (input.value !== '') return;
+
+      ev.preventDefault();
+      setYearFromPlaceholder(input, ev.key === 'ArrowUp' ? 1 : -1);
+    }
+
+    function handleYearSpinnerInteraction(input, ev) {
+      if (ev.button !== 0 || input.value !== '') return;
+
+      const bounds = input.getBoundingClientRect();
+      const spinnerWidth = Math.min(24, bounds.width * 0.35);
+      const clickedSpinner = ev.clientX >= bounds.right - spinnerWidth;
+      if (!clickedSpinner) return;
+
+      ev.preventDefault();
+      const direction = ev.clientY < bounds.top + bounds.height / 2 ? 1 : -1;
+      setYearFromPlaceholder(input, direction);
+      input.focus();
+    }
+
     function applyCustomRange() {
       const rawStart = startInput.value.trim();
       const rawEnd = endInput.value.trim();
@@ -203,10 +234,14 @@ const FilterComponent = (function () {
 
     [startInput, endInput].forEach(input => {
       input.addEventListener('keydown', (ev) => {
+        handleYearInputInteraction(input, ev);
         if (ev.key === 'Enter') {
           ev.preventDefault();
           applyCustomRange();
         }
+      });
+      input.addEventListener('mousedown', (ev) => {
+        handleYearSpinnerInteraction(input, ev);
       });
     });
 
