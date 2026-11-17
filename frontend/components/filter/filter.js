@@ -116,6 +116,19 @@ const FilterComponent = (function () {
     else console.warn('mostrarCitacoes não encontrada para renderizar resultados');
   }
 
+  function closeFilterSubmenus() {
+    ['decadeSubMenu', 'authorSubMenu', 'venueSubMenu']
+      .map(id => document.getElementById(id))
+      .filter(Boolean)
+      .forEach(submenu => submenu.classList.add('hidden'));
+  }
+
+  function isFilterActive(value) {
+    return (value === 'year-range' && activeFilters.years.length > 0)
+      || (value === 'author' && activeFilters.authors.length > 0)
+      || (value === 'venue' && activeFilters.venues.length > 0);
+  }
+
     function getYearBounds(baseDados = getBaseData()) {
     const years = (baseDados || [])
       .map(c => parseInt(c.year, 10))
@@ -231,6 +244,8 @@ const FilterComponent = (function () {
       showError('');
       activeFilters.years = [{ start, end }];
       applyCombinedFilters();
+      closeFilterSubmenus();
+      notifyFilterStateChanged();
     }
 
     filterBtn.addEventListener('click', applyCustomRange);
@@ -254,6 +269,8 @@ const FilterComponent = (function () {
       showError('');
       activeFilters.years = [];
       applyCombinedFilters();
+      closeFilterSubmenus();
+      notifyFilterStateChanged();
     });
   }
 
@@ -324,6 +341,8 @@ const FilterComponent = (function () {
 
         activeFilters.authors = selectedAuthors;
         applyCombinedFilters();
+        closeFilterSubmenus();
+        notifyFilterStateChanged();
       });
     });
   }
@@ -379,6 +398,8 @@ const FilterComponent = (function () {
         const selected = activeBtns.map(b => b.getAttribute('data-venue'));
         activeFilters.venues = selected;
         applyCombinedFilters();
+        closeFilterSubmenus();
+        notifyFilterStateChanged();
       });
     });
   }
@@ -426,6 +447,7 @@ const FilterComponent = (function () {
 
   function resetFilters() {
     clearActiveFilters();
+    closeFilterSubmenus();
 
     const full = getBaseData();
     try { window.citationsData = full; } catch (err) {}
@@ -447,6 +469,7 @@ const FilterComponent = (function () {
     document
       .querySelectorAll('.btn-decade.active, .btn-author.active, .btn-venue.active')
       .forEach(btn => btn.classList.remove('active'));
+    notifyFilterStateChanged();
   }
 
   /**
@@ -470,6 +493,11 @@ const FilterComponent = (function () {
   }
 
   const selectDropdowns = new Set();
+  const selectSyncers = new Set();
+
+  function notifyFilterStateChanged() {
+    selectSyncers.forEach(sync => sync());
+  }
 
   function closeOtherSelectDropdowns(current) {
     selectDropdowns.forEach(dropdown => {
@@ -514,7 +542,18 @@ const FilterComponent = (function () {
       const li = document.createElement('li');
       li.className = 'select-option';
       li.setAttribute('role', 'option');
-      li.textContent = option.textContent;
+      const label = document.createElement('span');
+      label.textContent = option.textContent;
+      li.appendChild(label);
+
+      if (select.id === 'status' && option.value !== 'todos' && option.value !== '') {
+        const check = document.createElement('span');
+        check.className = 'select-option-check';
+        check.textContent = '✓';
+        check.setAttribute('aria-hidden', 'true');
+        li.appendChild(check);
+      }
+
       li.addEventListener('click', () => choose(index));
       menu.appendChild(li);
       return li;
@@ -524,7 +563,12 @@ const FilterComponent = (function () {
       const index = Math.max(select.selectedIndex, 0);
       const current = select.options[index];
       triggerLabel.textContent = current ? current.textContent : '';
-      items.forEach((li, i) => li.setAttribute('aria-selected', String(i === index)));
+      items.forEach((li, i) => {
+        li.setAttribute('aria-selected', String(i === index));
+        const option = select.options[i];
+        const check = li.querySelector('.select-option-check');
+        if (check) check.hidden = !isFilterActive(option.value);
+      });
     }
 
     function setFocused(index) {
@@ -620,6 +664,7 @@ const FilterComponent = (function () {
     select.classList.add('select-native-hidden');
     select.parentNode.insertBefore(wrapper, select);
     wrapper.append(trigger, menu, select);
+    selectSyncers.add(sync);
     sync();
   }
 
