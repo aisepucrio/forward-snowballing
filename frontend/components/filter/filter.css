@@ -330,6 +330,10 @@
 }
 
 .select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 6px 12px;
   border-radius: 8px;
   font-family: 'Poppins', sans-serif;
@@ -338,6 +342,18 @@
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.select-option-check {
+  flex: 0 0 auto;
+  color: currentColor;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.select-option-check[hidden] {
+  display: none;
 }
 
 .select-option:hover,
