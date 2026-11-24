@@ -136,7 +136,7 @@ async function toggleIncludeAll() {
 
   const newState = determinarAcaoIncludeAll(window.citationsData);
 
-  window.citationsData.forEach(c => {
+ window.citationsData.forEach(c => {
     c.selecionado = newState;
   });
 
@@ -270,7 +270,7 @@ function trocarModo() {
   window.dedupHistoryByMode = window.dedupHistoryByMode || {};
   window.dedupRemovedHistory = window.dedupHistoryByMode[mode] || [];
 
-  if (window.FilterComponent) {
+ if (window.FilterComponent) {
     if (typeof window.FilterComponent.clearActiveFilters === 'function') {
       window.FilterComponent.clearActiveFilters();
     }
@@ -301,6 +301,34 @@ function persistirEstado() {
   } catch {
   }
 }
+
+function limparTriagemDeArtigosOcultos(baseDados, artigosVisiveis) {
+  const modo = obterModoAtual();
+  const visiveis = new Set((artigosVisiveis || []).map(item => item.paperId));
+  const ocultos = (baseDados || []).filter(item => !visiveis.has(item.paperId));
+
+  if (!ocultos.length) return;
+
+  const searchId = obterSearchIdAtual();
+  ocultos.forEach(item => {
+    if (item.selecionado !== 'incluir' && item.selecionado !== 'excluir') return;
+
+    item.selecionado = null;
+    const paperIdBd = obterPaperIdBd(item);
+    if (paperIdBd && searchId) {
+      queueFlagChange({
+        searchId,
+        paperId: paperIdBd,
+        selectedFirstPage: false,
+      });
+    }
+  });
+
+  SearchState.limparTriagem(ocultos, modo);
+  persistirEstado();
+}
+
+window.onTableFilterApplied = limparTriagemDeArtigosOcultos;
 
 function aplicarResultadoBusca(resultado) {
   const estado = SearchState.ler();
@@ -386,16 +414,10 @@ async function carregarResultados() {
     aplicarResultadoBusca(resultado);
   } catch (err) {
     console.error(err);
-    mostrarSemResultados('Could not load your last search. Try again, or start a new search.');
+    mostrarSemResultados(err.message || 'Could not load your last search.');
   } finally {
     if (loading) loading.style.display = 'none';
   }
-}
-
-function buscarArtigoNavbar() {
-  const input = document.getElementById('navbarSearchInput');
-  const valor = input ? input.value.trim() : '';
-  window.location.href = valor ? `index.html?search=${encodeURIComponent(valor)}` : 'index.html';
 }
 
 function construirAbasSeeds() {
@@ -1001,6 +1023,9 @@ if (dedupModalElem) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+  const navbarSearch = document.getElementById('navbarSearchForm');
+  if (navbarSearch) navbarSearch.remove();
+
   const downloadBtn = document.getElementById('downloadBtn');
   const includeAllBtn = document.getElementById('includeAllBtn');
   const saveStateBtn = document.getElementById('saveStateBtn');
